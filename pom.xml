@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <groupId>org.cfl</groupId>
+   <artifactId>cfl-super-pom</artifactId>
+   <version>1.4.0.0</version>
+   <packaging>pom</packaging>
+
+   <name>CFL - Common Functions Library ${project.version}</name>
+
+   <modules>
+      <module>cfl-headers</module>
+      <module>cfl-lib</module>
+   </modules>
+
+   <url>https://gitlab.com/fabiouggeri/cfl-library.git</url>
+
+   <licenses>
+      <license>
+         <name>Apache License, Version 2.0</name>
+         <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+         <distribution>repo</distribution>
+      </license>
+   </licenses>
+
+   <properties>
+      <mainSource>main.c</mainSource>
+
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <build-plugin-group-id>org.uggeri.maven.builder</build-plugin-group-id>
+      <build-plugin-artifact-id>builder-maven-plugin</build-plugin-artifact-id>
+      <build-plugin-version>2.3</build-plugin-version>
+
+      <os>win</os>
+      <arch>64</arch>
+      <target-platform>${os}${arch}</target-platform>
+      <cc-target>${c-compiler}${cc-major-version}</cc-target>
+      <c-classifier>${target-platform}-${cc-target}</c-classifier>
+      <debug-lib></debug-lib>
+      <extractDir>${user.home}\sic-build</extractDir>
+      <tools-path>${extractDir}</tools-path>
+      <cc-path>${tools-path}\${cc-group-id}\${cc-artifact-id}\${cc-version}\${target-platform}</cc-path>
+      <lpref></lpref>
+      <lext>lib</lext>
+      <oext>obj</oext>
+
+      <bcc-id>bcc</bcc-id>
+      <bcc-version>5.6.0.0</bcc-version>
+      <bcc-major-version>5.x</bcc-major-version>
+      <bcc-group-id>com.borland.bcc</bcc-group-id>
+      <bcc-artifact-id>bcc-app</bcc-artifact-id>
+      <bcc-includes-path>${cc-path}\include</bcc-includes-path>
+      <bcc-libs-path>${cc-path}\lib;${cc-path}\lib\psdk</bcc-libs-path>
+      <bcc-libs>c0x32.obj;import32.lib;cw32mt.lib</bcc-libs>
+      <bcc-cmd>bcc32.exe -O2 -c -d -5 -6 -a8 -tWM #{?verbose='true', '-q'} #{includesPaths, '-I"', '";"', '"'} #{defines, '-D', ' -D', '='} -o"#{outputFile}" "#{inputFile}"</bcc-cmd>
+      <bcc-link-options>-ap -Tpe -L"${cc-path}\lib" #{?verbose='true', '-r'} #{inputFiles, '"', '" "', '"'}, "#{outputFile}",, #{inputLibraries, '"', '" "', '"'}</bcc-link-options>
+      <bcc-link-cmd>ilink32.exe @${project.basedir}\target\classes\${c-classifier}\lnk_options.rsp</bcc-link-cmd>
+      <bcc-lib-cmd>tlib.exe "#{outputFile}" #{inputFiles, '+"', '" +"', '"'}</bcc-lib-cmd>
+
+      <msc-id>msc</msc-id>
+      <msc-version>16.0.0.0</msc-version>
+      <msc-major-version>16.x</msc-major-version>
+      <msc-group-id>com.microsoft.msc</msc-group-id>
+      <msc-artifact-id>msc-app</msc-artifact-id>
+      <msc-includes-path>${cc-path}\include;${cc-path}\include\um;${cc-path}\include\msclr</msc-includes-path>
+      <msc-libs-path>${cc-path}\lib;${cc-path}\lib\sdk</msc-libs-path>
+      <msc-libs>shell32.lib;user32.lib;kernel32.lib;advapi32.lib;winspool.lib;ole32.lib;oleaut32.lib;ws2_32.lib;libcmt.lib;gdi32.lib;comdlg32.lib;msvcrt.lib;oldnames.lib;iphlpapi.lib</msc-libs>
+      <msc-cmd>cl.exe /W3 /GA /c /Gs /Gd /arch:AVX /O2 /MT #{?mode='cpp', '/TP'} #{!mode, '/TC'} #{includesPaths, '/I"', '" /I"', '"'} /D_CRT_SECURE_NO_WARNINGS #{defines, '/D', ' /D', '='} /Fo"#{outputFile}" "#{inputFile}"</msc-cmd>
+      <msc-link-options>/IGNORE:4006,4078,4088 /INCREMENTAL:no /NODEFAULTLIB /SUBSYSTEM:CONSOLE /FORCE:MULTIPLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'} #{inputLibraries, '"', '" "', '"'}</msc-link-options>
+      <msc-link-cmd>link.exe @"${project.basedir}\target\classes\${c-classifier}\lnk_options.rsp"</msc-link-cmd>
+      <msc-lib-cmd>lib.exe /SUBSYSTEM:CONSOLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'}</msc-lib-cmd>
+
+      <mingw64-id>mingw64</mingw64-id>
+      <mingw64-version>10.0.0.0</mingw64-version>
+      <mingw64-major-version>10.x</mingw64-major-version>
+      <mingw64-group-id>org.mingw64</mingw64-group-id>
+      <mingw64-artifact-id>mingw64-app</mingw64-artifact-id>
+      <mingw64-includes-path></mingw64-includes-path>
+      <mingw64-libs-path></mingw64-libs-path>
+      <mingw64-libs></mingw64-libs>
+      <mingw64-cmd>gcc -pipe -O3 -c -Wdiscarded-qualifiers #{includesPaths, '-I"', '" -I"', '"'} #{defines, '-D', ' -D', '='} -D_WIN32_WINNT=0x0601 -o"#{outputFile}" "#{inputFile}"</mingw64-cmd>
+      <mingw64-link-options></mingw64-link-options>
+      <mingw64-link-cmd>gcc #{inputFiles, '"', '" "', '"'} -Wdiscarded-qualifiers -mconsole -Wl,--error-unresolved-symbols -Wl,--major-image-version=#{version} -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lwinspool -lcomctl32 -lcomdlg32 -lshell32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lmsimg32 -lwininet -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</mingw64-link-cmd>
+      <mingw64-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</mingw64-lib-cmd>
+
+      <clang-id>clang</clang-id>
+      <clang-version>14.0.4.0</clang-version>
+      <clang-major-version>14.x</clang-major-version>
+      <clang-group-id>org.llvm</clang-group-id>
+      <clang-artifact-id>clang-app</clang-artifact-id>
+      <clang-includes-path></clang-includes-path>
+      <clang-libs-path/>
+      <clang-libs/>
+      <clang-cmd>clang -O3 -Wall -ffunction-sections -fdata-sections #{includesPaths, '-I"', '" -I"', '"'} -I"${clp-includes-path}" #{defines, '-D', ' -D', '='} -o"#{outputFile}" -c "#{inputFile}"</clang-cmd>
+      <clang-link-options>#{inputFiles, '"', '" "', '"'} -Wl,-O -Wl,--nxcompat -Wl,--dynamicbase -Wl,--allow-multiple-definition -Wl,-s -Wl,-S -Wl,--gc-sections -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lshell32 -lwinspool -lmsimg32 -lcomctl32 -lcomdlg32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lwininet -lstdc++ -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</clang-link-options>
+      <clang-link-cmd>clang @"${project.basedir}\target\classes\${prg-classifier}\lnk_options.rsp"</clang-link-cmd>
+      <clang-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</clang-lib-cmd>
+
+      <gcc-id>gcc</gcc-id>
+      <gcc-version>11.2.0</gcc-version>
+      <gcc-major-version>11.x</gcc-major-version>
+      <gcc-group-id>org.gcc</gcc-group-id>
+      <gcc-artifact-id>gcc-app</gcc-artifact-id>
+      <gcc-includes-path></gcc-includes-path>
+      <gcc-libs-path></gcc-libs-path>
+      <gcc-libs></gcc-libs>
+      <gcc-cmd>gcc -pipe -Ofast -c -Wdiscarded-qualifiers #{?debug='true', '-g'} #{includesPaths, '-I', ' -I'} #{defines, '-D', ' -D', '='} -o#{outputFile} #{inputFile}</gcc-cmd>
+      <gcc-link-options></gcc-link-options>
+      <gcc-link-cmd>gcc #{inputFiles, ' ', ' ', ' '} -Wdiscarded-qualifiers -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l$(name,"lib")', ' -l$(name,"lib")'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</gcc-link-cmd>
+      <gcc-lib-cmd>ar rcs #{outputFile} #{inputFiles, ' ', ' ', ' '}</gcc-lib-cmd>
+
+      <c-compiler>${msc-id}</c-compiler>
+      <cc-version>${msc-version}</cc-version>
+      <cc-major-version>${msc-major-version}</cc-major-version>
+      <cc-group-id>${msc-group-id}</cc-group-id>
+      <cc-artifact-id>${msc-artifact-id}</cc-artifact-id>
+      <cc-includes-path>${msc-includes-path}</cc-includes-path>
+      <cc-libs-path>${msc-libs-path}</cc-libs-path>
+      <cc-libs>${msc-libs}</cc-libs>
+      <cc-cmd>${msc-cmd}</cc-cmd>
+      <link-options>${msc-link-options}</link-options>
+      <link-cmd>${msc-link-cmd}</link-cmd>
+      <lib-cmd>${msc-lib-cmd}</lib-cmd>
+   </properties>
+
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>${build-plugin-group-id}</groupId>
+            <artifactId>${build-plugin-artifact-id}</artifactId>
+            <version>${build-plugin-version}</version>
+            <extensions>true</extensions>
+
+            <configuration>
+               <directory>${project.basedir}\target</directory>
+               <outputDirectory>${project.basedir}\target\classes\${c-classifier}</outputDirectory>
+               <testOutputDirectory>${project.basedir}\target\test-classes\${c-classifier}</testOutputDirectory>
+               <sourceDirectory>${project.basedir}\src\main</sourceDirectory>
+               <testSourceDirectory>${project.basedir}\src\test</testSourceDirectory>
+               <extractionDirectory>${extractDir}</extractionDirectory>
+
+               <envVars>
+                  <PATH>${cc-path}\bin;${env.PATH}</PATH>
+                  <INCLUDE>${cc-path}\include</INCLUDE>
+                  <LIB>${cc-path}\lib</LIB>
+                  <LIBPATH>${cc-path}\lib</LIBPATH>
+               </envVars>
+
+               <classifier>${c-classifier}</classifier>
+               <mainSourcesTest>true</mainSourcesTest>
+
+               <defines>
+                  <__CC__>${c-compiler}</__CC__>
+               </defines>
+
+               <includesPaths>${cc-includes-path}</includesPaths>
+               <librariesPaths>${cc-libs-path}</librariesPaths>
+               <libraries>${cc-libs}</libraries>
+
+               <toolsMapping>
+                  <!-- Configuracao da ferramenta para compilacao dos fontes em C e CPP-->
+                  <toolMapping>
+                     <tool>
+                        <groupId>${build-plugin-group-id}</groupId>
+                        <artifactId>builder-custom</artifactId>
+                        <version>${build-plugin-version}</version>
+                        <scope>runtime</scope>
+                        <toolClass>org.uggeri.build.tools.custom.compiler.CustomCompiler</toolClass>
+                     </tool>
+
+                     <toolConfig>
+                        <outputType>${oext}</outputType>
+                        <sourceTypes>
+                           <type>c</type>
+                           <type>cpp</type>
+                        </sourceTypes>
+                        <includeTypes>
+                           <type>h</type>
+                           <type>hpp</type>
+                        </includeTypes>
+                        <commandLine>${cc-cmd}</commandLine>
+                     </toolConfig>
+                  </toolMapping>
+
+                  <!-- Configuracao da ferramenta para geracao (linker) de executaveis  -->
+                  <toolMapping>
+                     <tool>
+                        <groupId>${build-plugin-group-id}</groupId>
+                        <artifactId>builder-custom</artifactId>
+                        <version>${build-plugin-version}</version>
+                        <scope>runtime</scope>
+                        <toolClass>org.uggeri.build.tools.custom.packer.CustomPacker</toolClass>
+                     </tool>
+
+                     <toolConfig>
+                        <outputType>exe</outputType>
+                        <sourceTypes>
+                           <type>${oext}</type>
+                        </sourceTypes>
+                        <packagingTypes>
+                           <type>exe</type>
+                        </packagingTypes>
+                        <commandLine>${link-cmd}</commandLine>
+                        <optionsFile>
+                           <pathName>${project.basedir}\target\classes\${c-classifier}/lnk_options.rsp</pathName>
+                           <content>${link-options}</content>
+                        </optionsFile>
+                     </toolConfig>
+                  </toolMapping>
+
+                  <!-- Configuracao da ferramenta para geracao (archiver) de bibliotecas  -->
+                  <toolMapping>
+                     <tool>
+                        <groupId>${build-plugin-group-id}</groupId>
+                        <artifactId>builder-custom</artifactId>
+                        <version>${build-plugin-version}</version>
+                        <scope>runtime</scope>
+                        <toolClass>org.uggeri.build.tools.custom.packer.CustomPacker</toolClass>
+                     </tool>
+
+                     <toolConfig>
+                        <outputType>${lpref}</outputType>
+                        <sourceTypes>
+                           <type>${oext}</type>
+                        </sourceTypes>
+                        <packagingTypes>
+                           <type>lib</type>
+                        </packagingTypes>
+                        <commandLine>${lib-cmd}</commandLine>
+                     </toolConfig>
+                  </toolMapping>
+               </toolsMapping>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.2</version>
+            <configuration>
+               <createChecksum>true</createChecksum>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.8</version>
+            <inherited>false</inherited>
+            <executions>
+               <execution>
+                  <id>clean-distribution</id>
+                  <phase>clean</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target name="Clean Distribution">
+                        <delete dir="distribution/${project.version}" includeemptydirs="true" />
+                     </target>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+
+   <profiles>
+      <profile>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>windows</family>
+            </os>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>${cc-group-id}</groupId>
+               <artifactId>${cc-artifact-id}</artifactId>
+               <type>zip</type>
+               <version>${cc-version}</version>
+               <classifier>${target-platform}</classifier>
+            </dependency>
+         </dependencies>
+      </profile>
+
+      <profile>
+         <id>gcc</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>unix</family>
+               <name>Linux</name>
+            </os>
+         </activation>
+         <properties>
+            <os>linux</os>
+            <c-compiler>${gcc-id}</c-compiler>
+            <cc-version>${gcc-version}</cc-version>
+            <cc-major-version>${gcc-major-version}</cc-major-version>
+            <cc-group-id>${gcc-group-id}</cc-group-id>
+            <cc-artifact-id>${gcc-artifact-id}</cc-artifact-id>
+            <cc-includes-path>${gcc-includes-path}</cc-includes-path>
+            <cc-libs-path>${gcc-libs-path}</cc-libs-path>
+            <cc-libs>${gcc-libs}</cc-libs>
+            <cc-cmd>${gcc-cmd}</cc-cmd>
+            <link-options>${gcc-link-options}</link-options>
+            <link-cmd>${gcc-link-cmd}</link-cmd>
+            <lib-cmd>${gcc-lib-cmd}</lib-cmd>
+            <lpref>lib</lpref>
+            <lext>a</lext>
+            <oext>o</oext>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>bcc</id>
+
+         <activation>
+            <property>
+               <name>cc</name>
+               <value>bcc</value>
+            </property>
+         </activation>
+         <properties>
+            <arch>32</arch>
+            <c-compiler>${bcc-id}</c-compiler>
+            <cc-version>${bcc-version}</cc-version>
+            <cc-major-version>${bcc-major-version}</cc-major-version>
+            <cc-group-id>${bcc-group-id}</cc-group-id>
+            <cc-artifact-id>${bcc-artifact-id}</cc-artifact-id>
+            <cc-includes-path>${bcc-includes-path}</cc-includes-path>
+            <cc-libs-path>${bcc-libs-path}</cc-libs-path>
+            <cc-libs>${bcc-libs}</cc-libs>
+            <cc-cmd>${bcc-cmd}</cc-cmd>
+            <link-options>${bcc-link-options}</link-options>
+            <link-cmd>${bcc-link-cmd}</link-cmd>
+            <lib-cmd>${bcc-lib-cmd}</lib-cmd>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>msc</id>
+
+         <activation>
+            <property>
+               <name>cc</name>
+               <value>msc</value>
+            </property>
+         </activation>
+
+         <properties>
+            <c-compiler>${msc-id}</c-compiler>
+            <cc-version>${msc-version}</cc-version>
+            <cc-major-version>${msc-major-version}</cc-major-version>
+            <cc-group-id>${msc-group-id}</cc-group-id>
+            <cc-artifact-id>${msc-artifact-id}</cc-artifact-id>
+            <cc-includes-path>${msc-includes-path}</cc-includes-path>
+            <cc-libs-path>${msc-libs-path}</cc-libs-path>
+            <cc-libs>${msc-libs}</cc-libs>
+            <cc-cmd>${msc-cmd}</cc-cmd>
+            <link-options>${msc-link-options}</link-options>
+            <link-cmd>${msc-link-cmd}</link-cmd>
+            <lib-cmd>${msc-lib-cmd}</lib-cmd>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>mingw64</id>
+
+         <activation>
+            <property>
+               <name>cc</name>
+               <value>mingw64</value>
+            </property>
+         </activation>
+
+         <properties>
+            <c-compiler>${mingw64-id}</c-compiler>
+            <cc-version>${mingw64-version}</cc-version>
+            <cc-major-version>${mingw64-major-version}</cc-major-version>
+            <cc-target>gcc</cc-target>
+            <cc-group-id>${mingw64-group-id}</cc-group-id>
+            <cc-artifact-id>${mingw64-artifact-id}</cc-artifact-id>
+            <cc-includes-path>${mingw64-includes-path}</cc-includes-path>
+            <cc-libs-path>${mingw64-libs-path}</cc-libs-path>
+            <cc-libs>${mingw64-libs}</cc-libs>
+            <cc-cmd>${mingw64-cmd}</cc-cmd>
+            <link-options>${mingw64-link-options}</link-options>
+            <link-cmd>${mingw64-link-cmd}</link-cmd>
+            <lib-cmd>${mingw64-lib-cmd}</lib-cmd>
+            <lpref>lib</lpref>
+            <lext>a</lext>
+            <oext>o</oext>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>clang</id>
+
+         <activation>
+            <property>
+               <name>cc</name>
+               <value>clang</value>
+            </property>
+         </activation>
+
+         <properties>
+            <c-compiler>${clang-id}</c-compiler>
+            <cc-version>${clang-version}</cc-version>
+            <cc-major-version>${clang-major-version}</cc-major-version>
+            <cc-target>gcc</cc-target>
+            <cc-group-id>${clang-group-id}</cc-group-id>
+            <cc-artifact-id>${clang-artifact-id}</cc-artifact-id>
+            <cc-includes-path>${clang-includes-path}</cc-includes-path>
+            <cc-libs-path>${clang-libs-path}</cc-libs-path>
+            <cc-libs>${clang-libs}</cc-libs>
+            <cc-cmd>${clang-cmd}</cc-cmd>
+            <link-options>${clang-link-options}</link-options>
+            <link-cmd>${clang-link-cmd}</link-cmd>
+            <lib-cmd>${clang-lib-cmd}</lib-cmd>
+            <lpref>lib</lpref>
+            <lext>a</lext>
+            <oext>o</oext>
+         </properties>
+      </profile>
+   </profiles>
+
+</project>
