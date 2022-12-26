@@ -30,18 +30,33 @@ static DWORD s_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 #elif defined(__linux__)
 
-__thread CFL_THREADP threadObject = NULL;
+__thread CFL_THREADP s_threadObject = THREAD_UNDEF;
 
+#endif
+
+#ifdef _WIN32
+static void initThreadLocalStorage() {
+   s_dwTlsIndex = TlsAlloc();
+   if (s_dwTlsIndex != TLS_OUT_OF_INDEXES) {
+      CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
+      if (thread != NULL) {
+         memset(thread, 0, sizeof(CFL_THREAD));
+         TlsSetValue(s_dwTlsIndex, thread);
+      }
+   }
+}
 #endif
 
 CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
    CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
-   memset(thread, 0, sizeof(CFL_THREAD));
-   thread->func = func;
+   if (thread != NULL) {
+      memset(thread, 0, sizeof(CFL_THREAD));
+      thread->func = func;
+   }
 
 #ifdef _WIN32
    if (s_dwTlsIndex == TLS_OUT_OF_INDEXES) {
-      s_dwTlsIndex = TlsAlloc();
+      initThreadLocalStorage();
    }
 #endif
    return thread;
@@ -58,24 +73,12 @@ void cfl_thread_free(CFL_THREADP thread) {
 
 CFL_THREADP cfl_thread_getCurrent(void) {
 #ifdef _WIN32
-   if (s_dwTlsIndex != TLS_OUT_OF_INDEXES) {
-      return (CFL_THREADP) TlsGetValue(s_dwTlsIndex);
-   } else {
-      CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
-      if (thread == NULL) {
-         return NULL;
-      }
-      memset(thread, 0, sizeof(CFL_THREAD));
-      s_dwTlsIndex = TlsAlloc();
-      if (s_dwTlsIndex == TLS_OUT_OF_INDEXES) {
-         free(thread);
-         return NULL;
-      }
-      TlsSetValue(s_dwTlsIndex, thread);
-      return thread;
+   if (s_dwTlsIndex == TLS_OUT_OF_INDEXES) {
+      initThreadLocalStorage();
    }
+   return (CFL_THREADP) TlsGetValue(s_dwTlsIndex);
 #elif defined(__linux__)
-   return threadObject;
+   return s_threadObject;
 #endif
 }
 
@@ -100,11 +103,12 @@ static DWORD WINAPI startFunction(LPVOID param) {
    }
    return 0;
 }
+
 #else
 
 static void *startFunction(void *param) {
    CFL_THREADP thread = (CFL_THREADP) param;
-   threadObject = thread;
+   s_threadObject = thread;
    thread->func(thread->param);
    return NULL;
 }

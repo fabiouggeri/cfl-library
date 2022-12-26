@@ -4,7 +4,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-super-pom</artifactId>
-   <version>1.4.0.0</version>
+   <version>1.4.1.0</version>
    <packaging>pom</packaging>
 
    <name>CFL - Common Functions Library ${project.version}</name>
@@ -90,8 +90,8 @@
       <clang-group-id>org.llvm</clang-group-id>
       <clang-artifact-id>clang-app</clang-artifact-id>
       <clang-includes-path></clang-includes-path>
-      <clang-libs-path/>
-      <clang-libs/>
+      <clang-libs-path></clang-libs-path>
+      <clang-libs></clang-libs>
       <clang-cmd>clang -O3 -Wall -ffunction-sections -fdata-sections #{includesPaths, '-I"', '" -I"', '"'} -I"${clp-includes-path}" #{defines, '-D', ' -D', '='} -o"#{outputFile}" -c "#{inputFile}"</clang-cmd>
       <clang-link-options>#{inputFiles, '"', '" "', '"'} -Wl,-O -Wl,--nxcompat -Wl,--dynamicbase -Wl,--allow-multiple-definition -Wl,-s -Wl,-S -Wl,--gc-sections -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lshell32 -lwinspool -lmsimg32 -lcomctl32 -lcomdlg32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lwininet -lstdc++ -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</clang-link-options>
       <clang-link-cmd>clang @"${project.basedir}\target\classes\${prg-classifier}\lnk_options.rsp"</clang-link-cmd>
@@ -267,7 +267,6 @@
    <profiles>
       <profile>
          <activation>
-            <activeByDefault>false</activeByDefault>
             <os>
                <family>windows</family>
             </os>
@@ -286,7 +285,6 @@
       <profile>
          <id>gcc</id>
          <activation>
-            <activeByDefault>false</activeByDefault>
             <os>
                <family>unix</family>
                <name>Linux</name>
