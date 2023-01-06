@@ -39,6 +39,7 @@ struct _CFL_BUFFER {
 extern void cfl_buffer_init(CFL_BUFFERP buffer);
 extern CFL_BUFFERP cfl_buffer_new(void);
 extern CFL_BUFFERP cfl_buffer_newCapacity(CFL_UINT32 initialCapacity);
+extern CFL_BUFFERP cfl_buffer_clone(CFL_BUFFERP other);
 extern void cfl_buffer_free(CFL_BUFFERP buffer);
 extern CFL_UINT8 *cfl_buffer_getDataPtr(CFL_BUFFERP buffer);
 extern CFL_UINT8 *cfl_buffer_positionPtr(CFL_BUFFERP buffer);

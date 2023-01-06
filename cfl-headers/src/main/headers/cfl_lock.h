@@ -32,11 +32,9 @@
 #define CFL_LOCK_TIMEOUT 2
 
 struct _CFL_LOCK {
-   CFL_CONDITION_VARIABLE lockChange;
    CFL_LOCK_HANDLE        handle;
    CFL_THREAD_ID          threadId;
    CFL_UINT32             lockCount;
-   CFL_UINT32             timeout;
    CFL_BOOL               isAllocated;
 };
 
@@ -44,14 +42,12 @@ extern CFL_LOCKP cfl_lock_new(void);
 extern void cfl_lock_free(CFL_LOCKP pLock);
 extern void cfl_lock_init(CFL_LOCKP pLock);
 extern CFL_BOOL cfl_lock_tryExclusive(CFL_LOCKP pLock);
-extern void cfl_lock_acquireExclusive(CFL_LOCKP pLock);
-extern CFL_BOOL cfl_lock_tryShared(CFL_LOCKP pLock);
-extern void cfl_lock_acquireShared(CFL_LOCKP pLock);
+extern void cfl_lock_acquire(CFL_LOCKP pLock);
 extern void cfl_lock_release(CFL_LOCKP pLock);
-extern CFL_CONDITION_VARIABLEP cfl_lock_conditionVar(void);
-extern void cfl_lock_releaseConditionVar(CFL_CONDITION_VARIABLEP pVar);
-extern CFL_BOOL cfl_lock_waitCondition(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar);
-extern CFL_UINT8 cfl_lock_waitConditionTimeout(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT32 timeout);
+extern CFL_CONDITION_VARIABLEP cfl_lock_newConditionVar(void);
+extern void cfl_lock_freeConditionVar(CFL_CONDITION_VARIABLEP pVar);
+extern CFL_BOOL cfl_lock_conditionWait(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar);
+extern CFL_UINT8 cfl_lock_conditionWaitTimeout(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT32 timeout);
 extern void cfl_lock_conditionWake(CFL_CONDITION_VARIABLEP pVar);
 extern void cfl_lock_conditionWakeAll(CFL_CONDITION_VARIABLEP pVar);
 extern CFL_INT32 cfl_lock_lastErrorCode(void);

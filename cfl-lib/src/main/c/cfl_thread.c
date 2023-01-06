@@ -28,24 +28,28 @@
 
 static DWORD s_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
-#elif defined(__linux__)
+#define INIT_THREAD_STORAGE  if (s_dwTlsIndex == TLS_OUT_OF_INDEXES) s_dwTlsIndex = TlsAlloc();
+
+#else
 
 __thread CFL_THREADP s_threadObject = THREAD_UNDEF;
 
+#define INIT_THREAD_STORAGE
+
 #endif
 
+static CFL_THREADP initCurrentThread() {
+   CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
+   if (thread != NULL) {
+      memset(thread, 0, sizeof(CFL_THREAD));
 #ifdef _WIN32
-static void initThreadLocalStorage() {
-   s_dwTlsIndex = TlsAlloc();
-   if (s_dwTlsIndex != TLS_OUT_OF_INDEXES) {
-      CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
-      if (thread != NULL) {
-         memset(thread, 0, sizeof(CFL_THREAD));
-         TlsSetValue(s_dwTlsIndex, thread);
-      }
-   }
-}
+      TlsSetValue(s_dwTlsIndex, thread);
+#else
+      s_threadObject = thread;
 #endif
+   }
+   return thread;
+}
 
 CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
    CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
@@ -54,11 +58,8 @@ CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
       thread->func = func;
    }
 
-#ifdef _WIN32
-   if (s_dwTlsIndex == TLS_OUT_OF_INDEXES) {
-      initThreadLocalStorage();
-   }
-#endif
+   INIT_THREAD_STORAGE
+
    return thread;
 }
 
@@ -72,14 +73,18 @@ void cfl_thread_free(CFL_THREADP thread) {
 }
 
 CFL_THREADP cfl_thread_getCurrent(void) {
+   CFL_THREADP thread;
+
+   INIT_THREAD_STORAGE
 #ifdef _WIN32
-   if (s_dwTlsIndex == TLS_OUT_OF_INDEXES) {
-      initThreadLocalStorage();
-   }
-   return (CFL_THREADP) TlsGetValue(s_dwTlsIndex);
-#elif defined(__linux__)
-   return s_threadObject;
+   thread = (CFL_THREADP) TlsGetValue(s_dwTlsIndex);
+#else
+   thread = s_threadObject;
 #endif
+   if (thread == NULL) {
+      thread = initCurrentThread();
+   }
+   return thread;
 }
 
 void * cfl_thread_getData(CFL_THREADP thread) {
@@ -109,7 +114,9 @@ static DWORD WINAPI startFunction(LPVOID param) {
 static void *startFunction(void *param) {
    CFL_THREADP thread = (CFL_THREADP) param;
    s_threadObject = thread;
-   thread->func(thread->param);
+   if (thread->func != NULL) {
+      thread->func(thread->param);
+   }
    return NULL;
 }
 #endif
@@ -123,7 +130,7 @@ CFL_BOOL cfl_thread_start(CFL_THREADP thread, void * param) {
       return thread->handle != NULL ? CFL_TRUE : CFL_FALSE;
    }
    return CFL_FALSE;
-#elif defined(__linux__)
+#else
    thread->param = param;
    return pthread_create(&thread->handle, NULL, startFunction, thread) == 0 ? CFL_TRUE : CFL_FALSE;
 #endif
@@ -135,7 +142,7 @@ CFL_BOOL cfl_thread_wait(CFL_THREADP thread) {
       return WaitForSingleObject(thread->handle, INFINITE) == WAIT_OBJECT_0 ? CFL_TRUE : CFL_FALSE;
    }
    return CFL_FALSE;
-#elif defined(__linux__)
+#else
    return pthread_join(thread->handle, NULL) == 0 ? CFL_TRUE : CFL_FALSE;
 #endif
 }
@@ -147,7 +154,7 @@ CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout) {
       return res == WAIT_OBJECT_0 || res == WAIT_TIMEOUT ? CFL_TRUE : CFL_FALSE;
    }
    return CFL_FALSE;
-#elif defined(__linux__)
+#else
    struct timespec ts;
 
    //
@@ -162,7 +169,7 @@ CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout) {
 CFL_BOOL cfl_thread_sleep(CFL_UINT32 time) {
 #ifdef _WIN32
    Sleep((DWORD) time);
-#elif defined(__linux__)
+#else
    sleep((unsigned int) time / 1000);
 #endif
    return CFL_TRUE;

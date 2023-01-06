@@ -107,7 +107,7 @@ typedef unsigned char CFL_BOOL;
    #define CFL_WAIT_FOREVER       #0xFFFFFFFF
    typedef pthread_t              CFL_THREAD_HANDLE;
    typedef pthread_t              CFL_THREAD_ID;
-   typedef pthread_mutex_t        CFL_CRITICAL_SECTION;
+   typedef pthread_mutex_t        CFL_LOCK_HANDLE;
    typedef pthread_cond_t        *CFL_CONDITION_VARIABLEP;
    typedef pthread_cond_t         CFL_CONDITION_VARIABLE;
 #endif
@@ -169,6 +169,10 @@ typedef struct _CFL_BTREE *CFL_BTREEP;
 struct _CFL_BUFFER;
 typedef struct _CFL_BUFFER CFL_BUFFER;
 typedef struct _CFL_BUFFER *CFL_BUFFERP;
+
+struct _CFL_SYNC_QUEUE;
+typedef struct _CFL_SYNC_QUEUE CFL_SYNC_QUEUE;
+typedef struct _CFL_SYNC_QUEUE *CFL_SYNC_QUEUEP;
 
 struct _CFL_DATE;
 typedef struct _CFL_DATE CFL_DATE;

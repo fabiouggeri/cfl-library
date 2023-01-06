@@ -55,11 +55,11 @@
 
 const int i = 1;
 
-static CFL_BOOL ensureCapacity(CFL_BUFFERP buffer, CFL_UINT32 newCapacity) {
-   if (newCapacity > buffer->capacity) {
-      buffer->data = (CFL_UINT8 *) realloc(buffer->data, newCapacity * sizeof(CFL_UINT8));
+static CFL_BOOL ensureCapacity(CFL_BUFFERP buffer, CFL_UINT32 minCapacity) {
+   if (minCapacity > buffer->capacity) {
+      buffer->data = (CFL_UINT8 *) realloc(buffer->data, minCapacity * sizeof(CFL_UINT8));
       if (buffer->data != NULL) {
-         buffer->capacity = newCapacity;
+         buffer->capacity = minCapacity;
       } else {
          return CFL_FALSE;
       }
@@ -69,11 +69,11 @@ static CFL_BOOL ensureCapacity(CFL_BUFFERP buffer, CFL_UINT32 newCapacity) {
 
 static void bufferInit(CFL_BUFFERP buffer, CFL_UINT32 initialCapacity) {
 	buffer->allocated = CFL_FALSE;
-   buffer->capacity = initialCapacity;
+   buffer->capacity = initialCapacity > 0 ? initialCapacity : BUFFER_INI_SIZE;
    buffer->length = 0;
    buffer->position = 0;
    buffer->endian = ENDIANNESS(initialCapacity);
-   buffer->data = (CFL_UINT8 *) malloc(initialCapacity * sizeof(CFL_UINT8));
+   buffer->data = (CFL_UINT8 *) malloc(buffer->capacity * sizeof(CFL_UINT8));
 }
 
 void cfl_buffer_init(CFL_BUFFERP buffer) {
@@ -94,6 +94,22 @@ CFL_BUFFERP cfl_buffer_newCapacity(CFL_UINT32 initialCapacity) {
    if (buffer != NULL) {
       bufferInit(buffer, initialCapacity);
       buffer->allocated = CFL_TRUE;
+   }
+   return buffer;
+}
+
+CFL_BUFFERP cfl_buffer_clone(CFL_BUFFERP other) {
+   CFL_BUFFERP buffer = (CFL_BUFFERP) malloc(sizeof(CFL_BUFFER));
+   if (buffer != NULL) {
+      buffer->allocated = CFL_TRUE;
+      buffer->capacity = other->length > 0 ? other->length : other->capacity;
+      buffer->length = other->length;
+      buffer->position = other->position;
+      buffer->endian = other->endian;
+      buffer->data = (CFL_UINT8 *) malloc(buffer->capacity * sizeof(CFL_UINT8));
+      if (other->length > 0) {
+         memcpy(buffer->data, other->data, other->length);
+      }
    }
    return buffer;
 }
