@@ -97,19 +97,16 @@ typedef unsigned char CFL_BOOL;
       typedef CRITICAL_SECTION    CFL_LOCK_HANDLE;
    #endif
    #if defined(CONDITION_VARIABLE_INIT)
-      typedef CONDITION_VARIABLE *CFL_CONDITION_VARIABLEP;
-      typedef CONDITION_VARIABLE  CFL_CONDITION_VARIABLE;
+      typedef CONDITION_VARIABLE  CFL_CONDITION_HANDLE;
    #else
-      typedef int                *CFL_CONDITION_VARIABLEP;
-      typedef int                 CFL_CONDITION_VARIABLE;
+      typedef int                 CFL_CONDITION_HANDLE;
    #endif
 #elif defined(__linux__)
    #define CFL_WAIT_FOREVER       #0xFFFFFFFF
    typedef pthread_t              CFL_THREAD_HANDLE;
    typedef pthread_t              CFL_THREAD_ID;
    typedef pthread_mutex_t        CFL_LOCK_HANDLE;
-   typedef pthread_cond_t        *CFL_CONDITION_VARIABLEP;
-   typedef pthread_cond_t         CFL_CONDITION_VARIABLE;
+   typedef pthread_cond_t         CFL_CONDITION_HANDLE;
 #endif
 
 struct _CFL_HASH_ENTRY;
@@ -143,6 +140,10 @@ typedef struct _CFL_BITMAP *CFL_BITMAPP;
 struct _CFL_LOCK;
 typedef struct _CFL_LOCK CFL_LOCK;
 typedef struct _CFL_LOCK *CFL_LOCKP;
+
+struct _CFL_CONDITION_VARIABLE;
+typedef struct _CFL_CONDITION_VARIABLE CFL_CONDITION_VARIABLE;
+typedef struct _CFL_CONDITION_VARIABLE *CFL_CONDITION_VARIABLEP;
 
 struct _CFL_ITERATOR;
 typedef struct _CFL_ITERATOR CFL_ITERATOR;

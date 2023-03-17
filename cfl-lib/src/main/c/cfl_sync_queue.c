@@ -29,10 +29,18 @@
       CFL_BOOL timesUp; \
       return getItem(queue, 0, &timesUp).as##typename; \
    } \
-   void cfl_sync_queue_put##typename(CFL_SYNC_QUEUEP queue, datatype data) { \
+   datatype cfl_sync_queue_tryGet##typename(CFL_SYNC_QUEUEP queue, CFL_BOOL *took) { \
+      return tryGetItem(queue, took).as##typename; \
+   } \
+   CFL_BOOL cfl_sync_queue_put##typename(CFL_SYNC_QUEUEP queue, datatype data) { \
       CFL_SYNC_QUEUE_ITEM item; \
       item.as##typename = data; \
-      putItem(queue, item, 0); \
+      return putItem(queue, item, 0); \
+   } \
+   CFL_BOOL cfl_sync_queue_tryPut##typename(CFL_SYNC_QUEUEP queue, datatype data) { \
+      CFL_SYNC_QUEUE_ITEM item; \
+      item.as##typename = data; \
+      return tryPutItem(queue, item); \
    }
 
 #define DEFINE_GET_PUT_TIMEOUT(datatype, typename) \
@@ -62,12 +70,14 @@ CFL_SYNC_QUEUEP cfl_sync_queue_new(CFL_UINT32 size) {
       queue->index = 0;
       queue->itemCount = 0;
       queue->size = size;
+      queue->canceled = CFL_FALSE;
    }
    return queue;
 }
 
 void cfl_sync_queue_free(CFL_SYNC_QUEUEP queue) {
    if (queue) {
+      cfl_sync_queue_cancel(queue);
       cfl_lock_freeConditionVar(queue->notEmpty);
       cfl_lock_freeConditionVar(queue->notFull);
       cfl_lock_free(&queue->lock);
@@ -95,15 +105,37 @@ static CFL_SYNC_QUEUE_ITEM getItem(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CF
          return data;
       }
    }
-   data = queue->data[queue->index];
-   --queue->itemCount;
-   ++queue->index;
-   if (queue->index >= queue->size) {
-      queue->index = 0;
+   if (! queue->canceled) {
+      data = queue->data[queue->index];
+      --queue->itemCount;
+      ++queue->index;
+      if (queue->index >= queue->size) {
+         queue->index = 0;
+      }
    }
    cfl_lock_release(&queue->lock);
    cfl_lock_conditionWakeAll(queue->notFull);
    *timesUp = CFL_FALSE;
+   return data;
+}
+
+static CFL_SYNC_QUEUE_ITEM tryGetItem(CFL_SYNC_QUEUEP queue, CFL_BOOL *took) {
+   CFL_SYNC_QUEUE_ITEM data = {0};
+   cfl_lock_acquire(&queue->lock);
+   if (! IS_EMPTY(queue) && ! queue->canceled) {
+      data = queue->data[queue->index];
+      --queue->itemCount;
+      ++queue->index;
+      if (queue->index >= queue->size) {
+         queue->index = 0;
+      }
+      *took = CFL_TRUE;
+      cfl_lock_release(&queue->lock);
+      cfl_lock_conditionWakeAll(queue->notFull);
+   } else {
+      *took = CFL_FALSE;
+      cfl_lock_release(&queue->lock);
+   }
    return data;
 }
 
@@ -117,11 +149,27 @@ static CFL_BOOL putItem(CFL_SYNC_QUEUEP queue, CFL_SYNC_QUEUE_ITEM item, CFL_UIN
          return CFL_FALSE;
       }
    }
-   queue->data[NEXT_INDEX(queue)] = item;
-   ++queue->itemCount;
+   if (! queue->canceled) {
+      queue->data[NEXT_INDEX(queue)] = item;
+      ++queue->itemCount;
+   }
    cfl_lock_release(&queue->lock);
    cfl_lock_conditionWakeAll(queue->notEmpty);
    return CFL_TRUE;
+}
+
+static CFL_BOOL tryPutItem(CFL_SYNC_QUEUEP queue, CFL_SYNC_QUEUE_ITEM item) {
+   cfl_lock_acquire(&queue->lock);
+   if (! IS_FULL(queue) && ! queue->canceled) {
+      queue->data[NEXT_INDEX(queue)] = item;
+      ++queue->itemCount;
+      cfl_lock_release(&queue->lock);
+      cfl_lock_conditionWakeAll(queue->notEmpty);
+      return CFL_TRUE;
+   } else {
+      cfl_lock_release(&queue->lock);
+      return CFL_FALSE;
+   }
 }
 
 void * cfl_sync_queue_get(CFL_SYNC_QUEUEP queue) {
@@ -129,10 +177,32 @@ void * cfl_sync_queue_get(CFL_SYNC_QUEUEP queue) {
    return getItem(queue, 0, &timesUp).asPointer;
 }
 
-void cfl_sync_queue_put(CFL_SYNC_QUEUEP queue, void *data) {
+void * cfl_sync_queue_tryGet(CFL_SYNC_QUEUEP queue, CFL_BOOL *took) {
+   return tryGetItem(queue, took).asPointer;
+}
+
+CFL_BOOL cfl_sync_queue_put(CFL_SYNC_QUEUEP queue, void *data) {
    CFL_SYNC_QUEUE_ITEM item;
    item.asPointer = data;
-   putItem(queue, item, 0);
+   return putItem(queue, item, 0);
+}
+
+CFL_BOOL cfl_sync_queue_tryPut(CFL_SYNC_QUEUEP queue, void *data) {
+   CFL_SYNC_QUEUE_ITEM item;
+   item.asPointer = data;
+   return tryPutItem(queue, item);
+}
+
+void cfl_sync_queue_cancel(CFL_SYNC_QUEUEP queue) {
+   if (! queue->canceled) {
+      queue->canceled = CFL_TRUE;
+      cfl_lock_conditionWakeAll(queue->notEmpty);
+      cfl_lock_conditionWakeAll(queue->notFull);
+   }
+}
+
+CFL_BOOL cfl_sync_queue_canceled(CFL_SYNC_QUEUEP queue) {
+   return queue->canceled;
 }
 
 DEFINE_GET_PUT(CFL_BOOL  , Boolean)

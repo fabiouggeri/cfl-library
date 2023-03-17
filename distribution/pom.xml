@@ -24,12 +24,12 @@
       <maven.repo.release.id>sicredi-release-repo</maven.repo.release.id>
       <cfl-group-id>org.cfl</cfl-group-id>
       <cfl-artifact-id>cfl-app</cfl-artifact-id>
-      <builder-helper-version>2.3</builder-helper-version>
+      <builder-helper-version>2.4.0.0</builder-helper-version>
       <os-target>${os}${arch}</os-target>
 
       <cc>msc</cc>
       <cc-major-version>16.x</cc-major-version>
-      <cc-version>16.0.0.0</cc-version>
+      <cc-version>16.0.0.2</cc-version>
       <cc-target>${cc}${cc-major-version}</cc-target>
       <os>win</os>
       <arch>64</arch>
@@ -47,7 +47,7 @@
          </activation>
          <properties>
             <cc>msc</cc>
-            <cc-version>16.0.0.0</cc-version>
+            <cc-version>16.0.0.2</cc-version>
             <cc-major-version>16.x</cc-major-version>
             <os>win</os>
             <arch>64</arch>
@@ -64,7 +64,7 @@
          </activation>
          <properties>
             <cc>mingw64</cc>
-            <cc-version>10.0.0.0</cc-version>
+            <cc-version>10.0.0.7</cc-version>
             <cc-major-version>10.x</cc-major-version>
             <cc-target>gcc</cc-target>
             <os>win</os>
@@ -83,7 +83,7 @@
          </activation>
          <properties>
             <cc>clang</cc>
-            <cc-version>14.0.4.0</cc-version>
+            <cc-version>15.0.7.0</cc-version>
             <cc-major-version>14.x</cc-major-version>
             <cc-target>gcc</cc-target>
             <os>win</os>
@@ -102,7 +102,7 @@
          </activation>
          <properties>
             <cc>bcc</cc>
-            <cc-version>5.6.0.0</cc-version>
+            <cc-version>5.6.0.1</cc-version>
             <cc-major-version>5.x</cc-major-version>
             <os>win</os>
             <arch>32</arch>
@@ -135,7 +135,7 @@
          </activation>
          <properties>
 			  <cc>gcc</cc>
-			  <cc-version>10.2.0.0</cc-version>
+			  <cc-version>11.2.0.0</cc-version>
 			  <cc-major-version>11.x</cc-major-version>
             <cc-target>gcc</cc-target>
 			  <os>linux</os>

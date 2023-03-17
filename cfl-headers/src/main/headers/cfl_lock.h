@@ -31,10 +31,16 @@
 #define CFL_LOCK_ERROR   1
 #define CFL_LOCK_TIMEOUT 2
 
+struct _CFL_CONDITION_VARIABLE {
+   CFL_CONDITION_HANDLE handle;
+   CFL_BOOL             isAllocated;
+};
+
 struct _CFL_LOCK {
    CFL_LOCK_HANDLE        handle;
-   CFL_THREAD_ID          threadId;
+   CFL_THREAD_ID          lockOwner;
    CFL_UINT32             lockCount;
+   CFL_CONDITION_VARIABLE notLocked;
    CFL_BOOL               isAllocated;
 };
 
@@ -43,7 +49,10 @@ extern void cfl_lock_free(CFL_LOCKP pLock);
 extern void cfl_lock_init(CFL_LOCKP pLock);
 extern CFL_BOOL cfl_lock_tryExclusive(CFL_LOCKP pLock);
 extern void cfl_lock_acquire(CFL_LOCKP pLock);
+extern CFL_BOOL cfl_lock_tryShared(CFL_LOCKP pLock);
+extern void cfl_lock_acquireShared(CFL_LOCKP pLock);
 extern void cfl_lock_release(CFL_LOCKP pLock);
+extern void cfl_lock_initConditionVar(CFL_CONDITION_VARIABLEP pVar);
 extern CFL_CONDITION_VARIABLEP cfl_lock_newConditionVar(void);
 extern void cfl_lock_freeConditionVar(CFL_CONDITION_VARIABLEP pVar);
 extern CFL_BOOL cfl_lock_conditionWait(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar);

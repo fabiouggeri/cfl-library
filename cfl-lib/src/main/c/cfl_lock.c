@@ -30,22 +30,7 @@
 
 #define SLEEP_TIMEOUT  10
 
-
-#ifdef __linux__
-   #define GET_CURRENT_THREAD_ID      pthread_self()
-   #define IS_LOCKED_BY_ME(l)         pthread_equal((l)->threadId, GET_CURRENT_THREAD_ID)
-   #define ERROR_WAITING_CONDITION(t) (t != 0)
-   #define TIMEOUT_WAITING(t)         (t == ETIMEDOUT)
-   #define NULL_THREAD                _PTHREAD_NULL_THREAD
-#else
-   #define GET_CURRENT_THREAD_ID      GetCurrentThreadId()
-   #define IS_LOCKED_BY_ME(l)         ((l)->threadId == GET_CURRENT_THREAD_ID)
-   #define ERROR_WAITING_CONDITION(t) (t == 0)
-   #define TIMEOUT_WAITING(t)         (t == 0 && GetLastError() == ERROR_TIMEOUT)
-   #define NULL_THREAD                0
-#endif
-
-#define IS_EXCLUSIVE_LOCK(l)       ((l)->threadId != NULL_THREAD)
+#define IS_EXCLUSIVE_LOCK(l)       ((l)->lockOwner != NULL_THREAD)
 
 #if defined(__linux__) || ! defined(_CFL_CONDITION_VAR)
    #define WAIT_RESULT int
@@ -57,42 +42,47 @@
 
 #ifdef _WIN32
 
+   #define GET_CURRENT_THREAD_ID      GetCurrentThreadId()
+   #define IS_LOCKED_BY_ME(l)         ((l)->lockOwner == GET_CURRENT_THREAD_ID)
+   #define ERROR_WAITING_CONDITION(t) (t == 0)
+   #define TIMEOUT_WAITING(t)         (t == 0 && GetLastError() == ERROR_TIMEOUT)
+   #define NULL_THREAD                0
+
    #ifdef SRWLOCK_INIT
 
       #define INITIALIZE_LOCK_HANDLE(l)           InitializeSRWLock(&((l)->handle))
       #define RELEASE_LOCK_HANDLE(l)              // do nothing
       #define ACQUIRE_LOCK(l)                     AcquireSRWLockExclusive(&((l)->handle))
-      #define TRY_ACQUIRE_LOCK(l)                 TryAcquireSRWLockExclusive(&((l)->handle))
       #define RELEASE_LOCK(l)                     ReleaseSRWLockExclusive(&((l)->handle))
-      #define INITIALIZE_CONDITION(v)             InitializeConditionVariable(v)
-      #define WAIT_CONDITION(l, v, t)             SleepConditionVariableSRW(v, &((l)->handle), t, 0)
-      #define RELEASE_CONDITION(l)                // do nothing
-      #define WAKE_ALL_CONDITION(v)               WakeAllConditionVariable(v)
-      #define WAKE_CONDITION(v)                   WakeConditionVariable(v)
+      
+      #define INITIALIZE_CONDITION_HANDLE(v)      InitializeConditionVariable(&((v)->handle))
+      #define WAIT_CONDITION(l, v, t)             SleepConditionVariableSRW(&((v)->handle), &((l)->handle), t, 0)
+      #define RELEASE_CONDITION_HANDLE(v)         // do nothing
+      #define WAKE_ALL_CONDITION(v)               WakeAllConditionVariable(&((v)->handle))
+      #define WAKE_CONDITION(v)                   WakeConditionVariable(&((v)->handle))
 
    #else
 
       #define INITIALIZE_LOCK_HANDLE(l)           InitializeCriticalSection(&((l)->handle))
       #define RELEASE_LOCK_HANDLE(l)              DeleteCriticalSection(&((l)->handle))
       #define ACQUIRE_LOCK(l)                     EnterCriticalSection(&((l)->handle))
-      #define TRY_ACQUIRE_LOCK(l)                 TryEnterCriticalSection(&((l)->handle))
       #define RELEASE_LOCK(l)                     LeaveCriticalSection(&((l)->handle))
 
       #ifdef _CFL_CONDITION_VAR
 
-         #define INITIALIZE_CONDITION(v)          InitializeConditionVariable(v)
-         #define WAIT_CONDITION(l, v, t)          SleepConditionVariableCS(waitCondition(l, &((l)->lockChange), t)
-         #define RELEASE_CONDITION(l)             // do nothing
-         #define WAKE_ALL_CONDITION(v)            WakeAllConditionVariable(v)
-         #define WAKE_CONDITION(v)                WakeConditionVariable(v)
+         #define INITIALIZE_CONDITION_HANDLE(v)   InitializeConditionVariable(&((v)->handle))
+         #define WAIT_CONDITION(l, v, t)          SleepConditionVariableCS(&((v)->handle), &((l)->handle), t)
+         #define RELEASE_CONDITION_HANDLE(v)      // do nothing
+         #define WAKE_ALL_CONDITION(v)            WakeAllConditionVariable(&((v)->handle))
+         #define WAKE_CONDITION(v)                WakeConditionVariable(&((v)->handle))
 
       #else
 
-         #define INITIALIZE_CONDITION(v)          (*v = 0)
+         #define INITIALIZE_CONDITION_HANDLE(v)  ((v)->handle = 0)
          #define WAIT_CONDITION(l, v, t)          waitCondition(l, v, t)
-         #define RELEASE_CONDITION(l)             // do nothing
-         #define WAKE_ALL_CONDITION(v)            (++(*v))
-         #define WAKE_CONDITION(v)                (++(*v))
+         #define RELEASE_CONDITION_HANDLE(v)      // do nothing
+         #define WAKE_ALL_CONDITION(v)            (++((v)->handle))
+         #define WAKE_CONDITION(v)                (++((v)->handle))
          #define WAIT_FUNCTION
 
       #endif
@@ -101,16 +91,21 @@
 
 #elif defined(__linux__)
 
+   #define GET_CURRENT_THREAD_ID      pthread_self()
+   #define IS_LOCKED_BY_ME(l)         pthread_equal((l)->lockOwner, GET_CURRENT_THREAD_ID)
+   #define ERROR_WAITING_CONDITION(t) (t != 0)
+   #define TIMEOUT_WAITING(t)         (t == ETIMEDOUT)
+   #define NULL_THREAD                _PTHREAD_NULL_THREAD
+
    #define INITIALIZE_LOCK_HANDLE(l)              pthread_mutex_init(&((l)->handle), 0)
    #define RELEASE_LOCK_HANDLE(l)                 pthread_mutex_destroy(&((l)->handle))
    #define ACQUIRE_LOCK(l)                        pthread_mutex_lock(&((l)->handle))
-   #define TRY_ACQUIRE_LOCK(l)                    pthread_mutex_trylock(&((l)->handle))
    #define RELEASE_LOCK(l)                        pthread_mutex_unlock(&((l)->handle))
-   #define INITIALIZE_CONDITION(v)                pthread_cond_init(v, 0)
-   #define WAIT_CONDITION(l, v, t)                waitCondition(l, &((l)->lockChange), t)
-   #define RELEASE_CONDITION(l)                   pthread_cond_destroy(l)
-   #define WAKE_ALL_CONDITION(v)                  pthread_cond_broadcast(v)
-   #define WAKE_CONDITION(v)                      pthread_cond_signal(v)
+   #define INITIALIZE_CONDITION_HANDLE(v)         pthread_cond_init(&((v)->handle), 0)
+   #define WAIT_CONDITION(l, v, t)                waitCondition(l, v, t)
+   #define RELEASE_CONDITION_HANDLE(v)                   pthread_cond_destroy(&((v)->handle))
+   #define WAKE_ALL_CONDITION(v)                  pthread_cond_broadcast(&((v)->handle))
+   #define WAKE_CONDITION(v)                      pthread_cond_signal(&((v)->handle))
    #define WAIT_FUNCTION
 
 #endif
@@ -124,7 +119,7 @@ static int waitCondition(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT
    CFL_UINT64 nanoseconds;
 
    if (timeout == CFL_WAIT_FOREVER) {
-      return pthread_cond_wait(pVar, &pLock->handle);
+      return pthread_cond_wait(&pVar->handle, &pLock->handle);
    } else {
       gettimeofday(&tv, NULL);
 
@@ -134,7 +129,7 @@ static int waitCondition(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT
 
       ts.tv_sec = nanoseconds / 1000 / 1000 / 1000;
       ts.tv_nsec = (long) (nanoseconds - ((CFL_UINT64) ts.tv_sec) * 1000 * 1000 * 1000);
-      return pthread_cond_timedwait(pVar, &pLock->handle, &ts);
+      return pthread_cond_timedwait(&pVar->handle, &pLock->handle, &ts);
    }
 #elif ! defined(_CFL_CONDITION_VAR)
    clock_t lastClock;
@@ -147,8 +142,8 @@ static int waitCondition(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT
       elapsed += (((double)clock() - lastClock) / CLOCKS_PER_SEC) * 1000;
       if (((CFL_UINT32)elapsed) > timeout) {
          return 0;
-      } else if (*pVar > 0) {
-         *pVar = 0;
+      } else if (pVar->handle > 0) {
+         pVar->handle = 0;
          break;
       }
    }
@@ -168,16 +163,34 @@ CFL_LOCKP cfl_lock_new(void) {
 
 void cfl_lock_init(CFL_LOCKP pLock) {
    INITIALIZE_LOCK_HANDLE(pLock);
-   pLock->threadId = NULL_THREAD;
+   INITIALIZE_CONDITION_HANDLE(&pLock->notLocked);
+   pLock->lockOwner = NULL_THREAD;
    pLock->lockCount = 0;
    pLock->isAllocated = CFL_FALSE;
 }
 
 void cfl_lock_free(CFL_LOCKP pLock) {
    if (pLock) {
+      RELEASE_CONDITION_HANDLE(&pLock->notLocked);
       RELEASE_LOCK_HANDLE(pLock);
       if (pLock->isAllocated) {
          free(pLock);
+      }
+   }
+}
+
+void cfl_lock_acquire(CFL_LOCKP pLock) {
+   if (pLock) {
+      if (IS_LOCKED_BY_ME(pLock)) {
+         ++pLock->lockCount;
+      } else {
+         ACQUIRE_LOCK(pLock);
+         if (pLock->lockCount != 0) {
+            WAIT_CONDITION(pLock, &pLock->notLocked, CFL_WAIT_FOREVER);
+         }
+         pLock->lockCount = 1;
+         pLock->lockOwner = GET_CURRENT_THREAD_ID;
+         RELEASE_LOCK(pLock);
       }
    }
 }
@@ -187,59 +200,111 @@ CFL_BOOL cfl_lock_tryExclusive(CFL_LOCKP pLock) {
       if (IS_LOCKED_BY_ME(pLock)) {
          ++pLock->lockCount;
          return CFL_TRUE;
-      } else if (TRY_ACQUIRE_LOCK(pLock)) {
-         ++pLock->lockCount;
-         pLock->threadId = GET_CURRENT_THREAD_ID;
-         return CFL_TRUE;
+      } else {
+         CFL_BOOL bSuccess;
+         ACQUIRE_LOCK(pLock);
+         if (pLock->lockCount == 0) {
+            pLock->lockCount = 1;
+            pLock->lockOwner = GET_CURRENT_THREAD_ID;
+            bSuccess = CFL_TRUE;
+         } else {
+            bSuccess = CFL_FALSE;
+         }
+         RELEASE_LOCK(pLock);
+         return bSuccess;
       }
    }
    return CFL_FALSE;
 }
 
-void cfl_lock_acquire(CFL_LOCKP pLock) {
-   if (pLock) {
-      if (IS_LOCKED_BY_ME(pLock)) {
-         ++pLock->lockCount;
-      } else {
-         ACQUIRE_LOCK(pLock);
-         ++pLock->lockCount;
-         pLock->threadId = GET_CURRENT_THREAD_ID;
+void cfl_lock_acquireShared(CFL_LOCKP pLock) {
+   if (IS_LOCKED_BY_ME(pLock)) {
+      ++pLock->lockCount;
+   } else {
+      ACQUIRE_LOCK(pLock);
+      if (pLock->lockOwner != NULL_THREAD) {
+         WAIT_CONDITION(pLock, &pLock->notLocked, CFL_WAIT_FOREVER);
       }
+      pLock->lockCount++;
+      RELEASE_LOCK(pLock);
+   }
+}
+
+CFL_BOOL cfl_lock_tryShared(CFL_LOCKP pLock) {
+   if (IS_LOCKED_BY_ME(pLock)) {
+      ++pLock->lockCount;
+      return CFL_TRUE;
+   } else {
+      CFL_BOOL bSuccess;
+      ACQUIRE_LOCK(pLock);
+      if (pLock->lockOwner == NULL_THREAD) {
+         pLock->lockCount++;
+         bSuccess = CFL_TRUE;
+      } else {
+         bSuccess = CFL_FALSE;
+      }
+      RELEASE_LOCK(pLock);
+      return bSuccess;
    }
 }
 
 void cfl_lock_release(CFL_LOCKP pLock) {
-   if (pLock && IS_LOCKED_BY_ME(pLock)) {
-      --pLock->lockCount;
-      if (pLock->lockCount == 0) {
-         pLock->threadId = NULL_THREAD;
-         RELEASE_LOCK(pLock);
+   if (pLock && pLock->lockCount > 0) {
+      CFL_BOOL wakeupOthers;
+      ACQUIRE_LOCK(pLock);
+      if (pLock->lockCount > 0) {
+         if (pLock->lockOwner == NULL_THREAD) {
+            wakeupOthers = --pLock->lockCount == 0;
+         } else if (IS_LOCKED_BY_ME(pLock)) {
+            wakeupOthers = --pLock->lockCount == 0;
+            pLock->lockOwner = NULL_THREAD;
+         }
       }
+      RELEASE_LOCK(pLock);
+      if (wakeupOthers) {
+         WAKE_ALL_CONDITION(&pLock->notLocked);
+      }
+   }
+}
+
+void cfl_lock_initConditionVar(CFL_CONDITION_VARIABLEP pVar) {
+   if (pVar) {
+      INITIALIZE_CONDITION_HANDLE(pVar);
+      pVar->isAllocated = CFL_FALSE;
    }
 }
 
 CFL_CONDITION_VARIABLEP cfl_lock_newConditionVar(void) {
    CFL_CONDITION_VARIABLEP pVar = (CFL_CONDITION_VARIABLEP) malloc(sizeof(CFL_CONDITION_VARIABLE));
    if (pVar) {
-      INITIALIZE_CONDITION(pVar);
+      cfl_lock_initConditionVar(pVar);
+      pVar->isAllocated = CFL_TRUE;
    }
    return pVar;
 }
 
 void cfl_lock_freeConditionVar(CFL_CONDITION_VARIABLEP pVar) {
    if (pVar) {
-      RELEASE_CONDITION(pVar);
+      RELEASE_CONDITION_HANDLE(pVar);
+      if (pVar->isAllocated) {
+         free(pVar);
+      }
    }
 }
 
 CFL_BOOL cfl_lock_conditionWait(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar) {
    if (pLock && IS_LOCKED_BY_ME(pLock)) {
-      CFL_UINT32 previousLockCount = pLock->lockCount;
+      CFL_UINT32    currLockCount;
+      CFL_THREAD_ID currLockOwner;
+      ACQUIRE_LOCK(pLock);
+      currLockCount = pLock->lockCount;
+      currLockOwner = pLock->lockOwner;
       pLock->lockCount = 0;
-      pLock->threadId = NULL_THREAD;
+      pLock->lockOwner = NULL_THREAD;
       WAIT_CONDITION(pLock, pVar, CFL_WAIT_FOREVER);
-      pLock->lockCount = previousLockCount;
-      pLock->threadId = GET_CURRENT_THREAD_ID;
+      pLock->lockCount = currLockCount;
+      pLock->lockOwner = currLockOwner;
+      RELEASE_LOCK(pLock);
       return CFL_TRUE;
    }
    return CFL_FALSE;
@@ -249,22 +314,28 @@ CFL_UINT8 cfl_lock_conditionWaitTimeout(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP
    if (pLock && IS_LOCKED_BY_ME(pLock)) {
       CFL_UINT8 res;
       WAIT_RESULT waitRes;
-      CFL_UINT32 previousLockCount = pLock->lockCount;
+      CFL_UINT32    currLockCount;
+      CFL_THREAD_ID currLockOwner;
 
+      ACQUIRE_LOCK(pLock);
+      currLockCount = pLock->lockCount;
+      currLockOwner = pLock->lockOwner;
       pLock->lockCount = 0;
-      pLock->threadId = NULL_THREAD;
+      pLock->lockOwner = NULL_THREAD;
       waitRes = WAIT_CONDITION(pLock, pVar, timeout);
-      pLock->lockCount = previousLockCount;
-      pLock->threadId = GET_CURRENT_THREAD_ID;
-
       if (TIMEOUT_WAITING(waitRes)) {
          res = CFL_LOCK_TIMEOUT;
+         pLock->lockCount = currLockCount;
+         pLock->lockOwner = currLockOwner;
+         RELEASE_LOCK(pLock);
       } else if (ERROR_WAITING_CONDITION(waitRes)) {
          res = CFL_LOCK_ERROR;
       } else {
          res = CFL_LOCK_SUCCESS;
+         pLock->lockCount = currLockCount;
+         pLock->lockOwner = currLockOwner;
+         RELEASE_LOCK(pLock);
       }
-
       return res;
    }
    return CFL_LOCK_ERROR;

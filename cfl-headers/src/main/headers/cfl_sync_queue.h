@@ -26,7 +26,9 @@
 
 #define DECLARE_GET_PUT(datatype, typename) \
    extern datatype cfl_sync_queue_get##typename(CFL_SYNC_QUEUEP queue); \
-   extern void cfl_sync_queue_put##typename(CFL_SYNC_QUEUEP queue, datatype data)
+   extern datatype cfl_sync_queue_tryGet##typename(CFL_SYNC_QUEUEP queue, CFL_BOOL *took); \
+   extern CFL_BOOL cfl_sync_queue_put##typename(CFL_SYNC_QUEUEP queue, datatype data); \
+   extern CFL_BOOL cfl_sync_queue_tryPut##typename(CFL_SYNC_QUEUEP queue, datatype data)
 
 #define DECLARE_GET_PUT_TIMEOUT(datatype, typename) \
    extern datatype cfl_sync_queue_get##typename##Timeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp); \
@@ -52,6 +54,7 @@ struct _CFL_SYNC_QUEUE {
 	CFL_UINT32              size;
 	CFL_UINT32              index;
 	CFL_UINT32              itemCount;
+   CFL_BOOL                canceled;
 	CFL_SYNC_QUEUE_ITEM     data[1];
 };
 
@@ -60,9 +63,13 @@ extern void cfl_sync_queue_free(CFL_SYNC_QUEUEP queue);
 extern CFL_BOOL cfl_sync_queue_isEmpty(CFL_SYNC_QUEUEP queue);
 extern CFL_BOOL cfl_sync_queue_isFull(CFL_SYNC_QUEUEP queue);
 extern void * cfl_sync_queue_get(CFL_SYNC_QUEUEP queue);
-extern void cfl_sync_queue_put(CFL_SYNC_QUEUEP queue, void *data);
+extern void * cfl_sync_queue_tryGet(CFL_SYNC_QUEUEP queue, CFL_BOOL *took);
 extern void * cfl_sync_queue_getTimeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp);
+extern CFL_BOOL cfl_sync_queue_put(CFL_SYNC_QUEUEP queue, void *data);
+extern CFL_BOOL cfl_sync_queue_tryPut(CFL_SYNC_QUEUEP queue, void *data);
 extern CFL_BOOL cfl_sync_queue_putTimeout(CFL_SYNC_QUEUEP queue, void *data, CFL_UINT32 timeout);
+extern void cfl_sync_queue_cancel(CFL_SYNC_QUEUEP queue);
+extern CFL_BOOL cfl_sync_queue_canceled(CFL_SYNC_QUEUEP queue);
 
 DECLARE_GET_PUT(CFL_BOOL    , Boolean);
 DECLARE_GET_PUT(CFL_INT8    , Int8   );
