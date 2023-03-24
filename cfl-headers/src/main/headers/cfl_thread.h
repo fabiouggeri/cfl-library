@@ -40,6 +40,7 @@ extern void cfl_thread_setData(CFL_THREADP thread, void *data);
 extern CFL_BOOL cfl_thread_start(CFL_THREADP thread, void * param);
 extern CFL_BOOL cfl_thread_wait(CFL_THREADP thread);
 extern CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout);
+extern CFL_BOOL cfl_thread_kill(CFL_THREADP thread);
 extern CFL_BOOL cfl_thread_sleep(CFL_UINT32 time);
 
 #endif

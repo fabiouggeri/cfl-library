@@ -166,6 +166,14 @@ CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout) {
 #endif
 }
 
+CFL_BOOL cfl_thread_kill(CFL_THREADP thread) {
+#ifdef _WIN32
+   return TerminateThread(thread->handle, 1) ? CFL_TRUE : CFL_FALSE;
+#else
+   return pthread_kill(thread->handle, SIGUSR1) >= 0 ? CFL_TRUE : CFL_FALSE;
+#endif
+}
+
 CFL_BOOL cfl_thread_sleep(CFL_UINT32 time) {
 #ifdef _WIN32
    Sleep((DWORD) time);
