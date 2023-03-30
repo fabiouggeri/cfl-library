@@ -662,3 +662,22 @@ CFL_BOOL cfl_buffer_putFormat(CFL_BUFFERP buffer, const char * format, ...) {
    va_end(varArgs);
    return bSuccess;
 }
+
+CFL_BOOL cfl_buffer_moveTo(CFL_BUFFERP fromBuffer, CFL_BUFFERP toBuffer) {
+   if (fromBuffer == NULL || toBuffer == NULL) {
+      return CFL_FALSE;
+   }
+   if (toBuffer->data != NULL) {
+      free(toBuffer->data);
+   }
+	toBuffer->data      = fromBuffer->data;
+	toBuffer->length    = fromBuffer->length;
+	toBuffer->position  = fromBuffer->position;
+	toBuffer->capacity  = fromBuffer->capacity;
+   toBuffer->endian    = fromBuffer->endian;
+	fromBuffer->data      = NULL;
+	fromBuffer->length    = 0;
+	fromBuffer->position  = 0;
+	fromBuffer->capacity  = 0;
+   return CFL_TRUE;
+}

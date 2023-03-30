@@ -112,5 +112,6 @@ extern CFL_BOOL cfl_buffer_putBufferSize(CFL_BUFFERP buffer, CFL_BUFFERP other, 
 extern CFL_UINT32 cfl_buffer_remaining(CFL_BUFFERP buffer);
 extern CFL_BOOL cfl_buffer_haveEnough(CFL_BUFFERP buffer, CFL_UINT32 need);
 extern CFL_BOOL cfl_buffer_putFormat(CFL_BUFFERP buffer, const char *format, ...);
+extern CFL_BOOL cfl_buffer_moveTo(CFL_BUFFERP fromBuffer, CFL_BUFFERP toBuffer);
 
 #endif
