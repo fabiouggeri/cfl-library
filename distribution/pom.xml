@@ -11,7 +11,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-release-superpom</artifactId>
-   <version>1.5.0.0</version>
+   <version>1.6.0.0</version>
 
    <name>Release Super POM for CFL library</name>
 
@@ -180,7 +180,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-install-plugin</artifactId>
-            <version>2.5.2</version>
+            <version>3.1.1</version>
             <executions>
                <execution>
                   <id>install-resources</id>
@@ -196,7 +196,6 @@
                      <packaging>zip</packaging>
                      <classifier>${os-target}-${cc-target}</classifier>
                      <generatePom>true</generatePom>
-                     <createChecksum>true</createChecksum>
                   </configuration>
                </execution>
             </executions>
@@ -204,7 +203,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-deploy-plugin</artifactId>
-            <version>2.8.2</version>
+            <version>3.1.1</version>
             <executions>
                <execution>
                   <id>deploy-resources</id>
@@ -222,7 +221,6 @@
                      <packaging>zip</packaging>
                      <classifier>${os-target}-${cc-target}</classifier>
                      <generatePom>true</generatePom>
-                     <createChecksum>true</createChecksum>
                   </configuration>
                </execution>
             </executions>

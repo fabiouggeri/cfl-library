@@ -44,6 +44,17 @@ static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {
    return str->data != NULL;
 }
 
+void cfl_str_init(CFL_STRP str) {
+   if (str != NULL) {
+      str->ulCapacity = 0;
+      str->ulLength = 0;
+      str->ulHash = 0;
+      str->isVarData = CFL_FALSE;
+      str->isAllocated = CFL_FALSE;
+      str->data = "";
+   }
+}
+
 CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
    CFL_STRP str;
    str = (CFL_STRP) malloc(sizeof(CFL_STR));
@@ -52,6 +63,7 @@ CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
       str->ulLength = 0;
       str->ulHash = 0;
       str->isVarData = CFL_TRUE;
+      str->isAllocated = CFL_TRUE;
       str->data = (char *) malloc(iniCapacity * sizeof(char));
       if (str->data != NULL) {
          str->data[0] = '\0';
@@ -72,6 +84,7 @@ CFL_STRP cfl_str_newBufferLen(const char *buffer, CFL_UINT32 len) {
          str->ulLength = (CFL_UINT32) len;
          str->ulHash = 0;
          str->isVarData = CFL_TRUE;
+         str->isAllocated = CFL_TRUE;
          str->data = (char *) malloc(sizeof(char) * str->ulCapacity);
          if (str->data != NULL) {
             memcpy(str->data, (void *) buffer, len * sizeof(char));
@@ -104,6 +117,7 @@ CFL_STRP cfl_str_newConstLen(const char *buffer, CFL_UINT32 len) {
          str->ulLength = 0;
       }
       str->isVarData = CFL_FALSE;
+      str->isAllocated = CFL_TRUE;
    }
    return str;
 }
@@ -122,6 +136,7 @@ CFL_STRP cfl_str_newStr(CFL_STRP strSet) {
          str->ulHash = 0;
          str->data = (char *) malloc(sizeof(char) * str->ulCapacity);
          str->isVarData = CFL_TRUE;
+         str->isAllocated = CFL_TRUE;
          if (str->data != NULL) {
             memcpy(str->data, (void *) strSet->data, strSet->ulLength * sizeof(char));
             str->data[str->ulLength] = '\0';
@@ -141,7 +156,9 @@ void cfl_str_free(CFL_STRP str) {
       if (str->isVarData && str->data != NULL) {
          free(str->data);
       }
-      free(str);
+      if (str->isAllocated) {
+         free(str);
+      }
    }
 }
 
@@ -186,7 +203,7 @@ CFL_STRP cfl_str_append(CFL_STRP str, const char * buffer, ...) {
    return str;
 }
 
-CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer, int bufferLen) {
+CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer, CFL_UINT32 bufferLen) {
    if (buffer != NULL && bufferLen > 0) {
       if (str == NULL) {
          str = cfl_str_newBufferLen(buffer, bufferLen);
@@ -304,7 +321,7 @@ void cfl_str_clear(CFL_STRP str) {
       str->ulHash = 0;
       str->data[0] = '\0';
    } else {
-      str->ulCapacity = 1;
+      str->ulCapacity = 0;
       str->ulLength = 0;
       str->data = "";
       str->ulHash = 0;

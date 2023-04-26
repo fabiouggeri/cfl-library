@@ -1,3 +1,5 @@
+@echo off
+
 SET GOAL=%1
 
 IF "%GOAL%"=="" SET GOAL=install

@@ -4,7 +4,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-super-pom</artifactId>
-   <version>1.5.0.0</version>
+   <version>1.6.0.0</version>
    <packaging>pom</packaging>
 
    <name>CFL - Common Functions Library ${project.version}</name>

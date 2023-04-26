@@ -96,7 +96,7 @@ CFL_BOOL cfl_sync_queue_isFull(CFL_SYNC_QUEUEP queue) {
 static CFL_SYNC_QUEUE_ITEM getItem(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
    CFL_SYNC_QUEUE_ITEM data = {0};
    cfl_lock_acquire(&queue->lock);
-   if (IS_EMPTY(queue)) {
+   while (IS_EMPTY(queue) && ! queue->canceled) {
       if (timeout == 0) {
          cfl_lock_conditionWait(&queue->lock, queue->notEmpty);
       } else if (cfl_lock_conditionWaitTimeout(&queue->lock, queue->notEmpty, timeout) != CFL_LOCK_SUCCESS) {
@@ -141,7 +141,7 @@ static CFL_SYNC_QUEUE_ITEM tryGetItem(CFL_SYNC_QUEUEP queue, CFL_BOOL *took) {
 
 static CFL_BOOL putItem(CFL_SYNC_QUEUEP queue, CFL_SYNC_QUEUE_ITEM item, CFL_UINT32 timeout) {
    cfl_lock_acquire(&queue->lock);
-   if (IS_FULL(queue)) {
+   while (IS_FULL(queue) && ! queue->canceled) {
       if (timeout == 0) {
          cfl_lock_conditionWait(&queue->lock, queue->notFull);
       } else if (cfl_lock_conditionWaitTimeout(&queue->lock, queue->notFull, timeout) != CFL_LOCK_SUCCESS) {

@@ -45,8 +45,10 @@ struct _CFL_STR {
    CFL_UINT32 ulCapacity;
    CFL_UINT32 ulHash;
    CFL_BOOL   isVarData;
+   CFL_BOOL   isAllocated;
 };
 
+extern void cfl_str_init(CFL_STRP str);
 extern CFL_STRP cfl_str_new(CFL_UINT32  iniCapacity);
 extern CFL_STRP cfl_str_newBuffer(const char *buffer);
 extern CFL_STRP cfl_str_newBufferLen(const char *buffer, CFL_UINT32 len);
@@ -56,7 +58,7 @@ extern CFL_STRP cfl_str_newStr(CFL_STRP str);
 extern void cfl_str_free(CFL_STRP str);
 extern CFL_STRP cfl_str_append(CFL_STRP str, const char * buffer, ...);
 extern CFL_STRP cfl_str_appendChar(CFL_STRP str, char c);
-extern CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer, int len);
+extern CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 extern CFL_STRP cfl_str_appendStr(CFL_STRP str, CFL_STRP strAppend);
 extern CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char * format, va_list varArgs);
 extern CFL_STRP cfl_str_appendFormat(CFL_STRP str, const char * format, ...);
