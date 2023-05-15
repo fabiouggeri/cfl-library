@@ -118,7 +118,7 @@
          </activation>
          <properties>
             <cc>gcc</cc>
-            <cc-version>11.2.0.0</cc-version>
+            <cc-version>11.3.0.0</cc-version>
             <cc-major-version>11.x</cc-major-version>
             <cc-target>gcc</cc-target>
             <os>linux</os>
@@ -135,7 +135,7 @@
          </activation>
          <properties>
 			  <cc>gcc</cc>
-			  <cc-version>11.2.0.0</cc-version>
+			  <cc-version>11.3.0.0</cc-version>
 			  <cc-major-version>11.x</cc-major-version>
             <cc-target>gcc</cc-target>
 			  <os>linux</os>

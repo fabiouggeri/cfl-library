@@ -32,7 +32,7 @@ static DWORD s_dwTlsIndex = TLS_OUT_OF_INDEXES;
 
 #else
 
-__thread CFL_THREADP s_threadObject = THREAD_UNDEF;
+__thread CFL_THREADP s_threadObject = NULL;
 
 #define INIT_THREAD_STORAGE
 
@@ -170,7 +170,7 @@ CFL_BOOL cfl_thread_kill(CFL_THREADP thread) {
 #ifdef _WIN32
    return TerminateThread(thread->handle, 1) ? CFL_TRUE : CFL_FALSE;
 #else
-   return pthread_kill(thread->handle, SIGUSR1) >= 0 ? CFL_TRUE : CFL_FALSE;
+   return pthread_cancel(thread->handle) == 0 ? CFL_TRUE : CFL_FALSE;
 #endif
 }
 

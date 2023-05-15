@@ -679,3 +679,39 @@ CFL_STRP cfl_str_substr(CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end) {
    }
    return subs;
 }
+
+
+CFL_INT32 cfl_str_indexOf(CFL_STRP str, char search, CFL_UINT32 start) {
+   CFL_UINT32 i;
+   for (i = start; i < str->ulLength; i++) {
+      if (search == str->data[i]) {
+         return i <= 0x0FFFFFFF ? (CFL_INT32) i : -1;
+      }
+   }
+   return -1;
+}
+
+CFL_INT32 cfl_str_indexOfBuffer(CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start) {
+   CFL_UINT32 index;
+   CFL_UINT32 maxLen;
+   if (searchLen == 0 || str->ulLength - start < searchLen) {
+      return -1;
+   }
+   index = start;
+   maxLen = str->ulLength - searchLen;
+   do {
+      if (str->data[index] == search[0]) {
+         CFL_UINT32 indexSearch = searchLen;
+         do {
+            if (--indexSearch == 0) {
+               return index <= 0x0FFFFFFF ? (CFL_INT32) index : -1;
+            }
+         } while (str->data[index + indexSearch] == search[indexSearch]);
+      }
+   } while (index++ < maxLen);
+   return -1;
+}
+
+CFL_INT32 cfl_str_indexOfStr(CFL_STRP str, CFL_STRP search, CFL_UINT32 start) {
+   return cfl_str_indexOfBuffer(str, search->data, search->ulLength, start);
+}

@@ -95,7 +95,7 @@
    #define IS_LOCKED_BY_ME(l)         pthread_equal((l)->lockOwner, GET_CURRENT_THREAD_ID)
    #define ERROR_WAITING_CONDITION(t) (t != 0)
    #define TIMEOUT_WAITING(t)         (t == ETIMEDOUT)
-   #define NULL_THREAD                _PTHREAD_NULL_THREAD
+   #define NULL_THREAD                ((pthread_t)0)
 
    #define INITIALIZE_LOCK_HANDLE(l)              pthread_mutex_init(&((l)->handle), 0)
    #define RELEASE_LOCK_HANDLE(l)                 pthread_mutex_destroy(&((l)->handle))
@@ -185,7 +185,7 @@ void cfl_lock_acquire(CFL_LOCKP pLock) {
          ++pLock->lockCount;
       } else {
          ACQUIRE_LOCK(pLock);
-         if (pLock->lockCount != 0) {
+         while (pLock->lockCount != 0) {
             WAIT_CONDITION(pLock, &pLock->notLocked, CFL_WAIT_FOREVER);
          }
          pLock->lockCount = 1;
@@ -222,7 +222,7 @@ void cfl_lock_acquireShared(CFL_LOCKP pLock) {
       ++pLock->lockCount;
    } else {
       ACQUIRE_LOCK(pLock);
-      if (pLock->lockOwner != NULL_THREAD) {
+      while (pLock->lockOwner != NULL_THREAD) {
          WAIT_CONDITION(pLock, &pLock->notLocked, CFL_WAIT_FOREVER);
       }
       pLock->lockCount++;

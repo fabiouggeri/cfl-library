@@ -98,7 +98,7 @@
       <clang-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</clang-lib-cmd>
 
       <gcc-id>gcc</gcc-id>
-      <gcc-version>11.2.0</gcc-version>
+      <gcc-version>11.3.0.0</gcc-version>
       <gcc-major-version>11.x</gcc-major-version>
       <gcc-group-id>org.gcc</gcc-group-id>
       <gcc-artifact-id>gcc-app</gcc-artifact-id>
@@ -287,11 +287,11 @@
          <activation>
             <os>
                <family>unix</family>
-               <name>Linux</name>
             </os>
          </activation>
          <properties>
             <os>linux</os>
+            <arch>64</arch>
             <c-compiler>${gcc-id}</c-compiler>
             <cc-version>${gcc-version}</cc-version>
             <cc-major-version>${gcc-major-version}</cc-major-version>

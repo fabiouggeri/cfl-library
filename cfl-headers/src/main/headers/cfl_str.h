@@ -93,6 +93,9 @@ extern CFL_STRP cfl_str_trim(CFL_STRP str);
 extern CFL_BOOL cfl_str_isEmpty(CFL_STRP str);
 extern CFL_BOOL cfl_str_isBlank(CFL_STRP str);
 extern CFL_STRP cfl_str_substr(CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end);
-extern CFL_INT32 cfl_str_bufferFind(CFL_STRP str, const char *buffer, CFL_UINT32 len);
+
+extern CFL_INT32 cfl_str_indexOf(CFL_STRP str, char search, CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOfStr(CFL_STRP str, CFL_STRP search, CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOfBuffer(CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start);
 
 #endif

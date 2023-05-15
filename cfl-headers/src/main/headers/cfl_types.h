@@ -102,7 +102,7 @@ typedef unsigned char CFL_BOOL;
       typedef int                 CFL_CONDITION_HANDLE;
    #endif
 #elif defined(__linux__)
-   #define CFL_WAIT_FOREVER       #0xFFFFFFFF
+   #define CFL_WAIT_FOREVER       0xFFFFFFFF
    typedef pthread_t              CFL_THREAD_HANDLE;
    typedef pthread_t              CFL_THREAD_ID;
    typedef pthread_mutex_t        CFL_LOCK_HANDLE;
