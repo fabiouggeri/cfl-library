@@ -19,11 +19,11 @@ IF NOT "%ERRORLEVEL%"=="0" GOTO ERRO
 call mvn %GOAL% -Drelease -Dcc=mingw64 -Darch=32
 IF NOT "%ERRORLEVEL%"=="0" GOTO ERRO
 
-call mvn %GOAL% -Drelease -Dcc=clang
-IF NOT "%ERRORLEVEL%"=="0" GOTO ERRO
+rem call mvn %GOAL% -Drelease -Dcc=clang
+rem IF NOT "%ERRORLEVEL%"=="0" GOTO ERRO
 
-call mvn %GOAL% -Drelease -Dcc=clang -Darch=32
-IF NOT "%ERRORLEVEL%"=="0" GOTO ERRO
+rem call mvn %GOAL% -Drelease -Dcc=clang -Darch=32
+rem IF NOT "%ERRORLEVEL%"=="0" GOTO ERRO
 
 GOTO FIM
 

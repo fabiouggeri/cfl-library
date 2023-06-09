@@ -4,7 +4,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-super-pom</artifactId>
-   <version>1.6.0.0</version>
+   <version>1.6.0.1</version>
    <packaging>pom</packaging>
 
    <name>CFL - Common Functions Library ${project.version}</name>
@@ -72,8 +72,8 @@
       <msc-lib-cmd>lib.exe /SUBSYSTEM:CONSOLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'}</msc-lib-cmd>
 
       <mingw64-id>mingw64</mingw64-id>
-      <mingw64-version>10.0.0.7</mingw64-version>
-      <mingw64-major-version>10.x</mingw64-major-version>
+      <mingw64-version>11.0.0.0</mingw64-version>
+      <mingw64-major-version>11.x</mingw64-major-version>
       <mingw64-group-id>org.mingw64</mingw64-group-id>
       <mingw64-artifact-id>mingw64-app</mingw64-artifact-id>
       <mingw64-includes-path></mingw64-includes-path>
@@ -85,8 +85,8 @@
       <mingw64-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</mingw64-lib-cmd>
 
       <clang-id>clang</clang-id>
-      <clang-version>15.0.7.0</clang-version>
-      <clang-major-version>14.x</clang-major-version>
+      <clang-version>16.0.2.0</clang-version>
+      <clang-major-version>16.x</clang-major-version>
       <clang-group-id>org.llvm</clang-group-id>
       <clang-artifact-id>clang-app</clang-artifact-id>
       <clang-includes-path></clang-includes-path>

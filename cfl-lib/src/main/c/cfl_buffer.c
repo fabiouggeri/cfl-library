@@ -420,7 +420,7 @@ void cfl_buffer_copyStringLen(CFL_BUFFERP buffer, CFL_STRP destStr, CFL_UINT32 l
 }
 
 CFL_BOOL cfl_buffer_putString(CFL_BUFFERP buffer, CFL_STRP str) {
-   CFL_UINT32 len = cfl_str_getLength(str);
+   CFL_UINT32 len = cfl_str_length(str);
 
    PUT_BUFFER(CFL_UINT32, buffer, len);
    if (len > 0) {
@@ -441,7 +441,7 @@ CFL_BOOL cfl_buffer_putStringLen(CFL_BUFFERP buffer, CFL_STRP str, CFL_UINT32 le
 
    PUT_BUFFER(CFL_UINT32, buffer, len);
    if (len > 0) {
-      strLen = cfl_str_getLength(str);
+      strLen = cfl_str_length(str);
       if (strLen > len) {
          strLen = len;
       }

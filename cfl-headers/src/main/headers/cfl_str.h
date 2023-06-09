@@ -27,7 +27,7 @@
 
 #define CFL_STR_FREE(s) if (s != NULL) { cfl_str_free(s); s = NULL; }
 #define CFL_STR_APPEND_CONST(s, c) cfl_str_appendLen(s, c, (int) sizeof(c) - 1)
-#define CFL_STR_SET_CONST(s, c)    cfl_str_setValueLen(s, c, (int) sizeof(c) - 1)
+#define CFL_STR_SET_CONST(s, c)    cfl_str_setConstLen(s, c, (int) sizeof(c) - 1)
 
 #define CFL_ISUPPER( c ) ( ( c ) >= 'A' && ( c ) <= 'Z' )
 #define CFL_ISLOWER( c ) ( ( c ) >= 'a' && ( c ) <= 'z' )
@@ -40,15 +40,16 @@
 #define CFL_STR_CONST(s) { s , sizeof(s) - 1, sizeof(s), 0, CFL_FALSE }
 
 struct _CFL_STR {
-   char       *data;
-   CFL_UINT32 ulLength;
-   CFL_UINT32 ulCapacity;
-   CFL_UINT32 ulHash;
+   char *data;
+   CFL_UINT32 length;
+   CFL_UINT32 capacity;
+   CFL_UINT32 hashValue;
    CFL_BOOL   isVarData;
    CFL_BOOL   isAllocated;
 };
 
 extern void cfl_str_init(CFL_STRP str);
+extern void cfl_str_initConst(CFL_STRP str, const char *buffer);
 extern CFL_STRP cfl_str_new(CFL_UINT32  iniCapacity);
 extern CFL_STRP cfl_str_newBuffer(const char *buffer);
 extern CFL_STRP cfl_str_newBufferLen(const char *buffer, CFL_UINT32 len);
@@ -65,6 +66,8 @@ extern CFL_STRP cfl_str_appendFormat(CFL_STRP str, const char * format, ...);
 
 extern char *cfl_str_getPtr(CFL_STRP str);
 extern CFL_UINT32 cfl_str_getLength(CFL_STRP str);
+extern CFL_UINT32 cfl_str_length(CFL_STRP str);
+extern void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen);
 extern void cfl_str_clear(CFL_STRP str);
 extern CFL_STRP cfl_str_setStr(CFL_STRP str, CFL_STRP strSet);
 extern CFL_STRP cfl_str_setValue(CFL_STRP str, const char *buffer);
@@ -74,12 +77,16 @@ extern CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer, CFL_UINT32
 extern CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char * format, va_list varArgs);
 extern CFL_STRP cfl_str_setFormat(CFL_STRP str, const char * format, ...);
 
+extern CFL_BOOL cfl_str_startsWith(CFL_STRP str, CFL_STRP strStart);
+extern CFL_BOOL cfl_str_startsWithIgnoreCase(CFL_STRP str, CFL_STRP strStart);
 extern CFL_BOOL cfl_str_bufferStartsWith(CFL_STRP str, const char *buffer);
 extern CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(CFL_STRP str, const char *buffer);
+
 extern CFL_BOOL cfl_str_equals(CFL_STRP str1, CFL_STRP str2);
 extern CFL_BOOL cfl_str_equalsIgnoreCase(CFL_STRP str1, CFL_STRP str2);
 extern CFL_INT16 cfl_str_compare(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExact);
 extern CFL_INT16 cfl_str_compareIgnoreCase(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExact);
+
 extern CFL_BOOL cfl_str_bufferEquals(CFL_STRP str1, const char *str2);
 extern CFL_BOOL cfl_str_bufferEqualsIgnoreCase(CFL_STRP str1, const char *str2);
 extern CFL_INT16 cfl_str_bufferCompare(CFL_STRP str1, const char *str2, CFL_BOOL bExact);
@@ -97,5 +104,14 @@ extern CFL_STRP cfl_str_substr(CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end);
 extern CFL_INT32 cfl_str_indexOf(CFL_STRP str, char search, CFL_UINT32 start);
 extern CFL_INT32 cfl_str_indexOfStr(CFL_STRP str, CFL_STRP search, CFL_UINT32 start);
 extern CFL_INT32 cfl_str_indexOfBuffer(CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start);
+
+extern char cfl_str_charAt(CFL_STRP str, CFL_UINT32 index);
+extern char cfl_str_charRAt(CFL_STRP str, CFL_UINT32 index);
+
+extern CFL_UINT32 cfl_str_replaceChar(CFL_STRP str, char oldChar, char newChar);
+
+extern CFL_STRP cfl_str_copyBufferLen(CFL_STRP dest, const char *source, CFL_UINT32 sourceLen, CFL_UINT32 start, CFL_UINT32 end);
+extern CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source, CFL_UINT32 start, CFL_UINT32 end);
+extern CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end);
 
 #endif
