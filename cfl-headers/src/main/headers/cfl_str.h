@@ -49,6 +49,7 @@ struct _CFL_STR {
 };
 
 extern void cfl_str_init(CFL_STRP str);
+extern void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity);
 extern void cfl_str_initConst(CFL_STRP str, const char *buffer);
 extern CFL_STRP cfl_str_new(CFL_UINT32  iniCapacity);
 extern CFL_STRP cfl_str_newBuffer(const char *buffer);
@@ -113,5 +114,7 @@ extern CFL_UINT32 cfl_str_replaceChar(CFL_STRP str, char oldChar, char newChar);
 extern CFL_STRP cfl_str_copyBufferLen(CFL_STRP dest, const char *source, CFL_UINT32 sourceLen, CFL_UINT32 start, CFL_UINT32 end);
 extern CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source, CFL_UINT32 start, CFL_UINT32 end);
 extern CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end);
+
+extern CFL_STRP cfl_str_move(CFL_STRP dest, CFL_STRP source);
 
 #endif

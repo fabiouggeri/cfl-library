@@ -38,7 +38,7 @@ __thread CFL_THREADP s_threadObject = NULL;
 
 #endif
 
-static CFL_THREADP initCurrentThread() {
+static CFL_THREADP initCurrentThread(void) {
    CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
    if (thread != NULL) {
       memset(thread, 0, sizeof(CFL_THREAD));

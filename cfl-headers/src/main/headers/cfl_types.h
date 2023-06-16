@@ -87,6 +87,8 @@ typedef unsigned char CFL_BOOL;
 // #define BIT_FIELD : 1
 #define BIT_FIELD
 
+#define CFL_UNUSED(x) (void)(x)
+
 #if defined(_WIN32)
    #define CFL_WAIT_FOREVER       INFINITE
    typedef HANDLE                 CFL_THREAD_HANDLE;

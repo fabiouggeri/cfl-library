@@ -54,17 +54,22 @@ void cfl_array_init(CFL_ARRAYP array, CFL_UINT32 ulCapacity, CFL_UINT32 ulItemSi
    array->ulLength = 0;
    array->ulCapacity = ulCapacity;
    array->allocated = CFL_FALSE;
-   array->items = (CFL_UINT8 *)malloc(ulCapacity * ulItemSize);
+   if (ulCapacity > 0) {
+      array->items = (CFL_UINT8 *)malloc(ulCapacity * ulItemSize);
+   } else {
+      array->items = NULL;
+   }
 }
 
 CFL_ARRAYP cfl_array_new(CFL_UINT32 ulCapacity, CFL_UINT32 ulItemSize) {
    CFL_ARRAYP array;
-   if (ulItemSize > 0) {
-      array = (CFL_ARRAYP) malloc(sizeof(CFL_ARRAY));
+   if (ulItemSize == 0) {
+      return NULL;
+   }
+   array = (CFL_ARRAYP) malloc(sizeof(CFL_ARRAY));
+   if (array != NULL) {
       cfl_array_init(array, ulCapacity, ulItemSize);
       array->allocated = CFL_TRUE;
-   } else {
-      array = NULL;
    }
    return array;
 }
@@ -85,7 +90,9 @@ CFL_ARRAYP cfl_array_newLen(CFL_UINT32 ulLen, CFL_UINT32 ulItemSize) {
 
 void cfl_array_free(CFL_ARRAYP array) {
    if (array != NULL) {
-      free(array->items);
+      if (array->items != NULL) {
+         free(array->items);
+      }
       if (array->allocated) {
          free(array);
       }
@@ -95,7 +102,7 @@ void cfl_array_free(CFL_ARRAYP array) {
 void *cfl_array_add(CFL_ARRAYP array) {
    void *item;
    if (array->ulLength >= array->ulCapacity) {
-      if ( array->ulCapacity > 0 ) {
+      if ( array->items != NULL ) {
          array->ulCapacity = ( array->ulCapacity >> 1 ) + 1 + array->ulLength;
          array->items = (CFL_UINT8 *) realloc(array->items, array->ulCapacity * array->ulItemSize);
       } else {
@@ -111,7 +118,7 @@ void *cfl_array_add(CFL_ARRAYP array) {
 void *cfl_array_insert(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
    CFL_UINT32 ulNewLen = ulIndex < array->ulLength ? array->ulLength : ulIndex;
    if (ulNewLen >= array->ulCapacity) {
-      if ( array->ulCapacity > 0 ) {
+      if ( array->items != NULL ) {
          array->ulCapacity = ( array->ulCapacity >> 1 ) + 1 + ulNewLen;
          array->items = (CFL_UINT8 *) realloc(array->items, array->ulCapacity * array->ulItemSize);
       } else {
@@ -181,7 +188,10 @@ CFL_UINT32 cfl_array_length(CFL_ARRAYP array) {
 }
 
 void cfl_array_setLength(CFL_ARRAYP array, CFL_UINT32 newLen) {
-   if (newLen < array->ulLength) {
+   if (array->items == NULL) {
+      array->ulCapacity = ( newLen >> 1 ) + 1 + newLen;
+      array->items = (CFL_UINT8 *) malloc(array->ulCapacity * array->ulItemSize);
+   } else if (newLen < array->ulLength) {
       array->ulLength = newLen;
    } else if (newLen > array->ulLength) {
       if (newLen > array->ulCapacity) {

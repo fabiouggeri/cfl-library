@@ -44,6 +44,20 @@ static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {
    return str->data != NULL;
 }
 
+void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity) {
+   if (str != NULL) {
+      str->capacity = iniCapacity;
+      str->length = 0;
+      str->hashValue = 0;
+      str->isAllocated = CFL_FALSE;
+      str->isVarData = CFL_TRUE;
+      str->data = (char *) malloc(iniCapacity * sizeof(char));
+      if (str->data != NULL) {
+         str->data[0] = '\0';
+      }
+   }
+}
+
 void cfl_str_init(CFL_STRP str) {
    if (str != NULL) {
       str->capacity = 0;
@@ -74,8 +88,8 @@ CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
       str->capacity = iniCapacity;
       str->length = 0;
       str->hashValue = 0;
-      str->isVarData = CFL_TRUE;
       str->isAllocated = CFL_TRUE;
+      str->isVarData = CFL_TRUE;
       str->data = (char *) malloc(iniCapacity * sizeof(char));
       if (str->data != NULL) {
          str->data[0] = '\0';
@@ -333,7 +347,7 @@ CFL_UINT32 cfl_str_length(CFL_STRP str) {
 }
 
 void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen) {
-   if (ensureCapacityForLen(str, newLen )) {
+   if (ensureCapacityForLen(str, newLen)) {
       if (newLen > str->length) {
          memset(&str->data[str->length], ' ', newLen - str->length);
       }
@@ -488,7 +502,7 @@ CFL_BOOL cfl_str_bufferStartsWith(CFL_STRP str, const char *buffer) {
    char c2;
 
    if (str->data == buffer) {
-      return 0;
+      return CFL_TRUE;
    }
 
    s1 = str->data;
@@ -515,7 +529,7 @@ CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(CFL_STRP str, const char *buffer) {
    int c2;
 
    if (str->data == buffer) {
-      return 0;
+      return CFL_TRUE;
    }
 
    s1 = str->data;
@@ -808,7 +822,6 @@ CFL_UINT32 cfl_str_replaceChar(CFL_STRP str, char oldChar, char newChar) {
 }
 
 CFL_STRP cfl_str_copyBufferLen(CFL_STRP dest, const char *source, CFL_UINT32 sourceLen, CFL_UINT32 start, CFL_UINT32 end) {
-   CFL_UINT32 len;
    CFL_UINT32 index;
    
    if (start >= sourceLen) {
@@ -843,4 +856,21 @@ CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source, CFL_UINT32 start,
 
 CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end) {
    return cfl_str_copyBufferLen(dest, source->data, source->length, start, end);
+}
+
+CFL_STRP cfl_str_move(CFL_STRP dest, CFL_STRP source) {
+   if (dest->isVarData && dest->data != NULL) {
+      free(str->data);
+   }
+   dest->data = source->data;
+   dest->length = source->length;
+   dest->capacity = source->capacity;
+   dest->hashValue = source->hashValue;
+   dest->isVarData = source->isVarData;
+   source->capacity = 0;
+   source->length = 0;
+   source->hashValue = 0;
+   source->isVarData = CFL_FALSE;
+   source->data = "";
+   return dest;
 }
