@@ -37,6 +37,8 @@
    #define INET6_ADDRSTRLEN 65
 #endif
 
+#define STR_EMPTY(s) ((s) == NULL || (s)[0] == '\0')
+
 CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog) {
 #ifdef __linux__
    CFL_SOCKET socketHandle;
@@ -51,7 +53,9 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_port = htons(port);
 
-   if (inet_pton(AF_INET, address, &serv_addr.sin_addr) <= 0) {
+   if (STR_EMPTY(address)) {
+      serv_addr.sin_addr.s_addr = INADDR_ANY;
+   } else if (inet_pton(AF_INET, address, &serv_addr.sin_addr) <= 0) {
       he = gethostbyname(address);
       if (he == NULL) {
          close(socketHandle);
@@ -137,18 +141,23 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
 
    memset(&addr, 0, sizeof(addr));
    addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = inet_addr(address);
    addr.sin_port = htons(port);
-   /* Resolve by name */
-   if (addr.sin_addr.s_addr == INADDR_NONE) {
-      remoteHost = gethostbyname(address);
-      if (remoteHost == NULL) {
-         return CFL_INVALID_SOCKET;
-      }
-      if (remoteHost->h_addr_list[0] != 0) {
-         addr.sin_addr.s_addr = *(u_long *) remoteHost->h_addr_list[0];
-      } else {
-         return CFL_INVALID_SOCKET;
+   
+   if (STR_EMPTY(address)) {
+      addr.sin_addr.s_addr = INADDR_ANY;
+   } else {
+      addr.sin_addr.s_addr = inet_addr(address);
+      /* Resolve by name */
+      if (addr.sin_addr.s_addr == INADDR_NONE) {
+         remoteHost = gethostbyname(address);
+         if (remoteHost == NULL) {
+            return CFL_INVALID_SOCKET;
+         }
+         if (remoteHost->h_addr_list[0] != 0) {
+            addr.sin_addr.s_addr = *(u_long *) remoteHost->h_addr_list[0];
+         } else {
+            return CFL_INVALID_SOCKET;
+         }
       }
    }
 
