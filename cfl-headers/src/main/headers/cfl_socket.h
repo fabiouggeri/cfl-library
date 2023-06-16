@@ -40,7 +40,7 @@
 //};
 
 extern CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog);
-extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr);
+extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_UINT16 *port);
 extern CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port);
 extern CFL_INT32 cfl_socket_close(CFL_SOCKET socket);
 extern CFL_INT32 cfl_socket_sendBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer);

@@ -166,18 +166,18 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
 #endif
 }
 
-static const char *clientAddress(struct sockaddr *sa, char *buffer, size_t bufferSize) {
+static const char *clientAddress(struct sockaddr *sockAddr, char *buffer, size_t bufferSize) {
    const char *addr;
 #if ! defined(__BORLANDC__)
-   if (sa->sa_family == AF_INET) {
-      addr = inet_ntop(sa->sa_family, (void *) &(((struct sockaddr_in*)sa)->sin_addr), buffer, bufferSize);
+   if (sockAddr->sa_family == AF_INET) {
+      addr = inet_ntop(sockAddr->sa_family, (void *) &(((struct sockaddr_in*)sockAddr)->sin_addr), buffer, bufferSize);
    } else {
-      addr = inet_ntop(sa->sa_family, (void *) &(((struct sockaddr_in6*)sa)->sin6_addr), buffer, bufferSize);
+      addr = inet_ntop(sockAddr->sa_family, (void *) &(((struct sockaddr_in6*)sockAddr)->sin6_addr), buffer, bufferSize);
    }
 #else
-   if (((struct sockaddr_in*)sa)->sin_family == AF_INET) {
+   if (((struct sockaddr_in*)sockAddr)->sin_family == AF_INET) {
       addr = buffer;
-      snprintf(addr, bufferSize, "%s", inet_ntoa(((struct sockaddr_in*)sa)->sin_addr));
+      snprintf(addr, bufferSize, "%s", inet_ntoa(((struct sockaddr_in*)sockAddr)->sin_addr));
    } else {
       addr = NULL;
    }
@@ -185,18 +185,22 @@ static const char *clientAddress(struct sockaddr *sa, char *buffer, size_t buffe
    return addr;
 }
 
-CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr) {
+CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_UINT16 *port) {
    CFL_SOCKET clientSocket;
    struct sockaddr sockAddr;
    int len = sizeof(sockAddr);
 
    clientSocket = accept(listenSocket, &sockAddr, &len);
-   if (clientSocket != CFL_INVALID_SOCKET && clientAddr != NULL) {
-      char addrBuffer[INET6_ADDRSTRLEN];
-      const char *addr = clientAddress(&sockAddr, addrBuffer, sizeof(addrBuffer));
-       
-      if (addr != NULL) {
-         cfl_str_setValue(clientAddr, addr);
+   if (clientSocket != CFL_INVALID_SOCKET) {
+      if (clientAddr != NULL) {
+         char addrBuffer[INET6_ADDRSTRLEN];
+         const char *addr = clientAddress(&sockAddr, addrBuffer, sizeof(addrBuffer));
+         if (addr != NULL) {
+            cfl_str_setValue(clientAddr, addr);
+         }
+      }
+      if (port != NULL) {
+         *port = ntohs(((struct sockaddr_in*)&sockAddr)->sin_port);
       }
    }
    return clientSocket;
@@ -382,7 +386,7 @@ CFL_BOOL cfl_socket_sendAll(CFL_SOCKET socket, const char *buffer, CFL_UINT32 le
 }
 
 CFL_INT32 cfl_socket_receive(CFL_SOCKET socket, const char *buffer, int len) {
-   return recv(socket, buffer, len, 0);
+   return recv(socket, (char *) buffer, len, 0);
 }
 
 CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer, int len) {
@@ -390,7 +394,7 @@ CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer, int len) 
    int toRead = len;
 
    while (toRead > 0) {
-      retVal = recv(socket, buffer, toRead, 0);
+      retVal = recv(socket, (char *) buffer, toRead, 0);
       if (retVal <= 0) {
          return retVal;
       }

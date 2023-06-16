@@ -860,7 +860,7 @@ CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT
 
 CFL_STRP cfl_str_move(CFL_STRP dest, CFL_STRP source) {
    if (dest->isVarData && dest->data != NULL) {
-      free(str->data);
+      free(dest->data);
    }
    dest->data = source->data;
    dest->length = source->length;
