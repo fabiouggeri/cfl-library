@@ -25,15 +25,18 @@
 
 struct _CFL_LIST {
    void       **items;
-   CFL_UINT32 ulLength;
-   CFL_UINT32 ulCapacity;
+   CFL_UINT32 length;
+   CFL_UINT32 capacity;
+   CFL_BOOL   allocated;
 };
 
-extern CFL_LISTP cfl_list_new(CFL_UINT32 ulCapacity);
-extern CFL_LISTP cfl_list_newLen(CFL_UINT32 ulLen);
+extern void cfl_list_init(CFL_LISTP list, CFL_UINT32 capacity);
+extern CFL_LISTP cfl_list_new(CFL_UINT32 capacity);
+extern CFL_LISTP cfl_list_newLen(CFL_UINT32 len);
 extern void cfl_list_free(CFL_LISTP list);
 extern void cfl_list_add(CFL_LISTP list, void *item);
 extern void cfl_list_del(CFL_LISTP list, CFL_UINT32 ulIndex);
+extern void cfl_list_delItem(CFL_LISTP list, void *item);
 extern void *cfl_list_get(CFL_LISTP list, CFL_UINT32 ulIndex);
 extern void cfl_list_set(CFL_LISTP list, CFL_UINT32 ulIndex, void *item);
 extern void cfl_list_clear(CFL_LISTP list);

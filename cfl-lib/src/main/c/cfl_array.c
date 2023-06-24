@@ -143,7 +143,7 @@ void cfl_array_del(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
       if (array->ulLength > 0 && ulIndex < array->ulLength) {
          memmove(&array->items[ulIndex * array->ulItemSize],
                  &array->items[(ulIndex + 1) * array->ulItemSize],
-                 (array->ulLength - ulIndex) * array->ulItemSize);
+                 (array->ulLength - ulIndex - 1) * array->ulItemSize);
       }
    }
 }
@@ -158,8 +158,8 @@ void *cfl_array_get(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
 CFL_UINT32 cfl_array_getItemPos(CFL_ARRAYP array, void *item) {
    if (array->ulLength > 0 &&
        (CFL_UINT8 *) item >= array->items &&
-       (CFL_UINT8 *)item < &array->items[(array->ulLength - 1) * array->ulItemSize]) {
-      return (CFL_UINT32) ((CFL_UINT8 *) item - array->items) / array->ulItemSize;
+       (CFL_UINT8 *)item <= &array->items[(array->ulLength - 1) * array->ulItemSize]) {
+      return (CFL_UINT32) (((CFL_UINT8 *) item - array->items) / array->ulItemSize);
    }
    return array->ulLength;
 }

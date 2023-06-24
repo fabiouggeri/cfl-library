@@ -50,10 +50,17 @@ void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity) {
       str->length = 0;
       str->hashValue = 0;
       str->isAllocated = CFL_FALSE;
-      str->isVarData = CFL_TRUE;
-      str->data = (char *) malloc(iniCapacity * sizeof(char));
-      if (str->data != NULL) {
-         str->data[0] = '\0';
+      if (iniCapacity >0) {
+         str->data = (char *) malloc(iniCapacity * sizeof(char));
+         if (str->data != NULL) {
+            str->data[0] = '\0';
+            str->isVarData = CFL_TRUE;
+         } else {
+            str->isVarData = CFL_FALSE;
+         }
+      } else {
+         str->data = "";
+         str->isVarData = CFL_FALSE;
       }
    }
 }
@@ -133,13 +140,14 @@ CFL_STRP cfl_str_newBuffer(const char *buffer) {
 CFL_STRP cfl_str_newConstLen(const char *buffer, CFL_UINT32 len) {
    CFL_STRP str = (CFL_STRP) malloc(sizeof(CFL_STR));
    if (str != NULL) {
-      str->capacity = 0;
       str->hashValue = 0;
       if (buffer != NULL && len > 0) {
          str->data = (char *) buffer;
+         str->capacity = (CFL_UINT32) len + 1;
          str->length = (CFL_UINT32) len;
       } else {
          str->data = "";
+         str->capacity = 0;
          str->length = 0;
       }
       str->isVarData = CFL_FALSE;

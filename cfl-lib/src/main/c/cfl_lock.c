@@ -163,15 +163,11 @@ CFL_LOCKP cfl_lock_new(void) {
 
 void cfl_lock_init(CFL_LOCKP pLock) {
    INITIALIZE_LOCK_HANDLE(pLock);
-   INITIALIZE_CONDITION_HANDLE(&pLock->notLocked);
-   pLock->lockOwner = NULL_THREAD;
-   pLock->lockCount = 0;
    pLock->isAllocated = CFL_FALSE;
 }
 
 void cfl_lock_free(CFL_LOCKP pLock) {
    if (pLock) {
-      RELEASE_CONDITION_HANDLE(&pLock->notLocked);
       RELEASE_LOCK_HANDLE(pLock);
       if (pLock->isAllocated) {
          free(pLock);
@@ -181,89 +177,13 @@ void cfl_lock_free(CFL_LOCKP pLock) {
 
 void cfl_lock_acquire(CFL_LOCKP pLock) {
    if (pLock) {
-      if (IS_LOCKED_BY_ME(pLock)) {
-         ++pLock->lockCount;
-      } else {
-         ACQUIRE_LOCK(pLock);
-         while (pLock->lockCount != 0) {
-            WAIT_CONDITION(pLock, &pLock->notLocked, CFL_WAIT_FOREVER);
-         }
-         pLock->lockCount = 1;
-         pLock->lockOwner = GET_CURRENT_THREAD_ID;
-         RELEASE_LOCK(pLock);
-      }
-   }
-}
-
-CFL_BOOL cfl_lock_tryExclusive(CFL_LOCKP pLock) {
-   if (pLock) {
-      if (IS_LOCKED_BY_ME(pLock)) {
-         ++pLock->lockCount;
-         return CFL_TRUE;
-      } else {
-         CFL_BOOL bSuccess;
-         ACQUIRE_LOCK(pLock);
-         if (pLock->lockCount == 0) {
-            pLock->lockCount = 1;
-            pLock->lockOwner = GET_CURRENT_THREAD_ID;
-            bSuccess = CFL_TRUE;
-         } else {
-            bSuccess = CFL_FALSE;
-         }
-         RELEASE_LOCK(pLock);
-         return bSuccess;
-      }
-   }
-   return CFL_FALSE;
-}
-
-void cfl_lock_acquireShared(CFL_LOCKP pLock) {
-   if (IS_LOCKED_BY_ME(pLock)) {
-      ++pLock->lockCount;
-   } else {
       ACQUIRE_LOCK(pLock);
-      while (pLock->lockOwner != NULL_THREAD) {
-         WAIT_CONDITION(pLock, &pLock->notLocked, CFL_WAIT_FOREVER);
-      }
-      pLock->lockCount++;
-      RELEASE_LOCK(pLock);
-   }
-}
-
-CFL_BOOL cfl_lock_tryShared(CFL_LOCKP pLock) {
-   if (IS_LOCKED_BY_ME(pLock)) {
-      ++pLock->lockCount;
-      return CFL_TRUE;
-   } else {
-      CFL_BOOL bSuccess;
-      ACQUIRE_LOCK(pLock);
-      if (pLock->lockOwner == NULL_THREAD) {
-         pLock->lockCount++;
-         bSuccess = CFL_TRUE;
-      } else {
-         bSuccess = CFL_FALSE;
-      }
-      RELEASE_LOCK(pLock);
-      return bSuccess;
    }
 }
 
 void cfl_lock_release(CFL_LOCKP pLock) {
-   if (pLock && pLock->lockCount > 0) {
-      CFL_BOOL wakeupOthers;
-      ACQUIRE_LOCK(pLock);
-      if (pLock->lockCount > 0) {
-         if (pLock->lockOwner == NULL_THREAD) {
-            wakeupOthers = --pLock->lockCount == 0;
-         } else if (IS_LOCKED_BY_ME(pLock)) {
-            wakeupOthers = --pLock->lockCount == 0;
-            pLock->lockOwner = NULL_THREAD;
-         }
-      }
+   if (pLock) {
       RELEASE_LOCK(pLock);
-      if (wakeupOthers) {
-         WAKE_ALL_CONDITION(&pLock->notLocked);
-      }
    }
 }
 
@@ -293,48 +213,24 @@ void cfl_lock_freeConditionVar(CFL_CONDITION_VARIABLEP pVar) {
 }
 
 CFL_BOOL cfl_lock_conditionWait(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar) {
-   if (pLock && IS_LOCKED_BY_ME(pLock)) {
-      CFL_UINT32    currLockCount;
-      CFL_THREAD_ID currLockOwner;
-      ACQUIRE_LOCK(pLock);
-      currLockCount = pLock->lockCount;
-      currLockOwner = pLock->lockOwner;
-      pLock->lockCount = 0;
-      pLock->lockOwner = NULL_THREAD;
+   if (pLock && pVar) {
       WAIT_CONDITION(pLock, pVar, CFL_WAIT_FOREVER);
-      pLock->lockCount = currLockCount;
-      pLock->lockOwner = currLockOwner;
-      RELEASE_LOCK(pLock);
       return CFL_TRUE;
    }
    return CFL_FALSE;
 }
 
 CFL_UINT8 cfl_lock_conditionWaitTimeout(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT32 timeout) {
-   if (pLock && IS_LOCKED_BY_ME(pLock)) {
+   if (pLock && pVar) {
       CFL_UINT8 res;
       WAIT_RESULT waitRes;
-      CFL_UINT32    currLockCount;
-      CFL_THREAD_ID currLockOwner;
-
-      ACQUIRE_LOCK(pLock);
-      currLockCount = pLock->lockCount;
-      currLockOwner = pLock->lockOwner;
-      pLock->lockCount = 0;
-      pLock->lockOwner = NULL_THREAD;
       waitRes = WAIT_CONDITION(pLock, pVar, timeout);
       if (TIMEOUT_WAITING(waitRes)) {
          res = CFL_LOCK_TIMEOUT;
-         pLock->lockCount = currLockCount;
-         pLock->lockOwner = currLockOwner;
-         RELEASE_LOCK(pLock);
       } else if (ERROR_WAITING_CONDITION(waitRes)) {
          res = CFL_LOCK_ERROR;
       } else {
          res = CFL_LOCK_SUCCESS;
-         pLock->lockCount = currLockCount;
-         pLock->lockOwner = currLockOwner;
-         RELEASE_LOCK(pLock);
       }
       return res;
    }

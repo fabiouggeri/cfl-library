@@ -22,6 +22,7 @@
 #define CFL_LOCK_H_
 
 #include "cfl_types.h"
+#include "cfl_array.h"
 
 #if ! defined(__BORLANDC__)
    #define _CFL_CONDITION_VAR
@@ -37,20 +38,14 @@ struct _CFL_CONDITION_VARIABLE {
 };
 
 struct _CFL_LOCK {
-   CFL_LOCK_HANDLE        handle;
-   CFL_THREAD_ID          lockOwner;
-   CFL_UINT32             lockCount;
-   CFL_CONDITION_VARIABLE notLocked;
-   CFL_BOOL               isAllocated;
+   CFL_LOCK_HANDLE handle;
+   CFL_BOOL        isAllocated;
 };
 
 extern CFL_LOCKP cfl_lock_new(void);
 extern void cfl_lock_free(CFL_LOCKP pLock);
 extern void cfl_lock_init(CFL_LOCKP pLock);
-extern CFL_BOOL cfl_lock_tryExclusive(CFL_LOCKP pLock);
 extern void cfl_lock_acquire(CFL_LOCKP pLock);
-extern CFL_BOOL cfl_lock_tryShared(CFL_LOCKP pLock);
-extern void cfl_lock_acquireShared(CFL_LOCKP pLock);
 extern void cfl_lock_release(CFL_LOCKP pLock);
 extern void cfl_lock_initConditionVar(CFL_CONDITION_VARIABLEP pVar);
 extern CFL_CONDITION_VARIABLEP cfl_lock_newConditionVar(void);

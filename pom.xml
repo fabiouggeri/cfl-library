@@ -79,7 +79,7 @@
       <mingw64-includes-path></mingw64-includes-path>
       <mingw64-libs-path></mingw64-libs-path>
       <mingw64-libs></mingw64-libs>
-      <mingw64-cmd>gcc -pipe -O3 -c -Wdiscarded-qualifiers #{includesPaths, '-I"', '" -I"', '"'} #{defines, '-D', ' -D', '='} -D_WIN32_WINNT=0x0601 -o"#{outputFile}" "#{inputFile}"</mingw64-cmd>
+      <mingw64-cmd>gcc #{?debug='true', '-g'} -pipe -O3 -c -Wdiscarded-qualifiers #{includesPaths, '-I"', '" -I"', '"'} #{defines, '-D', ' -D', '='} -D_WIN32_WINNT=0x0601 -o"#{outputFile}" "#{inputFile}"</mingw64-cmd>
       <mingw64-link-options></mingw64-link-options>
       <mingw64-link-cmd>gcc #{inputFiles, '"', '" "', '"'} -Wdiscarded-qualifiers -mconsole -Wl,--error-unresolved-symbols -Wl,--major-image-version=#{version} -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lwinspool -lcomctl32 -lcomdlg32 -lshell32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lmsimg32 -lwininet -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</mingw64-link-cmd>
       <mingw64-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</mingw64-lib-cmd>
@@ -92,8 +92,8 @@
       <clang-includes-path></clang-includes-path>
       <clang-libs-path></clang-libs-path>
       <clang-libs></clang-libs>
-      <clang-cmd>clang -O3 -Wall -ffunction-sections -fdata-sections #{includesPaths, '-I"', '" -I"', '"'} -I"${clp-includes-path}" #{defines, '-D', ' -D', '='} -o"#{outputFile}" -c "#{inputFile}"</clang-cmd>
-      <clang-link-options>#{inputFiles, '"', '" "', '"'} -Wl,-O -Wl,--nxcompat -Wl,--dynamicbase -Wl,--allow-multiple-definition -Wl,-s -Wl,-S -Wl,--gc-sections -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lshell32 -lwinspool -lmsimg32 -lcomctl32 -lcomdlg32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lwininet -lstdc++ -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</clang-link-options>
+      <clang-cmd>clang #{?debug='true', '-Og -g3 -lSegFault'} #{!debug, '-O3'} -Wall -ffunction-sections -fdata-sections #{includesPaths, '-I"', '" -I"', '"'} -I"${clp-includes-path}" #{defines, '-D', ' -D', '='} -o"#{outputFile}" -c "#{inputFile}"</clang-cmd>
+      <clang-link-options>#{inputFiles, '"', '" "', '"'} #{?debug='true', '-Og -g3 -lSegFault'}-Wl,-O -Wl,--nxcompat -Wl,--dynamicbase -Wl,--allow-multiple-definition #{!debug, '-Wl,-s -Wl,-S'} -Wl,--gc-sections -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lshell32 -lwinspool -lmsimg32 -lcomctl32 -lcomdlg32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lwininet -lstdc++ -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</clang-link-options>
       <clang-link-cmd>clang @"${project.basedir}\target\classes\${prg-classifier}\lnk_options.rsp"</clang-link-cmd>
       <clang-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</clang-lib-cmd>
 
@@ -105,9 +105,9 @@
       <gcc-includes-path></gcc-includes-path>
       <gcc-libs-path></gcc-libs-path>
       <gcc-libs></gcc-libs>
-      <gcc-cmd>gcc -pipe -Ofast -c -Wdiscarded-qualifiers #{?debug='true', '-g'} #{includesPaths, '-I', ' -I'} #{defines, '-D', ' -D', '='} -o#{outputFile} #{inputFile}</gcc-cmd>
+      <gcc-cmd>gcc -pipe #{?debug='true', '-Og -g3'} #{!debug, '-Ofast'} -c -Wdiscarded-qualifiers #{?debug='true', '-g'} #{includesPaths, '-I', ' -I'} #{defines, '-D', ' -D', '='} -o#{outputFile} #{inputFile}</gcc-cmd>
       <gcc-link-options></gcc-link-options>
-      <gcc-link-cmd>gcc #{inputFiles, ' ', ' ', ' '} -Wdiscarded-qualifiers -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l$(name,"lib")', ' -l$(name,"lib")'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</gcc-link-cmd>
+      <gcc-link-cmd>gcc #{inputFiles, ' ', ' ', ' '} #{?debug='true', '-Og -g3 -lSegFault'} #{!debug, '-Ofast'} -Wdiscarded-qualifiers -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l$(name,"lib")', ' -l$(name,"lib")'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</gcc-link-cmd>
       <gcc-lib-cmd>ar rcs #{outputFile} #{inputFiles, ' ', ' ', ' '}</gcc-lib-cmd>
 
       <c-compiler>${msc-id}</c-compiler>

@@ -21,117 +21,144 @@
 #include <string.h>
 #include "cfl_list.h"
 
-CFL_LISTP cfl_list_new(CFL_UINT32 ulCapacity) {
-   CFL_LISTP list;
+void cfl_list_init(CFL_LISTP list, CFL_UINT32 capacity) {
+   list->length = 0;
+   list->capacity = capacity;
+   list->allocated = CFL_FALSE;
+   if (capacity > 0) {
+      list->items = (void *)malloc(capacity * sizeof(void *));
+   } else {
+      list->items = NULL;
+   }
+}
 
-   list = (CFL_LISTP) malloc(sizeof(CFL_LIST));
-   list->ulLength = 0;
-   list->ulCapacity = ulCapacity;
-   list->items = (void *)malloc(ulCapacity * sizeof(void *));
+CFL_LISTP cfl_list_new(CFL_UINT32 capacity) {
+   CFL_LISTP list = (CFL_LISTP) malloc(sizeof(CFL_LIST));
+   if (list == NULL) {
+      return NULL;
+   }
+   cfl_list_init(list, capacity);
+   list->allocated = CFL_TRUE;
    return list;
 }
 
-CFL_LISTP cfl_list_newLen(CFL_UINT32 ulLen) {
-   CFL_LISTP list;
-
-   list = (CFL_LISTP) malloc(sizeof(CFL_LIST));
-   list->ulLength = ulLen;
-   list->ulCapacity = ulLen;
-   list->items = (void *)malloc(ulLen * sizeof(void *));
+CFL_LISTP cfl_list_newLen(CFL_UINT32 len) {
+   CFL_LISTP list = (CFL_LISTP) malloc(sizeof(CFL_LIST));
+   if (list == NULL) {
+      return NULL;
+   }
+   cfl_list_init(list, len);
+   list->allocated = CFL_TRUE;
+   list->length = len;
+   memset(list->items , 0, len * sizeof(void *));
    return list;
 }
 
 void cfl_list_free(CFL_LISTP list) {
    if (list != NULL) {
       free(list->items);
-      free(list);
+      if (list->allocated) {
+         free(list);
+      }
    }
 }
 
 void cfl_list_add(CFL_LISTP list, void *item) {
-   if (list->ulLength >= list->ulCapacity) {
-      if ( list->ulCapacity > 0 ) {
-         list->ulCapacity = ( list->ulCapacity >> 1 ) + 1 + list->ulLength;
-         list->items = (void *) realloc(list->items, list->ulCapacity * sizeof(void *));
+   if (list->length >= list->capacity) {
+      if ( list->capacity > 0 ) {
+         list->capacity = ( list->capacity >> 1 ) + 1 + list->length;
+         list->items = (void *) realloc(list->items, list->capacity * sizeof(void *));
       } else {
-         list->ulCapacity = 12;
-         list->items = (void *) malloc(list->ulCapacity * sizeof(void *));
+         list->capacity = 12;
+         list->items = (void *) malloc(list->capacity * sizeof(void *));
       }
    }
-   list->items[list->ulLength] = item;
-   ++(list->ulLength);
+   list->items[list->length] = item;
+   ++(list->length);
 }
 
 void cfl_list_del(CFL_LISTP list, CFL_UINT32 ulIndex) {
-   if (ulIndex >= 0 && ulIndex < list->ulLength) {
+   if (ulIndex >= 0 && ulIndex < list->length) {
       CFL_UINT32 i;
-      --(list->ulLength);
-      for (i = ulIndex; i < list->ulLength; i++) {
+      --(list->length);
+      for (i = ulIndex; i < list->length; i++) {
          list->items[i] = list->items[i + 1];
       }
-      list->items[list->ulLength] = NULL;
+      list->items[list->length] = NULL;
+   }
+}
+
+void cfl_list_delItem(CFL_LISTP list, void *item) {
+   CFL_UINT32 i;
+   for (i = 0; i < list->length; i++) {
+      if (list->items[i] == item) {
+         list->length--;
+         memmove(&list->items[i], &list->items[i + 1], (list->length - i) * sizeof(void *));
+         list->items[list->length] = NULL;
+         return;
+      }
    }
 }
 
 void *cfl_list_remove(CFL_LISTP list, CFL_UINT32 ulIndex) {
-   if (ulIndex >= 0 && ulIndex < list->ulLength) {
+   if (ulIndex >= 0 && ulIndex < list->length) {
       CFL_UINT32 i;
       void *removed = list->items[ulIndex];
-      --(list->ulLength);
-      for (i = ulIndex; i < list->ulLength; i++) {
+      --(list->length);
+      for (i = ulIndex; i < list->length; i++) {
          list->items[i] = list->items[i + 1];
       }
-      list->items[list->ulLength] = NULL;
+      list->items[list->length] = NULL;
       return removed;
    }
    return NULL;
 }
 
 void *cfl_list_removeLast(CFL_LISTP list) {
-   return cfl_list_remove(list, list->ulLength - 1);
+   return cfl_list_remove(list, list->length - 1);
 }
 
 void *cfl_list_get(CFL_LISTP list, CFL_UINT32 ulIndex) {
-   if (ulIndex >= 0 && ulIndex < list->ulLength) {
+   if (ulIndex >= 0 && ulIndex < list->length) {
       return list->items[ ulIndex ];
    }
    return NULL;
 }
 
 void cfl_list_set(CFL_LISTP list, CFL_UINT32 ulIndex, void *item) {
-   if (ulIndex >= 0 && ulIndex < list->ulLength) {
+   if (ulIndex >= 0 && ulIndex < list->length) {
       list->items[ ulIndex ] = item;
    }
 }
 
 void cfl_list_clear(CFL_LISTP list) {
    if (list != NULL) {
-      list->ulLength = 0;
+      list->length = 0;
    }
 }
 
 CFL_UINT32 cfl_list_length(CFL_LISTP list) {
    if (list != NULL) {
-      return list->ulLength;
+      return list->length;
    }
    return 0;
 }
 
 void cfl_list_setLength(CFL_LISTP list, CFL_UINT32 newLen) {
-   if (newLen < list->ulLength) {
-      list->ulLength = newLen;
-   } else if (newLen > list->ulLength) {
-      if (newLen > list->ulCapacity) {
-         list->ulCapacity = ( newLen >> 1 ) + 1 + newLen;
-         list->items = (void *) realloc(list->items, list->ulCapacity * sizeof(void *));
+   if (newLen < list->length) {
+      list->length = newLen;
+   } else if (newLen > list->length) {
+      if (newLen > list->capacity) {
+         list->capacity = ( newLen >> 1 ) + 1 + newLen;
+         list->items = (void *) realloc(list->items, list->capacity * sizeof(void *));
       }
-      memset(&list->items[list->ulLength] ,0 , newLen - list->ulLength);
-      list->ulLength = newLen;
+      memset(&list->items[list->length] ,0 , (newLen - list->length) * sizeof(void *));
+      list->length = newLen;
    }
 }
 
 CFL_LISTP cfl_list_clone(CFL_LISTP other) {
-   CFL_LISTP clone = cfl_list_newLen(other->ulLength);
-   memcpy(clone->items, other->items, other->ulLength * sizeof(void *));
+   CFL_LISTP clone = cfl_list_newLen(other->length);
+   memcpy(clone->items, other->items, other->length * sizeof(void *));
    return clone;
 }

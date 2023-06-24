@@ -26,61 +26,107 @@
 
 #ifdef _WIN32
 
-static DWORD s_dwTlsIndex = TLS_OUT_OF_INDEXES;
+static volatile LONG s_threadStoreInitialized = 0;
+static DWORD s_threadStorageKey = TLS_OUT_OF_INDEXES;
 
-#define INIT_THREAD_STORAGE  if (s_dwTlsIndex == TLS_OUT_OF_INDEXES) s_dwTlsIndex = TlsAlloc();
+#define INIT_THREAD_STORAGE   if (s_threadStoreInitialized == 0) {\
+                                 if (InterlockedCompareExchange(&s_threadStoreInitialized, 1, 0) == 0) {\
+                                    s_threadStorageKey = TlsAlloc();\
+                                 }\
+                              }
+
+#define GET_THREAD(t) INIT_THREAD_STORAGE \
+                      t = (CFL_THREADP) TlsGetValue(s_threadStorageKey)
+
+#define SET_THREAD(t) INIT_THREAD_STORAGE \
+                      TlsSetValue(s_threadStorageKey, t)
 
 #else
 
-__thread CFL_THREADP s_threadObject = NULL;
+static pthread_once_t key_once = PTHREAD_ONCE_INIT;
 
-#define INIT_THREAD_STORAGE
+static int s_threadStoreInitialized = 0;
+
+static pthread_key_t s_threadStorageKey;
+
+#define INIT_THREAD_STORAGE   if (! s_threadStoreInitialized) {\
+                                 pthread_once(&key_once, init_key);\
+                              }
+
+#define GET_THREAD(t) INIT_THREAD_STORAGE \
+                      t = (CFL_THREADP) pthread_getspecific(s_threadStorageKey)
+
+#define SET_THREAD(t) INIT_THREAD_STORAGE \
+                      pthread_setspecific(s_threadStorageKey, t)
+
+static void freeStoredData(void *data) {
+   CFL_THREADP thread = (CFL_THREADP)data;
+   if (thread != NULL && thread->freeOnExit) {
+      if (thread->exitCallback != NULL) {
+         thread->exitCallback(thread);
+      }
+      cfl_thread_free(thread);
+   }
+}
+
+static void init_key(void) {
+   pthread_key_create(&s_threadStorageKey, freeStoredData);
+   s_threadStoreInitialized = 1;
+}
 
 #endif
 
 static CFL_THREADP initCurrentThread(void) {
    CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
-   if (thread != NULL) {
-      memset(thread, 0, sizeof(CFL_THREAD));
-#ifdef _WIN32
-      TlsSetValue(s_dwTlsIndex, thread);
-#else
-      s_threadObject = thread;
-#endif
+   if (thread == NULL) {
+      return NULL;
    }
+   memset(thread, 0, sizeof(CFL_THREAD));
+   thread->freeOnExit = CFL_TRUE;
+   SET_THREAD(thread);
+   return thread;
+}
+
+CFL_THREADP cfl_thread_newOptions(CFL_THREAD_FUNC func, CFL_BOOL freeOnExit, CFL_THREAD_CALLBACK exitCallback) {
+   CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
+   if (thread == NULL) {
+      return NULL;
+   }
+
+   memset(thread, 0, sizeof(CFL_THREAD));
+   thread->freeOnExit = freeOnExit;
+   thread->func = func;
+   thread->exitCallback = exitCallback;
+
    return thread;
 }
 
 CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
    CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
-   if (thread != NULL) {
-      memset(thread, 0, sizeof(CFL_THREAD));
-      thread->func = func;
+   if (thread == NULL) {
+      return NULL;
    }
 
-   INIT_THREAD_STORAGE
+   memset(thread, 0, sizeof(CFL_THREAD));
+   thread->freeOnExit = CFL_FALSE;
+   thread->func = func;
 
    return thread;
 }
 
 void cfl_thread_free(CFL_THREADP thread) {
 #ifdef _WIN32
-   if (thread->handle) {
-      CloseHandle(thread->handle);
-   }
+   CloseHandle(thread->handle);
+#else
+   pthread_detach(thread->handle);
 #endif
    free(thread);
 }
 
 CFL_THREADP cfl_thread_getCurrent(void) {
    CFL_THREADP thread;
-
-   INIT_THREAD_STORAGE
-#ifdef _WIN32
-   thread = (CFL_THREADP) TlsGetValue(s_dwTlsIndex);
-#else
-   thread = s_threadObject;
-#endif
+   
+   GET_THREAD(thread);
    if (thread == NULL) {
       thread = initCurrentThread();
    }
@@ -95,27 +141,38 @@ void cfl_thread_setData(CFL_THREADP thread, void *data) {
    thread->data = data;
 }
 
+void cfl_thread_setExitCallback(CFL_THREADP thread, CFL_THREAD_CALLBACK exitCallback) {
+   thread->exitCallback = exitCallback;
+}
+
+void cfl_thread_setFreeOnExit(CFL_THREADP thread, CFL_BOOL freeOnExit) {
+   thread->freeOnExit = freeOnExit;
+}
+
 #ifdef _WIN32
 
 static DWORD WINAPI startFunction(LPVOID param) {
    CFL_THREADP thread = (CFL_THREADP) param;
-   if (s_dwTlsIndex != TLS_OUT_OF_INDEXES) {
-      TlsSetValue(s_dwTlsIndex, thread);
-      if (thread->func != NULL) {
-         thread->func(thread->param);
-      }
-      return 1;
+   SET_THREAD(thread);
+   if (thread->func != NULL) {
+      thread->func(thread->param);
    }
-   return 0;
+   if (thread->exitCallback != NULL) {
+      thread->exitCallback(thread);
+   }
+   return 1;
 }
 
 #else
 
 static void *startFunction(void *param) {
    CFL_THREADP thread = (CFL_THREADP) param;
-   s_threadObject = thread;
+   SET_THREAD(thread);
    if (thread->func != NULL) {
       thread->func(thread->param);
+   }
+   if (thread->exitCallback != NULL) {
+      thread->exitCallback(thread);
    }
    return NULL;
 }
