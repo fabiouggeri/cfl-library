@@ -61,7 +61,7 @@ static pthread_key_t s_threadStorageKey;
 
 static void freeStoredData(void *data) {
    CFL_THREADP thread = (CFL_THREADP)data;
-   if (thread != NULL && thread->freeOnExit) {
+   if (thread != NULL && ! thread->manualAllocation) {
       if (thread->exitCallback != NULL) {
          thread->exitCallback(thread);
       }
@@ -82,19 +82,19 @@ static CFL_THREADP initCurrentThread(void) {
       return NULL;
    }
    memset(thread, 0, sizeof(CFL_THREAD));
-   thread->freeOnExit = CFL_TRUE;
+   thread->manualAllocation = CFL_FALSE;
    SET_THREAD(thread);
    return thread;
 }
 
-CFL_THREADP cfl_thread_newOptions(CFL_THREAD_FUNC func, CFL_BOOL freeOnExit, CFL_THREAD_CALLBACK exitCallback) {
+CFL_THREADP cfl_thread_newOptions(CFL_THREAD_FUNC func, CFL_THREAD_CALLBACK exitCallback) {
    CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
    if (thread == NULL) {
       return NULL;
    }
 
    memset(thread, 0, sizeof(CFL_THREAD));
-   thread->freeOnExit = freeOnExit;
+   thread->manualAllocation = CFL_TRUE;
    thread->func = func;
    thread->exitCallback = exitCallback;
 
@@ -108,13 +108,14 @@ CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
    }
 
    memset(thread, 0, sizeof(CFL_THREAD));
-   thread->freeOnExit = CFL_FALSE;
+   thread->manualAllocation = CFL_TRUE;
    thread->func = func;
 
    return thread;
 }
 
 void cfl_thread_free(CFL_THREADP thread) {
+   SET_THREAD(NULL);
 #ifdef _WIN32
    CloseHandle(thread->handle);
 #else
@@ -145,10 +146,6 @@ void cfl_thread_setExitCallback(CFL_THREADP thread, CFL_THREAD_CALLBACK exitCall
    thread->exitCallback = exitCallback;
 }
 
-void cfl_thread_setFreeOnExit(CFL_THREADP thread, CFL_BOOL freeOnExit) {
-   thread->freeOnExit = freeOnExit;
-}
-
 #ifdef _WIN32
 
 static DWORD WINAPI startFunction(LPVOID param) {
@@ -156,9 +153,6 @@ static DWORD WINAPI startFunction(LPVOID param) {
    SET_THREAD(thread);
    if (thread->func != NULL) {
       thread->func(thread->param);
-   }
-   if (thread->exitCallback != NULL) {
-      thread->exitCallback(thread);
    }
    return 1;
 }
@@ -170,9 +164,6 @@ static void *startFunction(void *param) {
    SET_THREAD(thread);
    if (thread->func != NULL) {
       thread->func(thread->param);
-   }
-   if (thread->exitCallback != NULL) {
-      thread->exitCallback(thread);
    }
    return NULL;
 }
@@ -235,7 +226,7 @@ CFL_BOOL cfl_thread_sleep(CFL_UINT32 time) {
 #ifdef _WIN32
    Sleep((DWORD) time);
 #else
-   sleep((unsigned int) time / 1000);
+   usleep((useconds_t) time * 1000);
 #endif
    return CFL_TRUE;
 }

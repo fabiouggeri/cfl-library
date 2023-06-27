@@ -244,4 +244,8 @@ struct _CFL_SQL_BUILDER;
 typedef struct _CFL_SQL_BUILDER CFL_SQL_BUILDER;
 typedef struct _CFL_SQL_BUILDER *CFL_SQL_BUILDERP;
 
+struct _CFL_MAP;
+typedef struct _CFL_MAP CFL_MAP;
+typedef struct _CFL_MAP *CFL_MAPP;
+
 #endif

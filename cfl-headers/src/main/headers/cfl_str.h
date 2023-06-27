@@ -36,8 +36,8 @@
 #define CFL_TOLOWER( c ) ( ( c ) + ( 'a' - 'A' ) )
 #define CFL_ISSPACE( c ) isspace( c )
 
-#define CFL_STR_EMPTY    { "", 0            , 1        , 0, CFL_FALSE }
-#define CFL_STR_CONST(s) { s , sizeof(s) - 1, sizeof(s), 0, CFL_FALSE }
+#define CFL_STR_EMPTY    { "", 0            , 1        , 0, CFL_FALSE, CFL_FALSE }
+#define CFL_STR_CONST(s) { s , sizeof(s) - 1, sizeof(s), 0, CFL_FALSE, CFL_FALSE }
 
 struct _CFL_STR {
    char *data;

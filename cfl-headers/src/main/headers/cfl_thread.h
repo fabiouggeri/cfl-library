@@ -32,10 +32,10 @@ struct _CFL_THREAD {
    void                *data;
    CFL_THREAD_HANDLE   handle;
    CFL_THREAD_CALLBACK exitCallback;
-   CFL_BOOL            freeOnExit;
+   CFL_BOOL            manualAllocation;
 };
 
-extern CFL_THREADP cfl_thread_newOptions(CFL_THREAD_FUNC func, CFL_BOOL freeOnExit, CFL_THREAD_CALLBACK exitCallback);
+extern CFL_THREADP cfl_thread_newOptions(CFL_THREAD_FUNC func, CFL_THREAD_CALLBACK exitCallback);
 extern CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func);
 extern void cfl_thread_free(CFL_THREADP thread);
 extern CFL_THREADP cfl_thread_getCurrent(void);
@@ -47,6 +47,5 @@ extern CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout);
 extern CFL_BOOL cfl_thread_kill(CFL_THREADP thread);
 extern CFL_BOOL cfl_thread_sleep(CFL_UINT32 time);
 extern void cfl_thread_setExitCallback(CFL_THREADP thread, CFL_THREAD_CALLBACK exitCallback);
-extern void cfl_thread_setFreeOnExit(CFL_THREADP thread, CFL_BOOL freeOnExit);
 
 #endif

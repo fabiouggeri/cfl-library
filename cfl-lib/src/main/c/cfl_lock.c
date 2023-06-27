@@ -103,7 +103,7 @@
    #define RELEASE_LOCK(l)                        pthread_mutex_unlock(&((l)->handle))
    #define INITIALIZE_CONDITION_HANDLE(v)         pthread_cond_init(&((v)->handle), 0)
    #define WAIT_CONDITION(l, v, t)                waitCondition(l, v, t)
-   #define RELEASE_CONDITION_HANDLE(v)                   pthread_cond_destroy(&((v)->handle))
+   #define RELEASE_CONDITION_HANDLE(v)            pthread_cond_destroy(&((v)->handle))
    #define WAKE_ALL_CONDITION(v)                  pthread_cond_broadcast(&((v)->handle))
    #define WAKE_CONDITION(v)                      pthread_cond_signal(&((v)->handle))
    #define WAIT_FUNCTION
