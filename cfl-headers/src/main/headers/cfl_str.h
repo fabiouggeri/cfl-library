@@ -77,6 +77,7 @@ extern CFL_STRP cfl_str_setConst(CFL_STRP str, const char *buffer);
 extern CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 extern CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char * format, va_list varArgs);
 extern CFL_STRP cfl_str_setFormat(CFL_STRP str, const char * format, ...);
+extern CFL_STRP cfl_str_setChar(CFL_STRP str, CFL_UINT32 index, char c);
 
 extern CFL_BOOL cfl_str_startsWith(CFL_STRP str, CFL_STRP strStart);
 extern CFL_BOOL cfl_str_startsWithIgnoreCase(CFL_STRP str, CFL_STRP strStart);

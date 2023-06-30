@@ -37,6 +37,16 @@
    #define INET6_ADDRSTRLEN 65
 #endif
 
+#ifdef __linux__
+   #define SHUTDOWN_READ       SHUT_RD
+   #define SHUTDOWN_WRITE      SHUT_WR
+   #define SHUTDOWN_READ_WRITE SHUT_RDWR
+#else
+   #define SHUTDOWN_READ       SD_RECEIVE
+   #define SHUTDOWN_WRITE      SD_SEND
+   #define SHUTDOWN_READ_WRITE SD_BOTH
+#endif
+
 #define STR_EMPTY(s) ((s) == NULL || (s)[0] == '\0')
 
 CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog) {
@@ -111,7 +121,7 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
       if (socketHandle == CFL_INVALID_SOCKET) {
          continue;
       }
-
+   
       // Establish the connection to server
       if (bind(socketHandle, addr->ai_addr, (int) addr->ai_addrlen) == 0 && 
           listen(socketHandle, (int)backlog) == 0) {
@@ -582,4 +592,24 @@ CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 
    CFL_UNUSED(interval);
    return CFL_FALSE;
 #endif
+}
+
+CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT16 lingerSeconds) {
+   struct linger sl;
+   sl.l_onoff = active ? 1 : 0;
+   sl.l_linger = lingerSeconds;
+   return setsockopt(socket, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl)) == 0 ? CFL_TRUE : CFL_FALSE;
+}
+
+CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write) {
+   int how;
+   if (read || write) {
+      if (read) {
+         how = write ? SHUTDOWN_READ_WRITE : SHUTDOWN_READ;
+      } else {
+         how = SHUTDOWN_WRITE;
+      }
+      return shutdown(socket, how) == 0 ? CFL_TRUE : CFL_FALSE;
+   } 
+   return CFL_FALSE;
 }

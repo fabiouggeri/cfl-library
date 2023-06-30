@@ -34,6 +34,9 @@
    extern datatype cfl_sync_queue_get##typename##Timeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp); \
    extern CFL_BOOL cfl_sync_queue_put##typename##Timeout(CFL_SYNC_QUEUEP queue, datatype data, CFL_UINT32 timeout)
 
+#define DECLARE_DRAIN(datatype, typename) \
+   extern datatype cfl_sync_queue_drain##typename(CFL_SYNC_QUEUEP queue, CFL_BOOL *empty)
+
 typedef union _CFL_SYNC_QUEUE_ITEM {
    void      *asPointer;
    CFL_BOOL   asBoolean;
@@ -70,6 +73,7 @@ extern CFL_BOOL cfl_sync_queue_tryPut(CFL_SYNC_QUEUEP queue, void *data);
 extern CFL_BOOL cfl_sync_queue_putTimeout(CFL_SYNC_QUEUEP queue, void *data, CFL_UINT32 timeout);
 extern void cfl_sync_queue_cancel(CFL_SYNC_QUEUEP queue);
 extern CFL_BOOL cfl_sync_queue_canceled(CFL_SYNC_QUEUEP queue);
+extern void *cfl_sync_queue_drain(CFL_SYNC_QUEUEP queue, CFL_BOOL *empty);
 
 DECLARE_GET_PUT(CFL_BOOL    , Boolean);
 DECLARE_GET_PUT(CFL_INT8    , Int8   );
@@ -90,5 +94,15 @@ DECLARE_GET_PUT_TIMEOUT(CFL_UINT8   , UInt8  );
 DECLARE_GET_PUT_TIMEOUT(CFL_UINT16  , UInt16 );
 DECLARE_GET_PUT_TIMEOUT(CFL_UINT32  , UInt32 );
 DECLARE_GET_PUT_TIMEOUT(CFL_UINT64  , UInt64 );
+
+DECLARE_DRAIN(CFL_BOOL    , Boolean);
+DECLARE_DRAIN(CFL_INT8    , Int8   );
+DECLARE_DRAIN(CFL_INT16   , Int16  );
+DECLARE_DRAIN(CFL_INT32   , Int32  );
+DECLARE_DRAIN(CFL_INT64   , Int64  );
+DECLARE_DRAIN(CFL_UINT8   , UInt8  );
+DECLARE_DRAIN(CFL_UINT16  , UInt16 );
+DECLARE_DRAIN(CFL_UINT32  , UInt32 );
+DECLARE_DRAIN(CFL_UINT64  , UInt64 );
 
 #endif

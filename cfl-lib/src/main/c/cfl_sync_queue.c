@@ -53,6 +53,11 @@
       return putItem(queue, item, timeout); \
    }
 
+#define DEFINE_DRAIN(datatype, typename) \
+   datatype cfl_sync_queue_drain##typename(CFL_SYNC_QUEUEP queue, CFL_BOOL *empty) { \
+      return queue_drain(queue, empty).as##typename; \
+   }
+
 #define IS_EMPTY(c)   ((c)->itemCount == 0)
 #define IS_FULL(c)    ((c)->itemCount == (c)->size)
 #define NEXT_INDEX(c) (((c)->index + (c)->itemCount) % (c)->size)
@@ -205,6 +210,24 @@ void cfl_sync_queue_cancel(CFL_SYNC_QUEUEP queue) {
    }
 }
 
+static CFL_SYNC_QUEUE_ITEM queue_drain(CFL_SYNC_QUEUEP queue, CFL_BOOL *empty) {
+   CFL_SYNC_QUEUE_ITEM data = {0};
+   cfl_lock_acquire(&queue->lock);
+   if (! IS_EMPTY(queue)) {
+      *empty = CFL_FALSE;
+      data = queue->data[queue->index];
+      --queue->itemCount;
+      ++queue->index;
+      if (queue->index >= queue->size) {
+         queue->index = 0;
+      }
+   } else {
+      *empty = CFL_TRUE;
+   }
+   cfl_lock_release(&queue->lock);
+   return data;
+}
+
 CFL_BOOL cfl_sync_queue_canceled(CFL_SYNC_QUEUEP queue) {
    return queue->canceled;
 }
@@ -238,3 +261,18 @@ DEFINE_GET_PUT_TIMEOUT(CFL_UINT8 , UInt8  )
 DEFINE_GET_PUT_TIMEOUT(CFL_UINT16, UInt16 )
 DEFINE_GET_PUT_TIMEOUT(CFL_UINT32, UInt32 )
 DEFINE_GET_PUT_TIMEOUT(CFL_UINT64, UInt64 )
+
+
+void *cfl_sync_queue_drain(CFL_SYNC_QUEUEP queue, CFL_BOOL *empty) {
+   return queue_drain(queue, empty).asPointer;
+}
+
+DEFINE_DRAIN(CFL_BOOL  , Boolean)
+DEFINE_DRAIN(CFL_INT8  , Int8   )
+DEFINE_DRAIN(CFL_INT16 , Int16  )
+DEFINE_DRAIN(CFL_INT32 , Int32  )
+DEFINE_DRAIN(CFL_INT64 , Int64  )
+DEFINE_DRAIN(CFL_UINT8 , UInt8  )
+DEFINE_DRAIN(CFL_UINT16, UInt16 )
+DEFINE_DRAIN(CFL_UINT32, UInt32 )
+DEFINE_DRAIN(CFL_UINT64, UInt64 )

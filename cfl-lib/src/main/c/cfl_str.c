@@ -341,6 +341,17 @@ CFL_STRP cfl_str_setFormat(CFL_STRP str, const char * format, ...) {
    return str;
 }
 
+CFL_STRP cfl_str_setChar(CFL_STRP str, CFL_UINT32 index, char c) {
+   if (str == NULL) {
+      str = cfl_str_new(index + 1);
+      cfl_str_setLength(str, index + 1);
+   } else if (index >= str->length) {
+      cfl_str_setLength(str, index + 1);
+   }
+   str->data[index] = c;
+   return str;
+}
+
 char *cfl_str_getPtr(CFL_STRP str) {
    return str->data;
 }
