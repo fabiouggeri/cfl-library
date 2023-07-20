@@ -22,7 +22,7 @@
 #include "cfl_lock.h"
 #include "cfl_hash.h"
 
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
 #include <sys/time.h>
 #else
 #include <time.h>
@@ -32,15 +32,15 @@
 
 #define IS_EXCLUSIVE_LOCK(l)       ((l)->lockOwner != NULL_THREAD)
 
-#if defined(__linux__) || ! defined(_CFL_CONDITION_VAR)
+#if defined(CFL_OS_LINUX) || ! defined(_CFL_CONDITION_VAR)
    #define WAIT_RESULT int
-#elif defined(_WIN32)
+#elif defined(CFL_OS_WINDOWS)
    #define WAIT_RESULT BOOL
 #else
    #define WAIT_RESULT int
 #endif
 
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
 
    #define GET_CURRENT_THREAD_ID      GetCurrentThreadId()
    #define IS_LOCKED_BY_ME(l)         ((l)->lockOwner == GET_CURRENT_THREAD_ID)
@@ -89,7 +89,7 @@
 
    #endif
 
-#elif defined(__linux__)
+#elif defined(CFL_OS_LINUX)
 
    #define GET_CURRENT_THREAD_ID      pthread_self()
    #define IS_LOCKED_BY_ME(l)         pthread_equal((l)->lockOwner, GET_CURRENT_THREAD_ID)
@@ -113,22 +113,20 @@
 #ifdef WAIT_FUNCTION
 
 static int waitCondition(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT32 timeout) {
-#if defined(__linux__)
-   struct timespec ts;
+#if defined(CFL_OS_LINUX)
    struct timeval tv;
-   CFL_UINT64 nanoseconds;
 
    if (timeout == CFL_WAIT_FOREVER) {
       return pthread_cond_wait(&pVar->handle, &pLock->handle);
    } else {
-      gettimeofday(&tv, NULL);
-
-      nanoseconds = ((CFL_UINT64) tv.tv_sec) * 1000 * 1000 * 1000 +
-              timeout * 1000 * 1000 +
-              ((CFL_UINT64) tv.tv_usec) * 1000;
-
-      ts.tv_sec = nanoseconds / 1000 / 1000 / 1000;
-      ts.tv_nsec = (long) (nanoseconds - ((CFL_UINT64) ts.tv_sec) * 1000 * 1000 * 1000);
+      struct timespec ts;
+      clock_gettime(CLOCK_REALTIME, &ts);
+      ts.tv_sec  += timeout / 1000;
+      ts.tv_nsec += (timeout % 1000) * 1000000;
+      if (ts.tv_nsec > 1000000000) {
+         ts.tv_sec  += 1;
+         ts.tv_nsec -= 1000000000;
+      }
       return pthread_cond_timedwait(&pVar->handle, &pLock->handle, &ts);
    }
 #elif ! defined(_CFL_CONDITION_VAR)
@@ -250,7 +248,7 @@ void cfl_lock_conditionWakeAll(CFL_CONDITION_VARIABLEP pVar) {
 }
 
 CFL_INT32 cfl_lock_lastErrorCode(void) {
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
    return errno;
 #else
    return GetLastError();

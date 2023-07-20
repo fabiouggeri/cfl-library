@@ -19,23 +19,25 @@
 
 #include <stdlib.h>
 
-#ifdef __linux__
-#include <errno.h>
-#include <sys/time.h>
+#include "cfl_types.h"
+
+#if defined(CFL_OS_LINUX)
+   #include <errno.h>
+   #include <sys/time.h>
 #endif
 
 #include "cfl_event.h"
 
 CFL_EVENTP cfl_event_new(char *name, CFL_BOOL manualReset) {
    CFL_EVENTP event = NULL;
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    HANDLE handle;
    handle = CreateEvent(NULL, manualReset, CFL_FALSE, name ? TEXT(name) : NULL);
    if (handle) {
       event = malloc(sizeof (CFL_EVENT));
       event->handle = handle;
    }
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    int result;
    event = malloc(sizeof (CFL_EVENT));
    if (event == NULL) {
@@ -58,9 +60,9 @@ CFL_EVENTP cfl_event_new(char *name, CFL_BOOL manualReset) {
 }
 
 void cfl_event_free(CFL_EVENTP event) {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    CloseHandle(event->handle);
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    pthread_cond_destroy(&event->conditionVar);
    pthread_mutex_destroy(&event->mutex);
 #endif
@@ -68,9 +70,9 @@ void cfl_event_free(CFL_EVENTP event) {
 }
 
 void cfl_event_set(CFL_EVENTP event) {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    SetEvent(event->handle);
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    if (pthread_mutex_lock(&event->mutex) == 0) {
       event->state = CFL_TRUE;
 
@@ -87,9 +89,9 @@ void cfl_event_set(CFL_EVENTP event) {
 }
 
 void cfl_event_reset(CFL_EVENTP event) {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    ResetEvent(event->handle);
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    if (pthread_mutex_lock(&event->mutex) == 0) {
       event->state = CFL_FALSE;
       pthread_mutex_unlock(&event->mutex);
@@ -98,7 +100,7 @@ void cfl_event_reset(CFL_EVENTP event) {
 }
 
 
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
 static int unlockedWaitForEvent(CFL_EVENTP event, CFL_UINT64 milliseconds) {
    int result = 0;
    if (!event->state) {
@@ -135,9 +137,9 @@ static int unlockedWaitForEvent(CFL_EVENTP event, CFL_UINT64 milliseconds) {
 #endif
 
 CFL_BOOL cfl_event_wait(CFL_EVENTP event) {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    return WaitForSingleObject(event->handle, INFINITE) == WAIT_OBJECT_0 ? CFL_TRUE : CFL_FALSE;
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    return pthread_mutex_lock(&event->mutex) == 0 &&
            unlockedWaitForEvent(event, 0) == 0 &&
            pthread_mutex_unlock(&event->mutex) == 0 ? CFL_TRUE : CFL_FALSE;
@@ -145,12 +147,12 @@ CFL_BOOL cfl_event_wait(CFL_EVENTP event) {
 }
 
 CFL_UINT8 cfl_event_wait2(CFL_EVENTP event) {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    if (WaitForSingleObject(event->handle, INFINITE) == WAIT_OBJECT_0) {
       return CFL_EVENT_SET;
    }
    return CFL_EVENT_FAIL;
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    return pthread_mutex_lock(&event->mutex) == 0 &&
            unlockedWaitForEvent(event, 0) == 0 &&
            pthread_mutex_unlock(&event->mutex) == 0 ? CFL_EVENT_SET : CFL_EVENT_FAIL;
@@ -158,11 +160,11 @@ CFL_UINT8 cfl_event_wait2(CFL_EVENTP event) {
 }
 
 CFL_BOOL cfl_event_waitTimeout(CFL_EVENTP event, CFL_INT32 timeout) {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    DWORD res;
    res = WaitForSingleObject(event->handle, timeout);
    return res == WAIT_OBJECT_0 || res == WAIT_TIMEOUT;
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    int result;
    if (timeout == 0) {
       result = pthread_mutex_trylock(&event->mutex);
@@ -176,7 +178,7 @@ CFL_BOOL cfl_event_waitTimeout(CFL_EVENTP event, CFL_INT32 timeout) {
 }
 
 CFL_UINT8 cfl_event_waitTimeout2(CFL_EVENTP event, CFL_INT32 timeout) {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    DWORD res;
    res = WaitForSingleObject(event->handle, timeout);
    switch (res) {
@@ -187,7 +189,7 @@ CFL_UINT8 cfl_event_waitTimeout2(CFL_EVENTP event, CFL_INT32 timeout) {
       default:
          return CFL_EVENT_FAIL;
    }
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    int result;
    if (pthread_mutex_lock(&event->mutex) == 0) {
       result = unlockedWaitForEvent(event, timeout);

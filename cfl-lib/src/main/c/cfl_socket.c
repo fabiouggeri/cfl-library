@@ -24,12 +24,12 @@
 #include "cfl_buffer.h"
 #include "cfl_str.h"
 
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
    #include <string.h>
    #include <arpa/inet.h>
    #include <fcntl.h>
    #include <netinet/tcp.h>
-#elif defined(_WIN32) && ! defined(__BORLANDC__)
+#elif defined(CFL_OS_WINDOWS) && ! defined(__BORLANDC__)
    #include <mstcpip.h>
 #endif
 
@@ -37,7 +37,7 @@
    #define INET6_ADDRSTRLEN 65
 #endif
 
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
    #define SHUTDOWN_READ       SHUT_RD
    #define SHUTDOWN_WRITE      SHUT_WR
    #define SHUTDOWN_READ_WRITE SHUT_RDWR
@@ -50,7 +50,7 @@
 #define STR_EMPTY(s) ((s) == NULL || (s)[0] == '\0')
 
 CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog) {
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
    CFL_SOCKET socketHandle;
    struct sockaddr_in serv_addr;
    struct hostent *he;
@@ -225,8 +225,45 @@ CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_U
    return clientSocket;
 }
 
+CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutMillis, CFL_STRP clientAddr, CFL_UINT16 *port) {
+   CFL_SOCKET clientSocket = CFL_INVALID_SOCKET;
+   struct sockaddr sockAddr;
+   int len = sizeof(sockAddr);
+   fd_set fdSet;
+   struct timeval timewait;
+   struct timeval *timeout;
+
+   FD_ZERO(&fdSet);
+   FD_SET(listenSocket, &fdSet);
+
+   if (timeoutMillis == CFL_WAIT_FOREVER) {
+      timeout = NULL;
+   } else {
+      timewait.tv_sec = (time_t) (timeoutMillis / 1000);
+      timewait.tv_usec = (timeoutMillis % 1000) * 1000;
+      timeout = &timewait;
+   }
+   if (listenSocket != CFL_INVALID_SOCKET && select(listenSocket + 1, &fdSet, NULL, NULL, timeout) > 0) {
+      clientSocket = accept(listenSocket, &sockAddr, &len);
+      if (clientSocket != CFL_INVALID_SOCKET) {
+         if (clientAddr != NULL) {
+            char addrBuffer[INET6_ADDRSTRLEN];
+            const char *addr = clientAddress(&sockAddr, addrBuffer, sizeof(addrBuffer));
+            if (addr != NULL) {
+               cfl_str_setValue(clientAddr, addr);
+            }
+         }
+         if (port != NULL) {
+            *port = ntohs(((struct sockaddr_in*)&sockAddr)->sin_port);
+         }
+      }
+   }
+
+   return clientSocket;
+}
+
 CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
    CFL_SOCKET socketHandle;
    struct sockaddr_in serv_addr;
    struct hostent *he;
@@ -344,7 +381,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
 }
 
 CFL_INT32 cfl_socket_close(CFL_SOCKET socket) {
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
    return close(socket);
 #else
    CFL_INT32 rc;
@@ -423,14 +460,14 @@ CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer, int len) 
    return len;
 }
 
-CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer, CFL_UINT32 packetLen, CFL_UINT32 timeout) {
+CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer, CFL_UINT32 packetLen, CFL_UINT32 timeoutMillis) {
    int retVal;
    CFL_UINT32 bodyLen;
    char *dataRead;
    int readLen;
 
    // wait until timeout or data received
-   retVal = cfl_socket_selectRead(socket, timeout, 0);
+   retVal = cfl_socket_selectRead(socket, timeoutMillis);
    if (retVal <= 0) {
       return CFL_FALSE;
    }
@@ -458,65 +495,65 @@ CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer, CFL_
    return CFL_TRUE;
 }
 
-CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, long sec, long mSec) {
+CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
    fd_set fdSet;
-   struct timeval time;
+   struct timeval timewait;
    struct timeval * timeout;
 
    FD_ZERO(&fdSet);
    FD_SET(socket, &fdSet);
 
-   if (sec >= 0 && mSec >= 0) {
-      time.tv_sec = sec < 0 ? 0 : sec;
-      time.tv_usec = mSec < 0 ? 0 : mSec;
-      timeout = &time;
-   } else {
+   if (timeoutMillis == CFL_WAIT_FOREVER) {
       timeout = NULL;
+   } else {
+      timewait.tv_sec = (time_t) (timeoutMillis / 1000);
+      timewait.tv_usec = (timeoutMillis % 1000) * 1000;
+      timeout = &timewait;
    }
 
    return select((int) socket + 1, &fdSet, NULL, NULL, timeout);
 }
 
-CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, long sec, long mSec) {
+CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
    fd_set fdSet;
-   struct timeval time;
+   struct timeval timewait;
    struct timeval * timeout;
 
    FD_ZERO(&fdSet);
    FD_SET(socket, &fdSet);
 
-   if (sec >= 0 && mSec >= 0) {
-      time.tv_sec = sec < 0 ? 0 : sec;
-      time.tv_usec = mSec < 0 ? 0 : mSec;
-      timeout = &time;
-   } else {
+   if (timeoutMillis == CFL_WAIT_FOREVER) {
       timeout = NULL;
+   } else {
+      timewait.tv_sec = (time_t) (timeoutMillis / 1000);
+      timewait.tv_usec = (timeoutMillis % 1000) * 1000;
+      timeout = &timewait;
    }
 
    return select((int) socket + 1, NULL, &fdSet, NULL, timeout);
 }
 
-CFL_INT32 cfl_socket_select(CFL_SOCKET socket, long sec, long mSec) {
+CFL_INT32 cfl_socket_select(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
    fd_set fdSet;
-   struct timeval time;
+   struct timeval timewait;
    struct timeval * timeout;
 
    FD_ZERO(&fdSet);
    FD_SET(socket, &fdSet);
 
-   if (sec >= 0 && mSec >= 0) {
-      time.tv_sec = sec < 0 ? 0 : sec;
-      time.tv_usec = mSec < 0 ? 0 : mSec;
-      timeout = &time;
-   } else {
+   if (timeoutMillis == CFL_WAIT_FOREVER) {
       timeout = NULL;
+   } else {
+      timewait.tv_sec = (time_t) (timeoutMillis / 1000);
+      timewait.tv_usec = (timeoutMillis % 1000) * 1000;
+      timeout = &timewait;
    }
 
    return select((int) socket + 1, &fdSet, &fdSet, NULL, timeout);
 }
 
 CFL_INT32 cfl_socket_lastErrorCode(void) {
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
    return errno;
 #else
    return WSAGetLastError();
@@ -525,7 +562,7 @@ CFL_INT32 cfl_socket_lastErrorCode(void) {
 
 CFL_BOOL cfl_socket_setBlockingMode(CFL_SOCKET socket, CFL_BOOL block) {
    CFL_BOOL ret;
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
     const int flags = fcntl(socket, F_GETFL, 0);
     if ((flags & O_NONBLOCK) && !block) {
        return CFL_TRUE;
@@ -554,7 +591,7 @@ CFL_BOOL cfl_socket_setSendBufferSize(CFL_SOCKET socket, int size) {
 }
 
 CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 time, CFL_UINT32 interval) {
-#ifdef __linux__
+#if defined(CFL_OS_LINUX)
 
    if(setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, (char *) &active, sizeof(CFL_BOOL)) != 0) {
       return CFL_FALSE;
@@ -570,7 +607,7 @@ CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 
       }
    }
    return CFL_TRUE;
-#elif defined(_WIN32) && ! defined(__BORLANDC__)
+#elif defined(CFL_OS_WINDOWS) && ! defined(__BORLANDC__)
    DWORD dwBytes = 0;
    struct tcp_keepalive kaSettings;
    kaSettings.onoff = active ? 1L : 0L;
@@ -598,7 +635,11 @@ CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT16 lin
    struct linger sl;
    sl.l_onoff = active ? 1 : 0;
    sl.l_linger = lingerSeconds;
+#if defined(CFL_OS_WINDOWS)
+   return setsockopt(socket, SOL_SOCKET, SO_LINGER, (char *) &sl, sizeof(sl)) == 0 ? CFL_TRUE : CFL_FALSE;
+#else
    return setsockopt(socket, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl)) == 0 ? CFL_TRUE : CFL_FALSE;
+#endif
 }
 
 CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write) {

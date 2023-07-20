@@ -24,8 +24,8 @@
 #include "cfl_types.h"
 #include "cfl_array.h"
 
-typedef int  (*MAP_COMP_FUNC) (void *k1, void *k2);
-typedef void (*MAP_KEY_VALUE_FUNC) (void *k, void *v);
+typedef int  (*MAP_COMP_FUNC) (const void *k1, const void *k2);
+typedef void (*MAP_KEY_VALUE_FUNC) (const void *k, const void *v);
 
 struct _CFL_MAP {
    CFL_ARRAY          entries;

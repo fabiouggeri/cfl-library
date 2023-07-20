@@ -22,6 +22,8 @@
 
 #include "cfl_date.h"
 
+#define LEAP_YEAR(y) ((y) % 400 == 0 || ((y) % 4 == 0 && (y) % 100 != 0))
+
 static CFL_DATEP newDateInit(CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
    CFL_DATEP date;
    date = (CFL_DATEP) malloc(sizeof(CFL_DATE));

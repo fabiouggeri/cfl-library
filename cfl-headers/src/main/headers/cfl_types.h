@@ -55,22 +55,55 @@ typedef int64_t       CFL_INT64;
 typedef uint64_t      CFL_UINT64;
 typedef double        CFL_DOUBLE;
 typedef float         CFL_FLOAT;
+typedef double        CFL_FLOAT64;
+typedef float         CFL_FLOAT32;
 typedef unsigned char CFL_BOOL;
 
-#ifdef _WIN32
+#if defined(_WIN32)
+   #define CFL_OS_WINDOWS
    #define CFL_SOCKET               SOCKET
    #define CFL_INVALID_SOCKET       INVALID_SOCKET
    #define CFL_HANDLE               HANDLE
    #define CFL_INVALID_HANDLE_VALUE INVALID_HANDLE_VALUE
    #define CFL_SOCKET_ERROR         SOCKET_ERROR
-
+   #define CFL_WAIT_FOREVER         INFINITE
+   typedef HANDLE                   CFL_THREAD_HANDLE;
+   typedef DWORD                    CFL_THREAD_ID;
+   #ifdef SRWLOCK_INIT  
+      typedef SRWLOCK               CFL_LOCK_HANDLE;
+   #else  
+      typedef CRITICAL_SECTION      CFL_LOCK_HANDLE;
+   #endif
+   #if defined(CONDITION_VARIABLE_INIT)
+      typedef CONDITION_VARIABLE    CFL_CONDITION_HANDLE;
+   #else
+      typedef int                   CFL_CONDITION_HANDLE;
+   #endif
+   
+   #if defined(_WIN64)
+      #define CFL_ARCH_64
+   #else
+      #define CFL_ARCH_32
+   #endif
 #elif defined(__linux__)
+   #define CFL_OS_LINUX
    #define CFL_SOCKET               int
    #define CFL_INVALID_SOCKET       -1
    #define CFL_HANDLE               int
    #define CFL_INVALID_HANDLE_VALUE -1
    #define CFL_SOCKET_ERROR         -1
-
+   #define CFL_WAIT_FOREVER         0xFFFFFFFF
+   typedef pthread_t                CFL_THREAD_HANDLE;
+   typedef pthread_t                CFL_THREAD_ID;
+   typedef pthread_mutex_t          CFL_LOCK_HANDLE;
+   typedef pthread_cond_t           CFL_CONDITION_HANDLE;
+   #if defined (__GNUC__)
+      #if defined(__x86_64__) || defined(__ppc64__)
+         #define CFL_ARCH_64
+      #else
+         #define CFL_ARCH_32
+      #endif
+   #endif
 #endif
 
 #define CFL_FALSE 0
@@ -84,32 +117,8 @@ typedef unsigned char CFL_BOOL;
 
 #define CFL_MAX_INT_DOUBLE 9007199254740992
 
-// #define BIT_FIELD : 1
-#define BIT_FIELD
-
 #define CFL_UNUSED(x) (void)(x)
 
-#if defined(_WIN32)
-   #define CFL_WAIT_FOREVER       INFINITE
-   typedef HANDLE                 CFL_THREAD_HANDLE;
-   typedef DWORD                  CFL_THREAD_ID;
-   #ifdef SRWLOCK_INIT
-      typedef SRWLOCK             CFL_LOCK_HANDLE;
-   #else
-      typedef CRITICAL_SECTION    CFL_LOCK_HANDLE;
-   #endif
-   #if defined(CONDITION_VARIABLE_INIT)
-      typedef CONDITION_VARIABLE  CFL_CONDITION_HANDLE;
-   #else
-      typedef int                 CFL_CONDITION_HANDLE;
-   #endif
-#elif defined(__linux__)
-   #define CFL_WAIT_FOREVER       0xFFFFFFFF
-   typedef pthread_t              CFL_THREAD_HANDLE;
-   typedef pthread_t              CFL_THREAD_ID;
-   typedef pthread_mutex_t        CFL_LOCK_HANDLE;
-   typedef pthread_cond_t         CFL_CONDITION_HANDLE;
-#endif
 
 struct _CFL_HASH_ENTRY;
 typedef struct _CFL_HASH_ENTRY CFL_HASH_ENTRY;
@@ -191,6 +200,10 @@ typedef struct _CFL_ERROR *CFL_ERRORP;
 struct _CFL_THREAD;
 typedef struct _CFL_THREAD CFL_THREAD;
 typedef struct _CFL_THREAD *CFL_THREADP;
+
+struct _CFL_THREAD_VARIABLE;
+typedef struct _CFL_THREAD_VARIABLE CFL_THREAD_VARIABLE;
+typedef struct _CFL_THREAD_VARIABLE *CFL_THREAD_VARIABLEP;
 
 struct _CFL_EVENT;
 typedef struct _CFL_EVENT CFL_EVENT;

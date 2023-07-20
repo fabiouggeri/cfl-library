@@ -28,9 +28,9 @@
 #define CFL_EVENT_TIMEOUT 2
 
 struct _CFL_EVENT {
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    HANDLE handle;
-#elif __linux__
+#elif defined(CFL_OS_LINUX)
    pthread_cond_t  conditionVar;
    pthread_mutex_t mutex;
    CFL_BOOL        autoReset;

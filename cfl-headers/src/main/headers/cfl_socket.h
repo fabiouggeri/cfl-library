@@ -25,7 +25,7 @@
 
 #include "cfl_types.h"
 
-#ifdef _WIN32
+#if defined(CFL_OS_WINDOWS)
    #define CFL_SOCK_ERROR_CONN_RESET WSAECONNRESET
 #else 
    #define CFL_SOCK_ERROR_CONN_RESET ECONNRESET
@@ -41,6 +41,7 @@
 
 extern CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog);
 extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_UINT16 *port);
+extern CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutMillis, CFL_STRP clientAddr, CFL_UINT16 *port);
 extern CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port);
 extern CFL_INT32 cfl_socket_close(CFL_SOCKET socket);
 extern CFL_INT32 cfl_socket_sendBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer);
@@ -49,10 +50,10 @@ extern CFL_BOOL cfl_socket_sendAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer);
 extern CFL_BOOL cfl_socket_sendAll(CFL_SOCKET socket, const char *buffer, CFL_UINT32 len);
 extern CFL_INT32 cfl_socket_receive(CFL_SOCKET socket, const char *buffer, int len);
 extern CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer, int len);
-extern CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer, CFL_UINT32 packetLen, CFL_UINT32 timeout);
-extern CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, long sec, long mSec);
-extern CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, long sec, long mSec);
-extern CFL_INT32 cfl_socket_select(CFL_SOCKET socket, long sec, long mSec);
+extern CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer, CFL_UINT32 packetLen, CFL_UINT32 timeoutMillis);
+extern CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
+extern CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
+extern CFL_INT32 cfl_socket_select(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
 extern CFL_INT32 cfl_socket_lastErrorCode(void);
 extern CFL_BOOL cfl_socket_setBlockingMode(CFL_SOCKET socket, CFL_BOOL block);
 extern CFL_BOOL cfl_socket_setNoDelay(CFL_SOCKET socket, CFL_BOOL delay);

@@ -90,7 +90,7 @@ const void * cfl_map_get(CFL_MAPP map, const void *key) {
    for (i = 0; i < len; i++) {
       CFL_MAP_ENTRYP entry = (CFL_MAP_ENTRYP) cfl_array_get(&map->entries, i);
       void *value = GET_VALUE(map, entry);
-      if (map->keyCompFunc(GET_KEY(entry), value) == 0) {
+      if (map->keyCompFunc(GET_KEY(entry), key) == 0) {
          return value;
       }
    }
@@ -112,10 +112,9 @@ CFL_BOOL cfl_map_del(CFL_MAPP map, const void *key) {
    CFL_UINT32 i;
    for (i = 0; i < len; i++) {
       CFL_MAP_ENTRYP entry = (CFL_MAP_ENTRYP) cfl_array_get(&map->entries, i);
-      void *key = GET_KEY(entry);
-      void *value = GET_VALUE(map, entry);
-      if (map->keyCompFunc(key, value) == 0) {
-         map->freeEntryFunc(key, value);
+      void *entryKey = GET_KEY(entry);
+      if (map->keyCompFunc(entryKey, key) == 0) {
+         map->freeEntryFunc(entryKey, key);
          cfl_array_del(&map->entries, i);
          return CFL_TRUE;
       }
