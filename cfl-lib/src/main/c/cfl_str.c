@@ -88,6 +88,27 @@ void cfl_str_initConst(CFL_STRP str, const char *buffer) {
    }
 }
 
+void cfl_str_initValue(CFL_STRP str, const char *buffer) {
+   if (str != NULL) {
+      size_t len = buffer != NULL ? strlen(buffer) : 0;
+      str->capacity = (CFL_UINT32) len;
+      str->length = (CFL_UINT32) len;
+      str->hashValue = 0;
+      str->isAllocated = CFL_FALSE;
+      if (len > 0) {
+         str->isVarData = CFL_TRUE;
+         str->data = (char *) malloc((len + 1) * sizeof(char));
+         if (str->data != NULL) {
+            memcpy(str->data, (void *) buffer, len * sizeof (char));
+            str->data[len] = 0;
+         }
+      } else {
+         str->isVarData = CFL_FALSE;
+         str->data = "";
+      }
+   }
+}
+
 CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
    CFL_STRP str;
    str = (CFL_STRP) malloc(sizeof(CFL_STR));
@@ -354,6 +375,13 @@ CFL_STRP cfl_str_setChar(CFL_STRP str, CFL_UINT32 index, char c) {
 
 char *cfl_str_getPtr(CFL_STRP str) {
    return str->data;
+}
+
+char *cfl_str_getPtrAt(CFL_STRP str, CFL_UINT32 index) {
+   if (index >= str->length) {
+      return NULL;
+   }
+   return &str->data[index];
 }
 
 /* #DEPRECATE. Use cfl_str_length */

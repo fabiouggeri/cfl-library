@@ -23,10 +23,11 @@
 
 #include "cfl_types.h"
 
-#define CFL_THREAD_CREATED   0
-#define CFL_THREAD_RUNNING   1
-#define CFL_THREAD_FINISHED  2
-#define CFL_THREAD_KILLED    3
+#define CFL_THREAD_CREATED   0x00
+#define CFL_THREAD_RUNNING   0x01
+#define CFL_THREAD_FINISHED  0x02
+#define CFL_THREAD_KILLED    0x03
+#define CFL_THREAD_ERROR     0xFF
 
 #define DECLARE_GET_SET(datatype, typename) \
    extern datatype cfl_thread_varGet##typename(CFL_THREAD_VARIABLEP threadVar); \
@@ -80,11 +81,12 @@ struct _CFL_THREAD_VARIABLE {
 };
 
 struct _CFL_THREAD {
-   CFL_THREAD_FUNC     func;
-   void                *param;
-   CFL_THREAD_HANDLE   handle;
-   CFL_BOOL            manualAllocation;
-   CFL_BOOL            joined;
+   CFL_THREAD_FUNC   func;
+   void              *param;
+   CFL_THREAD_HANDLE handle;
+   CFL_BOOL          manualAllocation;
+   CFL_BOOL          joined;
+   CFL_UINT8         status;
 };
 
 extern CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func);
@@ -96,6 +98,9 @@ extern CFL_BOOL cfl_thread_start(CFL_THREADP thread, void * param);
 extern CFL_BOOL cfl_thread_wait(CFL_THREADP thread);
 extern CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout);
 extern CFL_BOOL cfl_thread_kill(CFL_THREADP thread);
+extern CFL_UINT8 cfl_thread_status(CFL_THREADP thread);
+extern void cfl_thread_signalError(CFL_THREADP thread);
+extern CFL_BOOL cfl_thread_currentIsHandled(void);
 extern CFL_BOOL cfl_thread_sleep(CFL_UINT32 time);
 
 extern void *cfl_thread_varGet(CFL_THREAD_VARIABLEP threadVar);

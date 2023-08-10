@@ -36,51 +36,50 @@
 #define CFL_MIN_PER_HOUR   60
 #define CFL_HOUR_PER_DAY   60
 
-#define cfl_date_getYear(d)      ((d)->year)
-#define cfl_date_getMonth(d)     ((d)->month)
-#define cfl_date_getDay(d)       ((d)->day)
-#define cfl_date_getHour(d)      ((d)->hour)
-#define cfl_date_getMin(d)       ((d)->min)
-#define cfl_date_getSec(d)       ((d)->sec)
-#define cfl_date_getMillis(d)    ((d)->millis)
-#define cfl_date_setYear(d, v)   ((d)->year = v)
-#define cfl_date_setMonth(d, v)  ((d)->month = v)
-#define cfl_date_setDay(d, v)    ((d)->day = v)
-#define cfl_date_setHour(d, v)   ((d)->hour = v)
-#define cfl_date_setMin(d, v)    ((d)->min = v)
-#define cfl_date_setSec(d, v)    ((d)->sec = v)
-#define cfl_date_setMillis(d, v) ((d)->millis = v)
-
-#define cfl_date_secToMillis(s) (s * CFL_MILLIS_PER_SEC)
-#define cfl_date_minToSec(m)    (m * CFL_SEC_PER_MIN)
-#define cfl_date_hourToMin(m)   (m * CFL_MIN_PER_HOUR)
-#define cfl_date_dayToHour(m)   (m * CFL_HOUR_PER_DAY)
-
 struct _CFL_DATE {
    CFL_UINT16 millis;
-   CFL_UINT16 year;
+   CFL_INT16  year;
    CFL_UINT8  month;
    CFL_UINT8  day;
    CFL_UINT8  hour;
    CFL_UINT8  min;
    CFL_UINT8  sec;
+   CFL_BOOL   allocated;
 };
 
+extern void cfl_date_init(CFL_DATEP date);
 extern CFL_DATEP cfl_date_new(void);
 extern void cfl_date_free(CFL_DATEP date);
-extern CFL_DATEP cfl_date_newDate(CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day);
-extern CFL_DATEP cfl_date_newDateTime(CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis);
+extern CFL_DATEP cfl_date_newDate(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day);
+extern CFL_DATEP cfl_date_newDateTime(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis);
 extern CFL_DATEP cfl_date_getCurrent(CFL_DATEP date);
-extern void cfl_date_getDate(CFL_DATEP date, CFL_UINT16 *year, CFL_UINT8 *month, CFL_UINT8 *day);
+extern void cfl_date_getDate(CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day);
 extern void cfl_date_getTime(CFL_DATEP date, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis);
-extern void cfl_date_getDateTime(CFL_DATEP date, CFL_UINT16 *year, CFL_UINT8 *month, CFL_UINT8 *day, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis);
-extern void cfl_date_setDate(CFL_DATEP date, CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day);
+extern void cfl_date_getDateTime(CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis);
+extern void cfl_date_setDate(CFL_DATEP date, CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day);
 extern void cfl_date_setTime(CFL_DATEP date, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis);
-extern void cfl_date_setDateTime(CFL_DATEP date, CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis);
+extern void cfl_date_setDateTime(CFL_DATEP date, CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis);
+extern CFL_INT16 cfl_date_getYear(CFL_DATEP date);
+extern CFL_UINT8 cfl_date_getMonth(CFL_DATEP date);
+extern CFL_UINT8 cfl_date_getDay(CFL_DATEP date);
+extern CFL_UINT8 cfl_date_getHour(CFL_DATEP date);
+extern CFL_UINT8 cfl_date_getMin(CFL_DATEP date);
+extern CFL_UINT8 cfl_date_getSec(CFL_DATEP date);
+extern CFL_UINT16 cfl_date_getMillis(CFL_DATEP date);
+extern void cfl_date_setYear(CFL_DATEP date, CFL_INT16 year);
+extern void cfl_date_setMonth(CFL_DATEP date, CFL_UINT8 month);
+extern void cfl_date_setDay(CFL_DATEP date, CFL_UINT8 day);
+extern void cfl_date_setHour(CFL_DATEP date, CFL_UINT8 hour);
+extern void cfl_date_setMin(CFL_DATEP date, CFL_UINT8 min);
+extern void cfl_date_setSec(CFL_DATEP date, CFL_UINT8 sec);
+extern void cfl_date_setMillis(CFL_DATEP date, CFL_UINT16 millis);
+extern void cfl_date_copy(CFL_DATEP fromDate, CFL_DATEP toDate);
+//extern CFL_UINT64 cfl_date_toMillis(CFL_DATEP date);
+//extern CFL_UINT64 cfl_date_diffMillis(CFL_DATEP date1, CFL_DATEP date2);
+//extern CFL_UINT64 cfl_date_diffSec(CFL_DATEP date1, CFL_DATEP date2);
 //extern CFL_UINT16 cfl_date_get(CFL_DATEP date, CFL_UINT8 field);
 //extern void cfl_date_set(CFL_DATEP date, CFL_UINT8 field, CFL_UINT16 value);
 //extern CFL_DATEP cfl_date_diff(CFL_DATEP date1, CFL_DATEP date2);
-//extern CFL_UINT64 cfl_date_diffMillis(CFL_DATEP date1, CFL_DATEP date2);
 //extern CFL_UINT64 cfl_date_getCurrentMillis(void);
 
 #endif

@@ -116,9 +116,8 @@
    DEFINE_OPERATIONS_SET(CFL_INT32, Int32  , long  ,   )
    DEFINE_OPERATIONS_OP(CFL_INT32, Int32  , long  ,   )
 
-   DEFINE_OPERATIONS_SET(void *   , Pointer, void *, Pointer )
-
 #if defined(CFL_ARCH_64)
+   DEFINE_OPERATIONS_SET(void *   , Pointer, void *, Pointer )
    DEFINE_OPERATIONS_SET(CFL_INT64, Int64  , __int64, 64)
    DEFINE_OPERATIONS_OP(CFL_INT64, Int64  , __int64, 64)
 #endif

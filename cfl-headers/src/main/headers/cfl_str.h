@@ -24,7 +24,6 @@
 #include <stdarg.h>
 #include "cfl_types.h"
 
-
 #define CFL_STR_FREE(s) if (s != NULL) { cfl_str_free(s); s = NULL; }
 #define CFL_STR_APPEND_CONST(s, c) cfl_str_appendLen(s, c, (int) sizeof(c) - 1)
 #define CFL_STR_SET_CONST(s, c)    cfl_str_setConstLen(s, c, (int) sizeof(c) - 1)
@@ -51,6 +50,7 @@ struct _CFL_STR {
 extern void cfl_str_init(CFL_STRP str);
 extern void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity);
 extern void cfl_str_initConst(CFL_STRP str, const char *buffer);
+extern void cfl_str_initValue(CFL_STRP str, const char *buffer);
 extern CFL_STRP cfl_str_new(CFL_UINT32  iniCapacity);
 extern CFL_STRP cfl_str_newBuffer(const char *buffer);
 extern CFL_STRP cfl_str_newBufferLen(const char *buffer, CFL_UINT32 len);
@@ -66,6 +66,7 @@ extern CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char * format, va_l
 extern CFL_STRP cfl_str_appendFormat(CFL_STRP str, const char * format, ...);
 
 extern char *cfl_str_getPtr(CFL_STRP str);
+extern char *cfl_str_getPtrAt(CFL_STRP str, CFL_UINT32 index);
 extern CFL_UINT32 cfl_str_getLength(CFL_STRP str);
 extern CFL_UINT32 cfl_str_length(CFL_STRP str);
 extern void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen);

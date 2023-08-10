@@ -40,6 +40,9 @@
 
 #define DATA_SIZE(d) ((d)->dataSize > 0 ? (d)->dataSize : sizeof(VAR_DATA))
 
+/***********
+ * WINDOWS *
+ ***********/
 #if defined(CFL_OS_WINDOWS)
 
 static volatile LONG s_threadStoreInitialized = 0;
@@ -67,6 +70,11 @@ static DWORD s_threadStorageKey = TLS_OUT_OF_INDEXES;
 #define SET_THREAD(t) if (s_threadStoreInitialized && InterlockedCompareExchange(&s_threadStoreInitialized, 1, 1) == 1)\
                         TlsSetValue(s_threadStorageKey, t)
 
+#define KILL_THREAD(t) (TerminateThread((t)->handle, 1))
+
+/*********
+ * POSIX *
+ *********/
 #else
 
 static int s_threadStoreInitialized = 0;
@@ -96,6 +104,8 @@ static pthread_key_t s_threadStorageKey;
 #define SET_THREAD(t) if (s_threadStoreInitialized && __sync_val_compare_and_swap(&s_threadStoreInitialized, 1, 1) == 1)\
                          pthread_setspecific(s_threadStorageKey, t)
 
+#define KILL_THREAD(t) (pthread_cancel((t)->handle) == 0)
+
 static void freeOwnData(void *data) {
    CFL_THREADP thread = (CFL_THREADP)data;
    if (thread != NULL && ! thread->manualAllocation) {
@@ -121,6 +131,7 @@ static CFL_THREADP initCurrentThread(void) {
    memset(thread, 0, sizeof(CFL_THREAD));
    thread->manualAllocation = CFL_FALSE;
    thread->joined = CFL_FALSE;
+   thread->status = CFL_THREAD_RUNNING;
    SET_THREAD(thread);
    return thread;
 }
@@ -134,6 +145,7 @@ CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
    thread->manualAllocation = CFL_TRUE;
    thread->joined = CFL_FALSE;
    thread->func = func;
+   thread->status = CFL_THREAD_CREATED;
    return thread;
 }
 
@@ -150,9 +162,7 @@ void cfl_thread_free(CFL_THREADP thread) {
 }
 
 CFL_THREADP cfl_thread_getCurrent(void) {
-   CFL_THREADP thread;
-   
-   thread = GET_THREAD();
+   CFL_THREADP thread = GET_THREAD();
    if (thread == NULL) {
       thread = initCurrentThread();
    }
@@ -164,11 +174,13 @@ CFL_THREADP cfl_thread_getCurrent(void) {
 static DWORD WINAPI startFunction(LPVOID param) {
    CFL_THREADP thread = (CFL_THREADP) param;
 
+   thread->status = CFL_THREAD_RUNNING;
    INIT_THREAD_STORAGE
    SET_THREAD(thread);
    if (thread->func != NULL) {
       thread->func(thread->param);
    }
+   thread->status = CFL_THREAD_FINISHED;
    return 1;
 }
 
@@ -177,11 +189,13 @@ static DWORD WINAPI startFunction(LPVOID param) {
 static void *startFunction(void *param) {
    CFL_THREADP thread = (CFL_THREADP) param;
 
+   thread->status = CFL_THREAD_RUNNING;
    INIT_THREAD_STORAGE
    SET_THREAD(thread);
    if (thread->func != NULL) {
       thread->func(thread->param);
    }
+   thread->status = CFL_THREAD_FINISHED;
    return NULL;
 }
 #endif
@@ -252,11 +266,22 @@ CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout) {
 }
 
 CFL_BOOL cfl_thread_kill(CFL_THREADP thread) {
-#if defined(CFL_OS_WINDOWS)
-   return TerminateThread(thread->handle, 1) ? CFL_TRUE : CFL_FALSE;
-#else
-   return pthread_cancel(thread->handle) == 0 ? CFL_TRUE : CFL_FALSE;
-#endif
+   if (thread->status == CFL_THREAD_RUNNING && KILL_THREAD(thread)) {
+      thread->status = CFL_THREAD_KILLED;
+      return CFL_TRUE;
+   }
+   return CFL_FALSE;
+}
+
+void cfl_thread_signalError(CFL_THREADP thread) {
+   thread->status = CFL_THREAD_ERROR;
+}
+
+CFL_UINT8 cfl_thread_status(CFL_THREADP thread) {
+   return thread->status;
+}
+CFL_BOOL cfl_thread_currentIsHandled(void) {
+   return GET_THREAD() != NULL ? CFL_TRUE : CFL_FALSE;
 }
 
 CFL_BOOL cfl_thread_sleep(CFL_UINT32 time) {

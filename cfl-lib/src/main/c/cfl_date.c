@@ -22,37 +22,159 @@
 
 #include "cfl_date.h"
 
-#define LEAP_YEAR(y) ((y) % 400 == 0 || ((y) % 4 == 0 && (y) % 100 != 0))
+#define GREGORIAN_BASE 1582
 
-static CFL_DATEP newDateInit(CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
+#define SET_YEAR(d, v)   (d)->year = (v)
+#define SET_MONTH(d, v)  (d)->month = (v)
+#define SET_DAY(d, v)    (d)->day = (v)
+#define SET_HOUR(d, v)   (d)->hour = (v)
+#define SET_MIN(d, v)    (d)->min = (v)
+#define SET_SEC(d, v)    (d)->sec = (v)
+#define SET_MILLIS(d, v) (d)->millis = (v)
+
+#define GET_YEAR(d)   (d)->year
+#define GET_MONTH(d)  (d)->month
+#define GET_DAY(d)    (d)->day
+#define GET_HOUR(d)   (d)->hour
+#define GET_MIN(d)    (d)->min
+#define GET_SEC(d)    (d)->sec
+#define GET_MILLIS(d) (d)->millis
+
+#define SEC_TO_MILLIS(sec) ((sec) * CFL_MILLIS_PER_SEC)
+#define MIN_TO_SEC(min)    ((min) * CFL_SEC_PER_MIN)
+#define HOUR_TO_MIN(hour)  ((hour) * CFL_MIN_PER_HOUR)
+#define DAY_TO_HOUR(days)  ((days) * CFL_HOUR_PER_DAY)
+
+static CFL_BOOL isLeapYear(CFL_INT16 year) {
+   if (year > GREGORIAN_BASE) { 
+      return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? CFL_TRUE : CFL_FALSE;
+   } else if (year >= 8) { 
+      return year % 4 == 0 ? CFL_TRUE : CFL_FALSE;
+   }
+   switch(year) {
+      case -45:
+      case -42:
+      case -39:
+      case -36:
+      case -33:
+      case -30:
+      case -27:
+      case -24:
+      case -21:
+      case -18:
+      case -15:
+      case -12:
+      case -9:
+        return CFL_TRUE;
+      default:
+        return CFL_FALSE;
+   }
+}
+
+static CFL_UINT8 daysInMonth(CFL_INT16 year, CFL_UINT8 month) {
+   switch(month) {
+      case 1:
+      case 3:
+      case 5:
+      case 7:
+      case 8:
+      case 10:
+      case 12:
+         return 31;
+      case 2:
+         return isLeapYear(year) ? 29 : 28;
+
+      default:
+         return 30;
+   }
+}
+
+static CFL_UINT16 daysInYear(CFL_INT16 year) {
+   return isLeapYear(year) ? 366 : 365;
+}
+
+static CFL_UINT16 daysBetweenMonths(CFL_INT16 year, CFL_UINT8 fromMonth, CFL_UINT8 toMonth) {
+   CFL_UINT16 days = 0;
+   CFL_UINT8 month;
+   for (month = fromMonth; month < toMonth; month++) {
+      days += daysInMonth(year, month);
+   }
+   return days;
+}
+
+static CFL_UINT16 countLeapYears(CFL_INT16 year) {
+   CFL_UINT16 count;
+
+   if (year > GREGORIAN_BASE) {
+      year++;
+      count = (CFL_UINT16)((year / 4) - (year / 100) + (year / 400));                                // Leap years with Gregorian method
+      count -= (CFL_UINT16)((GREGORIAN_BASE / 4) - (GREGORIAN_BASE / 100) + (GREGORIAN_BASE / 400)); // - Leap years before 1583 with Gregorian method
+      count += (CFL_UINT16)(GREGORIAN_BASE / 4);                                                     // + Leap years with Julian method
+      count += 13;                                                                                   // + Leap years between -45..-9
+   } else if (year >= 8) {
+      year++;
+      count = (CFL_UINT16)((year / 4) + 13);
+   } else if (year >= -8) {
+      count = 13;
+   } else if (year >= -45) {
+      count =  (CFL_UINT16)((year + 48) / 3);
+   } else {
+      count = 0;
+   }
+   return count;
+}
+
+static CFL_UINT32 leapYearsBetween(CFL_INT16 startYear, CFL_INT16 endYear) {
+   CFL_UINT32 countStart;
+   CFL_UINT32 countEnd;
+
+   if (endYear >= startYear) {
+      countStart = countLeapYears(startYear);
+      countEnd = countLeapYears(endYear);
+   } else {
+      countStart = countLeapYears(endYear);
+      countEnd = countLeapYears(startYear);
+   }
+   return countEnd - countStart;
+}
+
+static CFL_DATEP newDateInit(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
    CFL_DATEP date;
    date = (CFL_DATEP) malloc(sizeof(CFL_DATE));
-   cfl_date_setYear(date, year);
-   cfl_date_setMonth(date, month);
-   cfl_date_setDay(date, day);
-   cfl_date_setHour(date, hour);
-   cfl_date_setMin(date, min);
-   cfl_date_setSec(date, sec);
-   cfl_date_setMillis(date, millis);
+   SET_YEAR(date, year);
+   SET_MONTH(date, month);
+   SET_DAY(date, day);
+   SET_HOUR(date, hour);
+   SET_MIN(date, min);
+   SET_SEC(date, sec);
+   SET_MILLIS(date, millis);
    return date;
+}
+
+void cfl_date_init(CFL_DATEP date) {
+   cfl_date_getCurrent(date);
+   date->allocated = CFL_FALSE;
 }
 
 CFL_DATEP cfl_date_new(void) {
    CFL_DATEP date;
    date = (CFL_DATEP) malloc(sizeof(CFL_DATE));
-   cfl_date_getCurrent(date);
+   cfl_date_init(date);
+   date->allocated = CFL_TRUE;
    return date;
 }
 
 void cfl_date_free(CFL_DATEP date) {
-   free(date);
+   if (date->allocated) {
+      free(date);
+   }
 }
 
-CFL_DATEP cfl_date_newDate(CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day) {
+CFL_DATEP cfl_date_newDate(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day) {
    return newDateInit(year, month, day, 0, 0, 0, 0);
 }
 
-CFL_DATEP cfl_date_newDateTime(CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
+CFL_DATEP cfl_date_newDateTime(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
    return newDateInit(year, month, day, hour, min, sec, millis);
 }
 
@@ -62,58 +184,199 @@ CFL_DATEP cfl_date_getCurrent(CFL_DATEP date) {
 
    time(&curTime);
    tm = localtime(&curTime);
-   cfl_date_setYear(date, (CFL_UINT16) tm->tm_year);
-   cfl_date_setMonth(date, (CFL_UINT8) tm->tm_mon);
-   cfl_date_setDay(date, (CFL_UINT8) tm->tm_mday);
-   cfl_date_setHour(date, (CFL_UINT8) tm->tm_hour);
-   cfl_date_setMin(date, (CFL_UINT8) tm->tm_min);
-   cfl_date_setSec(date, (CFL_UINT8) tm->tm_sec);
-   cfl_date_setMillis(date, 0);
+   SET_YEAR(date, (CFL_UINT16) tm->tm_year);
+   SET_MONTH(date, (CFL_UINT8) tm->tm_mon);
+   SET_DAY(date, (CFL_UINT8) tm->tm_mday);
+   SET_HOUR(date, (CFL_UINT8) tm->tm_hour);
+   SET_MIN(date, (CFL_UINT8) tm->tm_min);
+   SET_SEC(date, (CFL_UINT8) tm->tm_sec);
+   SET_MILLIS(date, 0);
    return date;
 }
 
-void cfl_date_getDate(CFL_DATEP date, CFL_UINT16 *year, CFL_UINT8 *month, CFL_UINT8 *day) {
-   *year = cfl_date_getYear(date);
-   *month = cfl_date_getMonth(date);
-   *day = cfl_date_getDay(date);
+void cfl_date_getDate(CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day) {
+   *year = GET_YEAR(date);
+   *month = GET_MONTH(date);
+   *day = GET_DAY(date);
 }
 
 void cfl_date_getTime(CFL_DATEP date, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis) {
-   *hour = cfl_date_getHour(date);
-   *min = cfl_date_getMin(date);
-   *sec = cfl_date_getSec(date);
-   *millis = cfl_date_getMillis(date);
+   *hour = GET_HOUR(date);
+   *min = GET_MIN(date);
+   *sec = GET_SEC(date);
+   *millis = GET_MILLIS(date);
 }
 
-void cfl_date_getDateTime(CFL_DATEP date, CFL_UINT16 *year, CFL_UINT8 *month, CFL_UINT8 *day, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis) {
-   *year = cfl_date_getYear(date);
-   *month = cfl_date_getMonth(date);
-   *day = cfl_date_getDay(date);
-   *hour = cfl_date_getHour(date);
-   *min = cfl_date_getMin(date);
-   *sec = cfl_date_getSec(date);
-   *millis = cfl_date_getMillis(date);
+void cfl_date_getDateTime(CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis) {
+   *year = GET_YEAR(date);
+   *month = GET_MONTH(date);
+   *day = GET_DAY(date);
+   *hour = GET_HOUR(date);
+   *min = GET_MIN(date);
+   *sec = GET_SEC(date);
+   *millis = GET_MILLIS(date);
 }
 
-void cfl_date_setDate(CFL_DATEP date, CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day) {
-   cfl_date_setYear(date, year);
-   cfl_date_setMonth(date, month);
-   cfl_date_setDay(date, day);
+void cfl_date_setDate(CFL_DATEP date, CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day) {
+   SET_YEAR(date, year);
+   SET_MONTH(date, month);
+   SET_DAY(date, day);
 }
 
 void cfl_date_setTime(CFL_DATEP date, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
-   cfl_date_setHour(date, hour);
-   cfl_date_setMin(date, min);
-   cfl_date_setSec(date, sec);
-   cfl_date_setMillis(date, millis);
+   SET_HOUR(date, hour);
+   SET_MIN(date, min);
+   SET_SEC(date, sec);
+   SET_MILLIS(date, millis);
 }
 
-void cfl_date_setDateTime(CFL_DATEP date, CFL_UINT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
-   cfl_date_setYear(date, year);
-   cfl_date_setMonth(date, month);
-   cfl_date_setDay(date, day);
-   cfl_date_setHour(date, hour);
-   cfl_date_setMin(date, min);
-   cfl_date_setSec(date, sec);
-   cfl_date_setMillis(date, millis);
+void cfl_date_setDateTime(CFL_DATEP date, CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
+   SET_YEAR(date, year);
+   SET_MONTH(date, month);
+   SET_DAY(date, day);
+   SET_HOUR(date, hour);
+   SET_MIN(date, min);
+   SET_SEC(date, sec);
+   SET_MILLIS(date, millis);
 }
+
+CFL_INT16 cfl_date_getYear(CFL_DATEP date) {
+   return GET_YEAR(date);
+}
+
+CFL_UINT8 cfl_date_getMonth(CFL_DATEP date) {
+   return GET_MONTH(date);
+}
+
+CFL_UINT8 cfl_date_getDay(CFL_DATEP date) {
+   return GET_DAY(date);
+}
+
+CFL_UINT8 cfl_date_getHour(CFL_DATEP date) {
+   return GET_HOUR(date);
+}
+
+CFL_UINT8 cfl_date_getMin(CFL_DATEP date) {
+   return GET_MIN(date);
+}
+
+CFL_UINT8 cfl_date_getSec(CFL_DATEP date) {
+   return GET_SEC(date);
+}
+
+CFL_UINT16 cfl_date_getMillis(CFL_DATEP date) {
+   return GET_MILLIS(date);
+}
+
+void cfl_date_setYear(CFL_DATEP date, CFL_INT16 year) {
+   SET_YEAR(date, year);
+}
+
+void cfl_date_setMonth(CFL_DATEP date, CFL_UINT8 month) {
+   if (month < 13) {
+      SET_MONTH(date, month);
+   }
+}
+
+void cfl_date_setDay(CFL_DATEP date, CFL_UINT8 day) {
+   switch(date->month) {
+      case 1:
+      case 3:
+      case 5:
+      case 7:
+      case 8:
+      case 10:
+      case 12:
+         if (day <= 31) {
+            SET_DAY(date, day);
+         }
+         break;
+
+      case 2:
+         if (day <= 28) {
+            SET_DAY(date, day);
+         } else if (isLeapYear(GET_YEAR(date)) && day <= 29) {
+            SET_DAY(date, day);
+         }
+         break;
+
+      default:
+         if (day <= 30) {
+            SET_DAY(date, day);
+         }
+         break;
+   }
+}
+
+void cfl_date_setHour(CFL_DATEP date, CFL_UINT8 hour) {
+   if (hour < 24) {
+      SET_HOUR(date, hour);
+   }
+}
+
+void cfl_date_setMin(CFL_DATEP date, CFL_UINT8 min) {
+   if (min < 60) {
+      SET_MIN(date, min);
+   }
+}
+
+void cfl_date_setSec(CFL_DATEP date, CFL_UINT8 sec) {
+   if (sec < 60) {
+      SET_SEC(date, sec);
+   }
+}
+
+void cfl_date_setMillis(CFL_DATEP date, CFL_UINT16 millis) {
+   if (millis < 1000) {
+      SET_MILLIS(date, millis);
+   }
+}
+
+void cfl_date_copy(CFL_DATEP fromDate, CFL_DATEP toDate) {
+   SET_YEAR(toDate, GET_YEAR(fromDate));
+   SET_MONTH(toDate, GET_MONTH(fromDate));
+   SET_DAY(toDate, GET_DAY(fromDate));
+   SET_HOUR(toDate, GET_HOUR(fromDate));
+   SET_MIN(toDate, GET_MIN(fromDate));
+   SET_SEC(toDate, GET_SEC(fromDate));
+   SET_MILLIS(toDate, GET_MILLIS(fromDate));
+}
+
+/*
+CFL_UINT64 cfl_date_toMillis(CFL_DATEP date) {
+   CFL_UINT64 millis;
+   CFL_UINT16 diffYear;
+
+   millis = GET_MILLIS(date) +
+            SEC_TO_MILLIS(GET_SEC(date)) +
+            SEC_TO_MILLIS(MIN_TO_SEC(GET_MIN(date))) +
+            SEC_TO_MILLIS(MIN_TO_SEC(HOUR_TO_MIN(GET_HOUR(date)))) +
+            SEC_TO_MILLIS(MIN_TO_SEC(HOUR_TO_MIN(DAY_TO_HOUR(GET_DAY(date)))));
+   
+   return millis;
+}
+
+CFL_UINT64 cfl_date_toSec(CFL_DATEP date) {
+   CFL_UINT64 millis;
+   CFL_INT16 year;
+
+   millis = GET_MILLIS(date) +
+            SEC_TO_MILLIS(GET_SEC(date)) +
+            SEC_TO_MILLIS(MIN_TO_SEC(GET_MIN(date))) +
+            SEC_TO_MILLIS(MIN_TO_SEC(HOUR_TO_MIN(GET_HOUR(date)))) +
+            SEC_TO_MILLIS(MIN_TO_SEC(HOUR_TO_MIN(DAY_TO_HOUR(GET_DAY(date)))));
+   return millis;
+}
+
+CFL_INT64 cfl_date_diffMillis(CFL_DATEP date1, CFL_DATEP date2) {
+   CFL_UINT64 millis1 = cfl_date_toMillis(date1);
+   CFL_UINT64 millis2 = cfl_date_toMillis(date2);
+   return millis1 > millis2 ? millis1 - millis2 : millis2 > millis1;
+}
+
+CFL_UINT64 cfl_date_diffSec(CFL_DATEP date1, CFL_DATEP date2) {
+   CFL_UINT64 sec1 = cfl_date_toSec(date1);
+   CFL_UINT64 sec2 = cfl_date_toSec(date2);
+   return sec1 > sec2 ? sec1 - sec2 : sec2 > sec1;
+}
+*/
