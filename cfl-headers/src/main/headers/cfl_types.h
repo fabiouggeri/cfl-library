@@ -41,6 +41,7 @@
    #include <netdb.h>
    #include <pthread.h>
    #include <errno.h>
+   #include <sched.h>
 #endif
 
 #include "cfl_ints.h"

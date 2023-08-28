@@ -69,13 +69,13 @@ typedef struct _CFL_THREAD_VAR_DATA {
 
 struct _CFL_THREAD_VARIABLE {
    #if defined(CFL_OS_WINDOWS)
-      volatile LONG     initialized;
-      DWORD             storageKey;
+      volatile LONG    initialized;
+      DWORD            storageKey;
    #else
-      int               initialized;
-      pthread_key_t     storageKey;
+      int              initialized;
+      pthread_key_t    storageKey;
    #endif
-   size_t               dataSize;
+   size_t              dataSize;
    CFL_THREAD_VAR_FUNC initData;
    CFL_THREAD_VAR_FUNC freeData;
 };
