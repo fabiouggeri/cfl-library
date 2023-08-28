@@ -40,6 +40,15 @@
 
 #define DATA_SIZE(d) ((d)->dataSize > 0 ? (d)->dataSize : sizeof(VAR_DATA))
 
+/*
+#if defined( _MSC_VER ) && ( _MSC_VER > 1500 )
+   #define CFL_THREAD_DATA __declspec( thread )
+#elif ( defined( __GNUC__ ) && __GNUC__ >= 3 ) && defined( CFL_OS_LINUX )
+   #define CFL_THREAD_DATA      __thread
+#endif
+
+*/
+
 /***********
  * WINDOWS *
  ***********/
@@ -48,31 +57,33 @@
 static volatile LONG s_threadStoreInitialized = 0;
 static DWORD s_threadStorageKey = TLS_OUT_OF_INDEXES;
 
-#define KILL_THREAD(t) (TerminateThread((t)->handle, 1))
+#define GET_CURRENT_THREAD_ID GetCurrentThreadId()
 
-#define INIT_THREAD_STORAGE   if (! s_threadStoreInitialized && InterlockedCompareExchange(&s_threadStoreInitialized, 1, 0) == 0) { \
-                                 s_threadStorageKey = TlsAlloc(); \
+#define THREAD_EQUALS(th1, th2) (th1 == th2)
+
+#define INIT_DATA_STORAGE(d)  if (d->initialized == 0) {\
+                                 if (InterlockedCompareExchange(&d->initialized, 1, 0) == 0) {\
+                                    d->storageKey = TlsAlloc();\
+                                 }\
                               }
+#define GET_DATA(d) TlsGetValue(d->storageKey)
 
-static void *get_data(CFL_THREAD_VARIABLEP v) {
-   INIT_THREAD_STORAGE
-   return TlsGetValue(v->storageKey);
-}
+#define SET_DATA(d, v) TlsSetValue(d->storageKey, v)
 
-static void set_data(CFL_THREAD_VARIABLEP v, CFL_THREAD_VAR_DATA *d) {
-   INIT_THREAD_STORAGE
-   TlsSetValue(v->storageKey, d);
-}
+#define INIT_THREAD_STORAGE if (s_threadStoreInitialized == 0) {\
+                               if (InterlockedCompareExchange(&s_threadStoreInitialized, 1, 0) == 0) {\
+                                  s_threadStorageKey = TlsAlloc();\
+                               }\
+                            }
 
-static CFL_THREADP get_thread(void) {
-   INIT_THREAD_STORAGE
-   return (CFL_THREADP) TlsGetValue(s_threadStorageKey);
-}
+#define GET_THREAD() (s_threadStoreInitialized && InterlockedCompareExchange(&s_threadStoreInitialized, 1, 1) == 1 ?\
+                      (CFL_THREADP) TlsGetValue(s_threadStorageKey)                                                :\
+                      NULL)
 
-static void set_thread(CFL_THREADP t) {
-   INIT_THREAD_STORAGE
-   TlsSetValue(s_threadStorageKey, t);
-}
+#define SET_THREAD(t) if (s_threadStoreInitialized && InterlockedCompareExchange(&s_threadStoreInitialized, 1, 1) == 1)\
+                        TlsSetValue(s_threadStorageKey, t)
+
+#define KILL_THREAD(t) (TerminateThread((t)->handle, 1))
 
 /*********
  * POSIX *
@@ -82,32 +93,35 @@ static void set_thread(CFL_THREADP t) {
 static int s_threadStoreInitialized = 0;
 static pthread_key_t s_threadStorageKey;
 
-#define KILL_THREAD(t) (pthread_cancel((t)->handle) == 0)
+#define GET_CURRENT_THREAD_ID pthread_self()
 
-#define INIT_THREAD_STORAGE   if (! s_threadStoreInitialized && __sync_val_compare_and_swap(&s_threadStoreInitialized, 0, 1) == 0) { \
-                                 pthread_key_create(&s_threadStorageKey, freeOwnData); \
+#define THREAD_EQUALS(th1, th2) pthread_equal(th1, th2)
+
+#define INIT_DATA_STORAGE(d)  if (! d->initialized) {\
+                                 if (__sync_val_compare_and_swap(&d->initialized, 0, 1) == 0) {\
+                                    pthread_key_create(&d->storageKey, freeVarData);\
+                                 }\
                               }
 
-static void *get_data(CFL_THREAD_VARIABLEP v) {
-   INIT_THREAD_STORAGE
-   return pthread_getspecific(v->storageKey);
-}
+#define GET_DATA(d) pthread_getspecific(d->storageKey)
 
-static void set_data(CFL_THREAD_VARIABLEP v, CFL_THREAD_VAR_DATA *d) {
-   INIT_THREAD_STORAGE
-   pthread_setspecific(v->storageKey, d);
-}
+#define SET_DATA(d, v) pthread_setspecific(d->storageKey, v)
 
-static CFL_THREADP get_thread(void) { 
-   INIT_THREAD_STORAGE
-   return (CFL_THREADP) pthread_getspecific(s_threadStorageKey);
-}
 
-static void set_thread(CFL_THREAD t) {
-   INIT_THREAD_STORAGE
-   pthread_setspecific(s_threadStorageKey, t);
-}
+#define INIT_THREAD_STORAGE if (! s_threadStoreInitialized) {\
+                               if (__sync_val_compare_and_swap(&s_threadStoreInitialized, 0, 1) == 0) {\
+                                  pthread_key_create(&s_threadStorageKey, freeOwnData);\
+                               }\
+                            }
 
+#define GET_THREAD() (s_threadStoreInitialized && __sync_val_compare_and_swap(&s_threadStoreInitialized, 1, 1) == 1 ?\
+                      (CFL_THREADP) pthread_getspecific(s_threadStorageKey)                                         :\
+                      NULL)
+
+#define SET_THREAD(t) if (s_threadStoreInitialized && __sync_val_compare_and_swap(&s_threadStoreInitialized, 1, 1) == 1)\
+                         pthread_setspecific(s_threadStorageKey, t)
+
+#define KILL_THREAD(t) (pthread_cancel((t)->handle) == 0)
 
 static void freeOwnData(void *data) {
    CFL_THREADP thread = (CFL_THREADP)data;
@@ -130,11 +144,12 @@ static CFL_THREADP initCurrentThread(void) {
    if (thread == NULL) {
       return NULL;
    }
+   INIT_THREAD_STORAGE
    memset(thread, 0, sizeof(CFL_THREAD));
    thread->manualAllocation = CFL_FALSE;
    thread->joined = CFL_FALSE;
    thread->status = CFL_THREAD_RUNNING;
-   set_thread(thread);
+   SET_THREAD(thread);
    return thread;
 }
 
@@ -152,7 +167,7 @@ CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
 }
 
 void cfl_thread_free(CFL_THREADP thread) {
-   set_thread(NULL);
+   SET_THREAD(NULL);
 #if defined(CFL_OS_WINDOWS)
    CloseHandle(thread->handle);
 #else
@@ -163,8 +178,16 @@ void cfl_thread_free(CFL_THREADP thread) {
    free(thread);
 }
 
+CFL_BOOL cfl_thread_equals(CFL_THREAD_ID th1, CFL_THREAD_ID th2) {
+   return THREAD_EQUALS(th1, th2);
+}
+
+CFL_THREAD_ID cfl_thread_id(void) {
+   return GET_CURRENT_THREAD_ID;
+}
+
 CFL_THREADP cfl_thread_getCurrent(void) {
-   CFL_THREADP thread = get_thread();
+   CFL_THREADP thread = GET_THREAD();
    if (thread == NULL) {
       thread = initCurrentThread();
    }
@@ -177,7 +200,8 @@ static DWORD WINAPI startFunction(LPVOID param) {
    CFL_THREADP thread = (CFL_THREADP) param;
 
    thread->status = CFL_THREAD_RUNNING;
-   set_thread(thread);
+   INIT_THREAD_STORAGE
+   SET_THREAD(thread);
    if (thread->func != NULL) {
       thread->func(thread->param);
    }
@@ -191,7 +215,8 @@ static void *startFunction(void *param) {
    CFL_THREADP thread = (CFL_THREADP) param;
 
    thread->status = CFL_THREAD_RUNNING;
-   set_thread(thread);
+   INIT_THREAD_STORAGE
+   SET_THREAD(thread);
    if (thread->func != NULL) {
       thread->func(thread->param);
    }
@@ -281,7 +306,7 @@ CFL_UINT8 cfl_thread_status(CFL_THREADP thread) {
    return thread->status;
 }
 CFL_BOOL cfl_thread_currentIsHandled(void) {
-   return get_thread() != NULL ? CFL_TRUE : CFL_FALSE;
+   return GET_THREAD() != NULL ? CFL_TRUE : CFL_FALSE;
 }
 
 CFL_BOOL cfl_thread_sleep(CFL_UINT32 time) {
@@ -295,12 +320,13 @@ CFL_BOOL cfl_thread_sleep(CFL_UINT32 time) {
 
 static CFL_THREAD_VAR_DATA *thread_dataGet(CFL_THREAD_VARIABLEP threadVar) {
    CFL_THREAD_VAR_DATA *varData;
-   varData = (CFL_THREAD_VAR_DATA *) get_data(threadVar);
+   INIT_DATA_STORAGE(threadVar);
+   varData = (CFL_THREAD_VAR_DATA *) GET_DATA(threadVar);
    if (varData == NULL) {
       size_t dataSize = DATA_SIZE(threadVar);
       varData = malloc(sizeof(CFL_THREAD_VAR_DATA) + dataSize);
       if (varData != NULL) {
-         set_data(threadVar, varData);
+         SET_DATA(threadVar, varData);
          if (threadVar->initData != NULL) {
             threadVar->initData(&varData->data[0]);
          } else {

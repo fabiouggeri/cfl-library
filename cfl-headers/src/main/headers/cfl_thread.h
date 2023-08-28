@@ -91,6 +91,8 @@ struct _CFL_THREAD {
 
 extern CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func);
 extern void cfl_thread_free(CFL_THREADP thread);
+extern CFL_THREAD_ID cfl_thread_id(void);
+extern CFL_BOOL cfl_thread_equals(CFL_THREAD_ID th1, CFL_THREAD_ID th2);
 extern CFL_THREADP cfl_thread_getCurrent(void);
 extern void * cfl_thread_getData(CFL_THREADP thread);
 extern void cfl_thread_setData(CFL_THREADP thread, void *data);
