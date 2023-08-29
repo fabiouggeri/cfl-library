@@ -61,27 +61,21 @@ static DWORD s_threadStorageKey = TLS_OUT_OF_INDEXES;
 
 #define THREAD_EQUALS(th1, th2) (th1 == th2)
 
-#define INIT_DATA_STORAGE(d)  if (d->initialized == 0) {\
-                                 if (InterlockedCompareExchange(&d->initialized, 1, 0) == 0) {\
-                                    d->storageKey = TlsAlloc();\
-                                 }\
+#define INIT_DATA_STORAGE(d)  if (InterlockedCompareExchange(&d->initialized, 1, 0) == 0) {\
+                                 d->storageKey = TlsAlloc();\
                               }
+
 #define GET_DATA(d) TlsGetValue(d->storageKey)
 
 #define SET_DATA(d, v) TlsSetValue(d->storageKey, v)
 
-#define INIT_THREAD_STORAGE if (s_threadStoreInitialized == 0) {\
-                               if (InterlockedCompareExchange(&s_threadStoreInitialized, 1, 0) == 0) {\
-                                  s_threadStorageKey = TlsAlloc();\
-                               }\
-                            }
+#define INIT_THREAD_STORAGE   if (InterlockedCompareExchange(&s_threadStoreInitialized, 1, 0) == 0) {\
+                                 s_threadStorageKey = TlsAlloc();\
+                              }
 
-#define GET_THREAD() (s_threadStoreInitialized && InterlockedCompareExchange(&s_threadStoreInitialized, 1, 1) == 1 ?\
-                      (CFL_THREADP) TlsGetValue(s_threadStorageKey)                                                :\
-                      NULL)
+#define GET_THREAD() ((CFL_THREADP) TlsGetValue(s_threadStorageKey))
 
-#define SET_THREAD(t) if (s_threadStoreInitialized && InterlockedCompareExchange(&s_threadStoreInitialized, 1, 1) == 1)\
-                        TlsSetValue(s_threadStorageKey, t)
+#define SET_THREAD(t) TlsSetValue(s_threadStorageKey, t)
 
 #define KILL_THREAD(t) (TerminateThread((t)->handle, 1))
 
@@ -97,10 +91,8 @@ static pthread_key_t s_threadStorageKey;
 
 #define THREAD_EQUALS(th1, th2) pthread_equal(th1, th2)
 
-#define INIT_DATA_STORAGE(d)  if (! d->initialized) {\
-                                 if (__sync_val_compare_and_swap(&d->initialized, 0, 1) == 0) {\
-                                    pthread_key_create(&d->storageKey, freeVarData);\
-                                 }\
+#define INIT_DATA_STORAGE(d)  if (__sync_val_compare_and_swap(&d->initialized, 0, 1) == 0) {\
+                                 pthread_key_create(&d->storageKey, freeVarData);\
                               }
 
 #define GET_DATA(d) pthread_getspecific(d->storageKey)
@@ -108,18 +100,13 @@ static pthread_key_t s_threadStorageKey;
 #define SET_DATA(d, v) pthread_setspecific(d->storageKey, v)
 
 
-#define INIT_THREAD_STORAGE if (! s_threadStoreInitialized) {\
-                               if (__sync_val_compare_and_swap(&s_threadStoreInitialized, 0, 1) == 0) {\
-                                  pthread_key_create(&s_threadStorageKey, freeOwnData);\
-                               }\
-                            }
+#define INIT_THREAD_STORAGE   if (__sync_val_compare_and_swap(&s_threadStoreInitialized, 0, 1) == 0) {\
+                                 pthread_key_create(&s_threadStorageKey, freeOwnData);\
+                              }
 
-#define GET_THREAD() (s_threadStoreInitialized && __sync_val_compare_and_swap(&s_threadStoreInitialized, 1, 1) == 1 ?\
-                      (CFL_THREADP) pthread_getspecific(s_threadStorageKey)                                         :\
-                      NULL)
+#define GET_THREAD() ((CFL_THREADP) pthread_getspecific(s_threadStorageKey))
 
-#define SET_THREAD(t) if (s_threadStoreInitialized && __sync_val_compare_and_swap(&s_threadStoreInitialized, 1, 1) == 1)\
-                         pthread_setspecific(s_threadStorageKey, t)
+#define SET_THREAD(t) pthread_setspecific(s_threadStorageKey, t)
 
 #define KILL_THREAD(t) (pthread_cancel((t)->handle) == 0)
 
@@ -167,6 +154,7 @@ CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
 }
 
 void cfl_thread_free(CFL_THREADP thread) {
+   INIT_THREAD_STORAGE
    SET_THREAD(NULL);
 #if defined(CFL_OS_WINDOWS)
    CloseHandle(thread->handle);
@@ -187,7 +175,10 @@ CFL_THREAD_ID cfl_thread_id(void) {
 }
 
 CFL_THREADP cfl_thread_getCurrent(void) {
-   CFL_THREADP thread = GET_THREAD();
+   CFL_THREADP thread;
+   
+   INIT_THREAD_STORAGE
+   thread = GET_THREAD();
    if (thread == NULL) {
       thread = initCurrentThread();
    }
@@ -306,6 +297,7 @@ CFL_UINT8 cfl_thread_status(CFL_THREADP thread) {
    return thread->status;
 }
 CFL_BOOL cfl_thread_currentIsHandled(void) {
+   INIT_THREAD_STORAGE
    return GET_THREAD() != NULL ? CFL_TRUE : CFL_FALSE;
 }
 
