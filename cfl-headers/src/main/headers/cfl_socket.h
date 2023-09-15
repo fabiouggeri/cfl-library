@@ -41,7 +41,7 @@
 
 extern CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog);
 extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_UINT16 *port);
-extern CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutMillis, CFL_STRP clientAddr, CFL_UINT16 *port);
+extern CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutMillis, CFL_STRP clientAddr, CFL_UINT16 *port, CFL_BOOL *timesUp);
 extern CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port);
 extern CFL_INT32 cfl_socket_close(CFL_SOCKET socket);
 extern CFL_INT32 cfl_socket_sendBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer);
@@ -55,6 +55,7 @@ extern CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, CFL_UINT32 timeoutMill
 extern CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
 extern CFL_INT32 cfl_socket_select(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
 extern CFL_INT32 cfl_socket_lastErrorCode(void);
+extern char * cfl_socket_lastErrorDescription(void);
 extern CFL_BOOL cfl_socket_setBlockingMode(CFL_SOCKET socket, CFL_BOOL block);
 extern CFL_BOOL cfl_socket_setNoDelay(CFL_SOCKET socket, CFL_BOOL delay);
 extern CFL_BOOL cfl_socket_setReceiveBufferSize(CFL_SOCKET socket, int size);

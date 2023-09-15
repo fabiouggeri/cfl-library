@@ -29,6 +29,7 @@
    #include <arpa/inet.h>
    #include <fcntl.h>
    #include <netinet/tcp.h>
+   #include <signal.h>
 #elif defined(CFL_OS_WINDOWS) && ! defined(__BORLANDC__)
    #include <mstcpip.h>
 #endif
@@ -49,6 +50,35 @@
 
 #define STR_EMPTY(s) ((s) == NULL || (s)[0] == '\0')
 
+#define MAX_ERROR_MSG_SIZE 256
+
+static CFL_INT32 s_lastErrorCode = 0;
+static char s_lastErrorMsg[MAX_ERROR_MSG_SIZE] = {0};
+
+static void setLastError(void) {
+#if defined(CFL_OS_LINUX)
+   s_lastErrorCode = errno;
+   if (s_lastErrorCode != 0) {
+      snprintf(s_lastErrorMsg, MAX_ERROR_MSG_SIZE, "%s", strerror(s_lastErrorCode));
+   } else {
+      s_lastErrorMsg[0] = '\0';
+   }
+#else
+   s_lastErrorCode = WSAGetLastError();
+   if (s_lastErrorCode != 0) {
+      FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                    NULL,
+                    (DWORD) s_lastErrorCode,
+                    0,
+                    s_lastErrorMsg,
+                    MAX_ERROR_MSG_SIZE,
+                    NULL);
+   } else {
+      s_lastErrorMsg[0] = '\0';
+   }
+#endif
+}
+
 CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog) {
 #if defined(CFL_OS_LINUX)
    CFL_SOCKET socketHandle;
@@ -57,6 +87,11 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    struct in_addr **addr_list;
 
    socketHandle = socket(AF_INET, SOCK_STREAM, 0);
+
+   if (socketHandle == CFL_INVALID_SOCKET) {
+      setLastError();
+      return CFL_INVALID_SOCKET;
+   }
 
    memset(&serv_addr, '0', sizeof(serv_addr));
 
@@ -68,6 +103,7 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    } else if (inet_pton(AF_INET, address, &serv_addr.sin_addr) <= 0) {
       he = gethostbyname(address);
       if (he == NULL) {
+         setLastError();
          close(socketHandle);
          return CFL_INVALID_SOCKET;
       }
@@ -80,11 +116,13 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
       }
    }
    if (bind(socketHandle, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) != 0) {
+      setLastError();
       close(socketHandle);
       return CFL_INVALID_SOCKET;
    }
 
    if (listen(socketHandle, (int)backlog) != 0) {
+      setLastError();
       close(socketHandle);
       return CFL_INVALID_SOCKET;
    }
@@ -101,17 +139,19 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    WSADATA winsockinfo;
 
    if (WSAStartup(MAKEWORD(2, 2), &winsockinfo) != 0) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
    memset(&addrCriteria, 0, sizeof(addrCriteria));
-   addrCriteria.ai_family = AF_UNSPEC;
+   addrCriteria.ai_family = STR_EMPTY(address) ? AF_INET : AF_UNSPEC;
    addrCriteria.ai_socktype = SOCK_STREAM;
    addrCriteria.ai_protocol = IPPROTO_TCP;
 
    // Get address(es)
    sprintf(serverPort, "%u", port);
    if (getaddrinfo(address, serverPort, &addrCriteria, &serverAddr) != 0) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
@@ -119,15 +159,16 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
       // Create a reliable, stream socket using TCP
       socketHandle = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
       if (socketHandle == CFL_INVALID_SOCKET) {
+         setLastError();
          continue;
       }
    
       // Establish the connection to server
-      if (bind(socketHandle, addr->ai_addr, (int) addr->ai_addrlen) == 0 && 
-          listen(socketHandle, (int)backlog) == 0) {
+      if (bind(socketHandle, addr->ai_addr, (int) addr->ai_addrlen) == 0 && listen(socketHandle, (int)backlog) == 0) {
          break;
       }
 
+      setLastError();
       closesocket(socketHandle);
       socketHandle = CFL_INVALID_SOCKET;
    }
@@ -141,11 +182,13 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    struct hostent *remoteHost;
 
    if (WSAStartup(MAKEWORD(2, 2), &winsockinfo) != 0) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
    socketHandle = (CFL_SOCKET) socket(AF_INET, SOCK_STREAM, 0);
    if (socketHandle == CFL_INVALID_SOCKET) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
@@ -161,6 +204,7 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
       if (addr.sin_addr.s_addr == INADDR_NONE) {
          remoteHost = gethostbyname(address);
          if (remoteHost == NULL) {
+            setLastError();
             return CFL_INVALID_SOCKET;
          }
          if (remoteHost->h_addr_list[0] != 0) {
@@ -172,11 +216,13 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    }
 
    if (bind(socketHandle, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)) != 0) {
+      setLastError();
       closesocket(socketHandle);
       return CFL_INVALID_SOCKET;
    }
 
    if (listen(socketHandle, (int)backlog) != 0) {
+      setLastError();
       close(socketHandle);
       return CFL_INVALID_SOCKET;
    }
@@ -221,11 +267,13 @@ CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_U
       if (port != NULL) {
          *port = ntohs(((struct sockaddr_in*)&sockAddr)->sin_port);
       }
+   } else {
+      setLastError();
    }
    return clientSocket;
 }
 
-CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutMillis, CFL_STRP clientAddr, CFL_UINT16 *port) {
+CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutMillis, CFL_STRP clientAddr, CFL_UINT16 *port, CFL_BOOL *timesUp) {
    CFL_SOCKET clientSocket = CFL_INVALID_SOCKET;
    struct sockaddr sockAddr;
    int len = sizeof(sockAddr);
@@ -244,6 +292,7 @@ CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutM
       timeout = &timewait;
    }
    if (listenSocket != CFL_INVALID_SOCKET && select(listenSocket + 1, &fdSet, NULL, NULL, timeout) > 0) {
+      *timesUp = CFL_FALSE;
       clientSocket = accept(listenSocket, &sockAddr, &len);
       if (clientSocket != CFL_INVALID_SOCKET) {
          if (clientAddr != NULL) {
@@ -256,7 +305,11 @@ CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutM
          if (port != NULL) {
             *port = ntohs(((struct sockaddr_in*)&sockAddr)->sin_port);
          }
+      } else {
+         setLastError();
       }
+   } else {
+      *timesUp = CFL_TRUE;
    }
 
    return clientSocket;
@@ -270,6 +323,10 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    struct in_addr **addr_list;
 
    socketHandle = socket(AF_INET, SOCK_STREAM, 0);
+   if (socketHandle == CFL_INVALID_SOCKET) {
+      setLastError();
+      return CFL_INVALID_SOCKET;
+   }
 
    memset(&serv_addr, '0', sizeof(serv_addr));
 
@@ -279,6 +336,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    if (inet_pton(AF_INET, serverAddress, &serv_addr.sin_addr) <= 0) {
       he = gethostbyname(serverAddress);
       if (he == NULL) {
+         setLastError();
          close(socketHandle);
          return CFL_INVALID_SOCKET;
       }
@@ -292,6 +350,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    }
 
    if (connect(socketHandle, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) != 0) {
+      setLastError();
       close(socketHandle);
       return CFL_INVALID_SOCKET;
    }
@@ -308,6 +367,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    WSADATA winsockinfo;
 
    if (WSAStartup(MAKEWORD(2, 2), &winsockinfo) != 0) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
@@ -319,6 +379,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    // Get address(es)
    sprintf(serverPort, "%u", port);
    if (getaddrinfo(serverAddress, serverPort, &addrCriteria, &serverAddr) != 0) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
@@ -326,6 +387,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
       // Create a reliable, stream socket using TCP
       socketHandle = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
       if (socketHandle == CFL_INVALID_SOCKET) {
+         setLastError();
          continue;
       }
 
@@ -334,6 +396,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
          break;
       }
 
+      setLastError();
       closesocket(socketHandle);
       socketHandle = CFL_INVALID_SOCKET;
    }
@@ -347,11 +410,13 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    struct hostent *remoteHost;
 
    if (WSAStartup(MAKEWORD(2, 2), &winsockinfo) != 0) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
    socketHandle = (CFL_SOCKET) socket(AF_INET, SOCK_STREAM, 0);
    if (socketHandle == CFL_INVALID_SOCKET) {
+      setLastError();
       return CFL_INVALID_SOCKET;
    }
 
@@ -363,6 +428,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    if (addr.sin_addr.s_addr == INADDR_NONE) {
       remoteHost = gethostbyname(serverAddress);
       if (remoteHost == NULL) {
+         setLastError();
          return CFL_INVALID_SOCKET;
       }
       if (remoteHost->h_addr_list[0] != 0) {
@@ -373,6 +439,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    }
 
    if (connect(socketHandle, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)) != 0) {
+      setLastError();
       closesocket(socketHandle);
       return CFL_INVALID_SOCKET;
    }
@@ -386,22 +453,28 @@ CFL_INT32 cfl_socket_close(CFL_SOCKET socket) {
 #else
    CFL_INT32 rc;
    rc = closesocket(socket);
-   WSACleanup();
+   setLastError();
+//   WSACleanup();
    return rc;
 #endif
 }
 
 CFL_INT32 cfl_socket_sendBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer) {
-   CFL_INT32 bytesSent;
-   bytesSent = send(socket, (const char *) cfl_buffer_getDataPtr(buffer), (int) cfl_buffer_remaining(buffer), 0);
+   CFL_INT32 bytesSent = send(socket, (const char *) cfl_buffer_getDataPtr(buffer), (int) cfl_buffer_remaining(buffer), 0);
    if (bytesSent > 0) {
       cfl_buffer_skip(buffer, bytesSent);
+   } else if (bytesSent < 0) {
+      setLastError();
    }
    return bytesSent;
 }
 
 CFL_INT32 cfl_socket_send(CFL_SOCKET socket, const char *buffer, CFL_INT32 len) {
-   return send(socket, buffer, (int) len, 0);
+   CFL_INT32 bytesSent = send(socket, buffer, (int) len, 0);
+   if (bytesSent < 0) {
+      setLastError();
+   }
+   return bytesSent;
 }
 
 CFL_BOOL cfl_socket_sendAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer) {
@@ -415,6 +488,7 @@ CFL_BOOL cfl_socket_sendAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer) {
    while (bytesLeft > 0) {
       bytesSent = send(socket, data + totalSent, (int) bytesLeft, 0);
       if (bytesSent < 0) {
+         setLastError();
          break;
       }
       totalSent += bytesSent;
@@ -433,6 +507,7 @@ CFL_BOOL cfl_socket_sendAll(CFL_SOCKET socket, const char *buffer, CFL_UINT32 le
    while (bytesLeft > 0) {
       bytesSent = send(socket, buffer + totalSent, (int) bytesLeft, 0);
       if (bytesSent < 0) {
+         setLastError();
          break;
       }
       totalSent += bytesSent;
@@ -442,7 +517,11 @@ CFL_BOOL cfl_socket_sendAll(CFL_SOCKET socket, const char *buffer, CFL_UINT32 le
 }
 
 CFL_INT32 cfl_socket_receive(CFL_SOCKET socket, const char *buffer, int len) {
-   return recv(socket, (char *) buffer, len, 0);
+   CFL_INT32 read = recv(socket, (char *) buffer, len, 0);
+   if (read < 0) {
+      setLastError();
+   }
+   return read;
 }
 
 CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer, int len) {
@@ -451,7 +530,10 @@ CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer, int len) 
 
    while (toRead > 0) {
       retVal = recv(socket, (char *) buffer, toRead, 0);
-      if (retVal <= 0) {
+      if (retVal < 0) {
+         setLastError();
+         return retVal;
+      } else if (retVal == 0) {
          return retVal;
       }
       buffer += retVal;
@@ -482,6 +564,7 @@ CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer, CFL_
       readLen = bodyLen > packetLen ? packetLen : bodyLen;
       retVal = recv(socket, dataRead, readLen, 0);
       if (retVal == CFL_SOCKET_ERROR) {
+         setLastError();
          free(dataRead);
          return CFL_FALSE;
       } else if (retVal == 0) {
@@ -499,6 +582,7 @@ CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
    fd_set fdSet;
    struct timeval timewait;
    struct timeval * timeout;
+   CFL_INT32 res;
 
    FD_ZERO(&fdSet);
    FD_SET(socket, &fdSet);
@@ -511,13 +595,18 @@ CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
       timeout = &timewait;
    }
 
-   return select((int) socket + 1, &fdSet, NULL, NULL, timeout);
+   res = select((int) socket + 1, &fdSet, NULL, NULL, timeout);
+   if (res == CFL_SOCKET_ERROR) {
+      setLastError();
+   }
+   return res;
 }
 
 CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
    fd_set fdSet;
    struct timeval timewait;
    struct timeval * timeout;
+   CFL_INT32 res;
 
    FD_ZERO(&fdSet);
    FD_SET(socket, &fdSet);
@@ -530,13 +619,18 @@ CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
       timeout = &timewait;
    }
 
-   return select((int) socket + 1, NULL, &fdSet, NULL, timeout);
+   res = select((int) socket + 1, NULL, &fdSet, NULL, timeout);
+   if (res == CFL_SOCKET_ERROR) {
+      setLastError();
+   }
+   return res;
 }
 
 CFL_INT32 cfl_socket_select(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
    fd_set fdSet;
    struct timeval timewait;
    struct timeval * timeout;
+   CFL_INT32 res;
 
    FD_ZERO(&fdSet);
    FD_SET(socket, &fdSet);
@@ -549,60 +643,85 @@ CFL_INT32 cfl_socket_select(CFL_SOCKET socket, CFL_UINT32 timeoutMillis) {
       timeout = &timewait;
    }
 
-   return select((int) socket + 1, &fdSet, &fdSet, NULL, timeout);
+   res = select((int) socket + 1, &fdSet, &fdSet, NULL, timeout);
+   if (res == CFL_SOCKET_ERROR) {
+      setLastError();
+   }
+   return res;
 }
 
 CFL_INT32 cfl_socket_lastErrorCode(void) {
-#if defined(CFL_OS_LINUX)
-   return errno;
-#else
-   return WSAGetLastError();
-#endif
+   return s_lastErrorCode;
+}
+
+char * cfl_socket_lastErrorDescription(void) {
+   return s_lastErrorMsg;
 }
 
 CFL_BOOL cfl_socket_setBlockingMode(CFL_SOCKET socket, CFL_BOOL block) {
    CFL_BOOL ret;
 #if defined(CFL_OS_LINUX)
-    const int flags = fcntl(socket, F_GETFL, 0);
-    if ((flags & O_NONBLOCK) && !block) {
-       return CFL_TRUE;
-    }
-    if (!(flags & O_NONBLOCK) && block) {
-       return CFL_TRUE;
-    }
-    ret = fcntl(socket, F_SETFL, block ? flags ^ O_NONBLOCK : flags | O_NONBLOCK) == 0 ? CFL_TRUE : CFL_FALSE;
+   const int flags = fcntl(socket, F_GETFL, 0);
+   if ((flags & O_NONBLOCK) && !block) {
+      return CFL_TRUE;
+   }
+   if (!(flags & O_NONBLOCK) && block) {
+      return CFL_TRUE;
+   }
+   if (fcntl(socket, F_SETFL, block ? flags ^ O_NONBLOCK : flags | O_NONBLOCK) != 0) {
+      setLastError();
+      return CFL_FALSE;
+   }
 #else
    u_long mode = block ? 1 : 0;
-   ret = ioctlsocket(socket, FIONBIO, &mode) == NO_ERROR ? CFL_TRUE : CFL_FALSE;
+   if (ioctlsocket(socket, FIONBIO, &mode) != NO_ERROR) {
+      setLastError();
+      return CFL_FALSE;
+   }
 #endif
-   return ret;
+   return CFL_TRUE;
 }
 
 CFL_BOOL cfl_socket_setNoDelay(CFL_SOCKET socket, CFL_BOOL delay) {
-   return setsockopt(socket, SOL_SOCKET, TCP_NODELAY, (char *) &delay, sizeof(CFL_BOOL)) == 0 ? CFL_TRUE : CFL_FALSE;
+   if (setsockopt(socket, SOL_SOCKET, TCP_NODELAY, (char *) &delay, sizeof(CFL_BOOL)) != 0) {
+         setLastError();
+      return CFL_FALSE;
+   }
+   return CFL_TRUE;
 }
 
 CFL_BOOL cfl_socket_setReceiveBufferSize(CFL_SOCKET socket, int size) {
-   return setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(int)) == 0 ? CFL_TRUE : CFL_FALSE;
+   if (setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char *) &size, sizeof(int)) != 0) {
+      setLastError();
+      return CFL_FALSE;
+   }
+   return CFL_TRUE;
 }
 
 CFL_BOOL cfl_socket_setSendBufferSize(CFL_SOCKET socket, int size) {
-   return setsockopt(socket, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(int)) == 0 ? CFL_TRUE : CFL_FALSE;
+   if (setsockopt(socket, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(int)) != 0) {
+      setLastError();
+      return CFL_FALSE;
+   }
+   return CFL_TRUE;
 }
 
 CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 time, CFL_UINT32 interval) {
 #if defined(CFL_OS_LINUX)
 
    if(setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, (char *) &active, sizeof(CFL_BOOL)) != 0) {
+         setLastError();
       return CFL_FALSE;
    }
    if (active) {
       int keepidle = (int) time;
       int keepintvl = (int) interval;
       if (setsockopt(socket, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int)) != 0) {
+         setLastError();
          return CFL_FALSE;
       }
       if (setsockopt(socket, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int)) != 0) {
+         setLastError();
          return CFL_FALSE;
       }
    }
@@ -613,7 +732,7 @@ CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 
    kaSettings.onoff = active ? 1L : 0L;
    kaSettings.keepalivetime = (ULONG) time;
    kaSettings.keepaliveinterval = (ULONG) interval;
-   return WSAIoctl(socket,
+   if (WSAIoctl(socket,
                    SIO_KEEPALIVE_VALS,
                    &kaSettings,
                    sizeof(kaSettings),
@@ -621,7 +740,11 @@ CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 
                    0,
                    &dwBytes,
                    NULL,
-                   NULL) == 0 ? CFL_TRUE : CFL_FALSE;
+                   NULL) != 0) {
+      setLastError();
+      return CFL_FALSE;
+   }
+   return CFL_TRUE;
 #else
    CFL_UNUSED(socket);
    CFL_UNUSED(active);
@@ -636,10 +759,17 @@ CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT16 lin
    sl.l_onoff = active ? 1 : 0;
    sl.l_linger = lingerSeconds;
 #if defined(CFL_OS_WINDOWS)
-   return setsockopt(socket, SOL_SOCKET, SO_LINGER, (char *) &sl, sizeof(sl)) == 0 ? CFL_TRUE : CFL_FALSE;
+   if (setsockopt(socket, SOL_SOCKET, SO_LINGER, (char *) &sl, sizeof(sl)) != 0) {
+      setLastError();
+      return CFL_FALSE;
+   }
 #else
-   return setsockopt(socket, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl)) == 0 ? CFL_TRUE : CFL_FALSE;
+   if (setsockopt(socket, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl)) != 0) {
+      setLastError();
+      return CFL_FALSE;
+   }
 #endif
+   return CFL_TRUE;
 }
 
 CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write) {
@@ -650,7 +780,11 @@ CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write) {
       } else {
          how = SHUTDOWN_WRITE;
       }
-      return shutdown(socket, how) == 0 ? CFL_TRUE : CFL_FALSE;
+      if (shutdown(socket, how) == 0) { 
+         return CFL_TRUE;
+      } else {
+         setLastError();
+      }
    } 
    return CFL_FALSE;
 }

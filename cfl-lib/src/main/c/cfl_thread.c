@@ -108,7 +108,7 @@ static pthread_key_t s_threadStorageKey;
 
 #define SET_THREAD(t) pthread_setspecific(s_threadStorageKey, t)
 
-#define KILL_THREAD(t) (pthread_cancel((t)->handle) == 0)
+#define KILL_THREAD(t) (pthread_kill((t)->handle) == 0)
 
 static void freeOwnData(void *data) {
    CFL_THREADP thread = (CFL_THREADP)data;

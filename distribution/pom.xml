@@ -11,7 +11,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-release-superpom</artifactId>
-   <version>1.6.0.5</version>
+   <version>1.6.0.6</version>
 
    <name>Release Super POM for CFL library</name>
 
@@ -20,6 +20,7 @@
    <description>Super POM for install CFL library</description>
 
    <properties>
+		<artifactory.home>https://artifactory.sicredi.net/artifactory</artifactory.home>
       <maven.repo.release.url>${artifactory.home}/libs-release-local</maven.repo.release.url>
       <maven.repo.release.id>sicredi-release-repo</maven.repo.release.id>
       <cfl-group-id>org.cfl</cfl-group-id>
