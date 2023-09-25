@@ -22,6 +22,11 @@
 #include <string.h>
 
 #include "cfl_thread.h"
+
+#if defined(CFL_OS_LINUX)
+   #include <signal.h>
+#endif
+
 #include "cfl_lock.h"
 
 #define DEFINE_GET_SET(datatype, typename, defaultValue) \
@@ -108,7 +113,7 @@ static pthread_key_t s_threadStorageKey;
 
 #define SET_THREAD(t) pthread_setspecific(s_threadStorageKey, t)
 
-#define KILL_THREAD(t) (pthread_kill((t)->handle) == 0)
+#define KILL_THREAD(t) (pthread_kill((t)->handle, SIGUSR1) == 0)
 
 static void freeOwnData(void *data) {
    CFL_THREADP thread = (CFL_THREADP)data;
