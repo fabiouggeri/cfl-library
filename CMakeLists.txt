@@ -25,7 +25,8 @@ add_library(cfl-lib STATIC
             cfl-lib/src/main/c/cfl_sql.c
             cfl-lib/src/main/c/cfl_str.c
             cfl-lib/src/main/c/cfl_sync_queue.c
-            cfl-lib/src/main/c/cfl_thread.c )
+            cfl-lib/src/main/c/cfl_thread.c
+            cfl-lib/src/main/c/cfl_log.c )
 
 include_directories(cfl-lib PUBLIC  
                     ${PROJECT_SOURCE_DIR}/cfl-headers/src/main/headers

@@ -94,8 +94,6 @@ extern void cfl_thread_free(CFL_THREADP thread);
 extern CFL_THREAD_ID cfl_thread_id(void);
 extern CFL_BOOL cfl_thread_equals(CFL_THREAD_ID th1, CFL_THREAD_ID th2);
 extern CFL_THREADP cfl_thread_getCurrent(void);
-extern void * cfl_thread_getData(CFL_THREADP thread);
-extern void cfl_thread_setData(CFL_THREADP thread, void *data);
 extern CFL_BOOL cfl_thread_start(CFL_THREADP thread, void * param);
 extern CFL_BOOL cfl_thread_wait(CFL_THREADP thread);
 extern CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout);
