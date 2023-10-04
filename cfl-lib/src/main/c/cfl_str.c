@@ -25,8 +25,6 @@
 
 #define DEFAULT_CAPACITY 16
 
-#define FORMAT_BUFFER_SIZE 4096
-
 static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {
    if (! str->isVarData) {
       char *curData = str->data;
@@ -46,12 +44,12 @@ static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {
 
 void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity) {
    if (str != NULL) {
-      str->capacity = iniCapacity;
+      str->capacity = iniCapacity + 1;
       str->length = 0;
       str->hashValue = 0;
       str->isAllocated = CFL_FALSE;
       if (iniCapacity >0) {
-         str->data = (char *) malloc(iniCapacity * sizeof(char));
+         str->data = (char *) malloc((iniCapacity + 1) * sizeof(char));
          if (str->data != NULL) {
             str->data[0] = '\0';
             str->isVarData = CFL_TRUE;
@@ -113,12 +111,12 @@ CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
    CFL_STRP str;
    str = (CFL_STRP) malloc(sizeof(CFL_STR));
    if (str != NULL) {
-      str->capacity = iniCapacity;
+      str->capacity = iniCapacity + 1;
       str->length = 0;
       str->hashValue = 0;
       str->isAllocated = CFL_TRUE;
       str->isVarData = CFL_TRUE;
-      str->data = (char *) malloc(iniCapacity * sizeof(char));
+      str->data = (char *) malloc((iniCapacity + 1) * sizeof(char));
       if (str->data != NULL) {
          str->data[0] = '\0';
       } else {
@@ -292,26 +290,24 @@ CFL_STRP cfl_str_appendStr(CFL_STRP str, CFL_STRP strAppend) {
 
 CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char * format, va_list varArgs) {
    int iLen;
-   char buffer[FORMAT_BUFFER_SIZE];
+   va_list varArgsCopy;
 
-   iLen = vsnprintf(buffer, FORMAT_BUFFER_SIZE, format, varArgs);
+   va_copy(varArgsCopy, varArgs);
+   iLen = vsnprintf(NULL, 0, format, varArgsCopy);
+   va_end(varArgsCopy);
    if (iLen > 0) {
-      if (iLen < FORMAT_BUFFER_SIZE) {
-         str = cfl_str_appendLen(str, buffer, iLen);
+      CFL_BOOL bSuccess;
+      if (str == NULL) {
+         str = cfl_str_new(iLen);
+         bSuccess = str != NULL;
       } else {
-         CFL_BOOL bSuccess;
-         if (str == NULL) {
-            str = cfl_str_new((iLen >> 1) + 1 + iLen);
-            bSuccess = str != NULL;
-         } else {
-            bSuccess = ensureCapacityForLen(str, str->length + iLen);
-         }
-         if (bSuccess) {
-            iLen = vsnprintf(&str->data[str->length], iLen, format, varArgs);
-            str->length += iLen;
-            str->data[str->length] = '\0';
-            str->hashValue = 0;
-         }
+         bSuccess = ensureCapacityForLen(str, str->length + iLen);
+      }
+      if (bSuccess) {
+         vsnprintf(&str->data[str->length], iLen + 1, format, varArgs);
+         str->length += (CFL_UINT32) iLen;
+         str->data[str->length] = '\0';
+         str->hashValue = 0;
       }
    }
    return str;
@@ -328,27 +324,27 @@ CFL_STRP cfl_str_appendFormat(CFL_STRP str, const char * format, ...) {
 
 CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char * format, va_list varArgs) {
    int iLen;
-   char buffer[FORMAT_BUFFER_SIZE];
+   va_list varArgsCopy;
 
-   iLen = vsnprintf(buffer, FORMAT_BUFFER_SIZE, format, varArgs);
+   va_copy(varArgsCopy, varArgs);
+   iLen = vsnprintf(NULL, 0, format, varArgsCopy);
+   va_end(varArgsCopy);
    if (iLen > 0) {
-      if (iLen < FORMAT_BUFFER_SIZE) {
-         str = cfl_str_setValueLen(str, buffer, iLen);
+      CFL_BOOL bSuccess;
+      if (str == NULL) {
+         str = cfl_str_new(iLen);
+         bSuccess = str != NULL;
       } else {
-         CFL_BOOL bSuccess;
-         if (str == NULL) {
-            str = cfl_str_new((iLen >> 1) + 1 + iLen);
-            bSuccess = str != NULL;
-         } else {
-            bSuccess = ensureCapacityForLen(str, iLen);
-         }
-         if (bSuccess) {
-            iLen = vsnprintf(str->data, iLen, format, varArgs);
-            str->length = iLen;
-            str->data[iLen] = '\0';
-            str->hashValue = 0;
-         }
+         bSuccess = ensureCapacityForLen(str, iLen);
       }
+      if (bSuccess) {
+         vsnprintf(str->data, iLen + 1, format, varArgs);
+         str->length = (CFL_UINT32) iLen;
+         str->data[str->length] = '\0';
+         str->hashValue = 0;
+      }
+   } else {
+      str = cfl_str_setConstLen(str, "", 0);
    }
    return str;
 }
