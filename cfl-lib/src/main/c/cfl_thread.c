@@ -27,6 +27,10 @@
    #include <signal.h>
 #endif
 
+#if defined(__BORLANDC__) && __BORLANDC__ < 0x0600
+   #define YieldProcessor() Sleep(0)
+#endif
+
 #include "cfl_lock.h"
 
 #define DEFINE_GET_SET(datatype, typename, defaultValue) \

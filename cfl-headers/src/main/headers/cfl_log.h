@@ -84,10 +84,12 @@ extern void cfl_log_setFormatter(CFL_LOGGERP logger, CFL_LOG_FORMATTER formatter
 
 #undef DEFINE_LOGGER_FUN
 
-#define CFL_LOG_ERROR(logger, message, ...) if (logger.level >= LOG_LEVEL_ERROR) cfl_log_writeArgs(&logger, LOG_LEVEL_ERROR, message, __VA_ARGS__)
-#define CFL_LOG_WARN(logger, message, ...) if (logger.level >= LOG_LEVEL_WARN) cfl_log_writeArgs(&logger, LOG_LEVEL_WARN, message, __VA_ARGS__)
-#define CFL_LOG_INFO(logger, message, ...) if (logger.level >= LOG_LEVEL_INFO) cfl_log_writeArgs(&logger, LOG_LEVEL_INFO, message, __VA_ARGS__)
-#define CFL_LOG_DEBUG(logger, message, ...) if (logger.level >= LOG_LEVEL_DEBUG) cfl_log_writeArgs(&logger, LOG_LEVEL_DEBUG, message, __VA_ARGS__)
-#define CFL_LOG_TRACE(logger, message, ...) if (logger.level >= LOG_LEVEL_TRACE) cfl_log_writeArgs(&logger, LOG_LEVEL_TRACE, message, __VA_ARGS__)
+#if __STDC_VERSION__ >= 199901L
+#define CFL_LOG_ERROR(logger, ...) if (logger.level >= LOG_LEVEL_ERROR) cfl_log_write(&logger, LOG_LEVEL_ERROR, __VA_ARGS__)
+#define CFL_LOG_WARN(logger, ...) if (logger.level >= LOG_LEVEL_WARN) cfl_log_write(&logger, LOG_LEVEL_WARN, __VA_ARGS__)
+#define CFL_LOG_INFO(logger, ...) if (logger.level >= LOG_LEVEL_INFO) cfl_log_write(&logger, LOG_LEVEL_INFO, __VA_ARGS__)
+#define CFL_LOG_DEBUG(logger, ...) if (logger.level >= LOG_LEVEL_DEBUG) cfl_log_write(&logger, LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define CFL_LOG_TRACE(logger, ...) if (logger.level >= LOG_LEVEL_TRACE) cfl_log_write(&logger, LOG_LEVEL_TRACE, __VA_ARGS__)
+#endif
 
 #endif

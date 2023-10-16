@@ -659,7 +659,6 @@ char * cfl_socket_lastErrorDescription(void) {
 }
 
 CFL_BOOL cfl_socket_setBlockingMode(CFL_SOCKET socket, CFL_BOOL block) {
-   CFL_BOOL ret;
 #if defined(CFL_OS_LINUX)
    const int flags = fcntl(socket, F_GETFL, 0);
    if ((flags & O_NONBLOCK) && !block) {

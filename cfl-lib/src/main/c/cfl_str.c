@@ -23,6 +23,10 @@
 #include <stdio.h>
 #include "cfl_str.h"
 
+#ifndef va_copy
+   #define va_copy(dest, src) dest = src
+#endif
+
 #define DEFAULT_CAPACITY 16
 
 static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {

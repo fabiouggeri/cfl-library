@@ -9,6 +9,12 @@
 #include "cfl_atomic.h"
 #include "cfl_list.h"
 
+#if defined(CFL_OS_LINUX)
+   #define _strnicmp(s1, s2, n) strncasecmp(s1, s2, n)
+#elif defined( __BORLANDC__ )
+   #define _strnicmp strnicmp
+#endif
+
 #define LOCK_INIT_LOGGER(var)   while (! cfl_atomic_compareAndSetBoolean(&(var), CFL_FALSE, CFL_TRUE)) cfl_thread_yield()
 #define UNLOCK_INIT_LOGGER(var) cfl_atomic_setBoolean(&(var), CFL_FALSE)
 
@@ -359,9 +365,9 @@ void cfl_log_setFileHandle(CFL_LOGGERP logger, FILE *fileHandle) {
 
 void cfl_log_setFile(CFL_LOGGERP logger, const char *pathfilename) {
    LOCK_INIT_LOGGER(s_locked);
-   if (strcasecmp(pathfilename, "stdout") == 0) {
+   if (_strnicmp(pathfilename, "stdout", 6) == 0) {
       node_setWriter(logger_node(logger), newLoggerWriter(stdout, default_log_writer, NULL));
-   } else if (strcasecmp(pathfilename, "stderr") == 0) {
+   } else if (_strnicmp(pathfilename, "stderr", 6) == 0) {
       node_setWriter(logger_node(logger), newLoggerWriter(stderr, default_log_writer, NULL));
    } else {
       FILE *handle = fopen(pathfilename, "a");
