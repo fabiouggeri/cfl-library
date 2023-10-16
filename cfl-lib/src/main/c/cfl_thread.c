@@ -315,6 +315,14 @@ CFL_BOOL cfl_thread_sleep(CFL_UINT32 time) {
    return CFL_TRUE;
 }
 
+void cfl_thread_yield(void) {
+#if defined(CFL_OS_WINDOWS)
+   YieldProcessor();
+#else
+   sched_yield();
+#endif
+}
+
 static CFL_THREAD_VAR_DATA *thread_dataGet(CFL_THREAD_VARIABLEP threadVar) {
    CFL_THREAD_VAR_DATA *varData;
    INIT_DATA_STORAGE(threadVar);

@@ -263,10 +263,19 @@ typedef struct _CFL_MAP CFL_MAP;
 typedef struct _CFL_MAP *CFL_MAPP;
 
 struct _CFL_LOGGER;
+typedef struct _CFL_LOGGER CFL_LOGGER;
 typedef struct _CFL_LOGGER *CFL_LOGGERP;
 
 enum _CFL_LOG_LEVEL;
 typedef enum _CFL_LOG_LEVEL CFL_LOG_LEVEL;
 typedef enum _CFL_LOG_LEVEL *CFL_LOG_LEVELP;
+
+struct _CFL_MAPSTR;
+typedef struct _CFL_MAPSTR CFL_MAPSTR;
+typedef struct _CFL_MAPSTR *CFL_MAPSTRP;
+
+struct _CFL_MAPSTR_ENTRY;
+typedef struct _CFL_MAPSTR_ENTRY CFL_MAPSTR_ENTRY;
+typedef struct _CFL_MAPSTR_ENTRY *CFL_MAPSTR_ENTRYP;
 
 #endif

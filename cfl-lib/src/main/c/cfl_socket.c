@@ -788,3 +788,20 @@ CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write) {
    } 
    return CFL_FALSE;
 }
+
+char *cfl_socket_hostname(char *hostname, CFL_UINT32 hostnameLen) {
+   if (hostname != NULL) {
+#if defined(CFL_OS_WINDOWS)
+   WSADATA wsadata;
+   WSAStartup(MAKEWORD(1, 1), &wsadata);
+#endif
+   if (gethostname(hostname, hostnameLen) != 0) {
+      strncpy(hostname, "unknown", hostnameLen);
+   }
+   hostname[hostnameLen] = '\0';
+#if defined(CFL_OS_WINDOWS)
+   WSACleanup();
+#endif
+   }
+   return hostname;
+}

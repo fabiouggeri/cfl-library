@@ -402,20 +402,18 @@ void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen) {
 
 void cfl_str_clear(CFL_STRP str) {
    if (str->isVarData) {
-      str->length = 0;
-      str->hashValue = 0;
       str->data[0] = '\0';
    } else {
-      str->capacity = 0;
-      str->length = 0;
       str->data = "";
-      str->hashValue = 0;
+      str->capacity = 0;
    }
+   str->hashValue = 0;
+   str->length = 0;
 }
 
-CFL_STRP cfl_str_setStr(CFL_STRP str, CFL_STRP strSet) {
-   if (strSet != NULL && strSet->length > 0) {
-      return cfl_str_setValueLen(str, strSet->data, strSet->length);
+CFL_STRP cfl_str_setStr(CFL_STRP str, CFL_STRP src) {
+   if (src != NULL && src->length > 0) {
+      return cfl_str_setValueLen(str, src->data, src->length);
    } else {
       return cfl_str_setConstLen(str, "", 0);
    }

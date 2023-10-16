@@ -71,7 +71,7 @@ extern CFL_UINT32 cfl_str_getLength(CFL_STRP str);
 extern CFL_UINT32 cfl_str_length(CFL_STRP str);
 extern void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen);
 extern void cfl_str_clear(CFL_STRP str);
-extern CFL_STRP cfl_str_setStr(CFL_STRP str, CFL_STRP strSet);
+extern CFL_STRP cfl_str_setStr(CFL_STRP str, CFL_STRP src);
 extern CFL_STRP cfl_str_setValue(CFL_STRP str, const char *buffer);
 extern CFL_STRP cfl_str_setValueLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 extern CFL_STRP cfl_str_setConst(CFL_STRP str, const char *buffer);

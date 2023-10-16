@@ -63,5 +63,6 @@ extern CFL_BOOL cfl_socket_setSendBufferSize(CFL_SOCKET socket, int size);
 extern CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 time, CFL_UINT32 interval);
 extern CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT16 lingerSeconds);
 extern CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write);
+extern char *cfl_socket_hostname(char *hostname, CFL_UINT32 hostnameLen);
 
 #endif
