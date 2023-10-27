@@ -20,6 +20,16 @@
 
 #define IS_ROOT_NODE(node) ((node)->parent == NULL)
 
+#define DEFINE_LOGGER_FUN(level_name, level_value) \
+   void cfl_log_##level_name(CFL_LOGGERP logger, char *message, ...) { \
+      if (logger->level >= level_value) { \
+         va_list varArgs; \
+         va_start(varArgs, message); \
+         cfl_log_writeArgs(logger, level_value, message, varArgs); \
+         va_end(varArgs); \
+      } \
+   }
+
 typedef struct {
    void           *data;
    CFL_LOG_WRITE  write;
@@ -37,19 +47,40 @@ typedef struct _CFL_LOGGER_NODE {
    CFL_LOG_FORMATTER       format;
 } CFL_LOGGER_NODE, *CFL_LOGGER_NODEP;
 
-static void default_log_formatter(CFL_LOG_LEVEL level, CFL_STRP buffer, char *message, va_list varArgs);
+static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, char *filePathname, CFL_UINT32 line, char *message, va_list varArgs);
 static void default_log_writer(void *handle, char *data, CFL_UINT32 len);
 static void default_log_close(void *handle);
 
-static char *level_name[] = {"UNINITIALIZED", "OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
+static char *level_name[] = {"OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
 
 static CFL_BOOL s_locked = CFL_FALSE;
 
 static CFL_LOGGER_NODE s_rootNode = { 0 };
 
-static CFL_LOGGER s_rootLogger = {LOG_LEVEL_ERROR, "", "", &s_rootNode};
+static char *s_missingId = "__missing__";
+
+static struct _CFL_LOGGER s_rootLogger = {LOG_LEVEL_ERROR, "", "", &s_rootNode};
 
 static char s_hostName[256] = {0};
+
+static char * sub_path(char *filePathname, CFL_UINT8 maxPathSep) {
+   char *path = filePathname;
+   CFL_UINT8 count = 0;
+   while (*path != '\0') {
+      path++;
+   }
+   while (path != filePathname) {
+      char c = *path;
+      if (c == '/' || c == '\\') {
+         count++;
+         if (count >= maxPathSep) {
+            return path;
+         }
+      }
+      path--;
+   }
+   return path;
+}
 
 static char *file_name(char *pathFilename) {
    char *index = pathFilename;
@@ -121,6 +152,7 @@ static void node_setLevel(CFL_LOGGER_NODEP node, CFL_LOG_LEVEL level) {
 
 static CFL_LOG_WRITERP newLoggerWriter(void *data, CFL_LOG_WRITE write, CFL_LOG_CLOSE close) {
    CFL_LOG_WRITERP logWriter = (CFL_LOG_WRITERP) malloc(sizeof(CFL_LOG_WRITER));
+   memset(logWriter, 0, sizeof(CFL_LOG_WRITER));
    logWriter->data = data;
    logWriter->write = write;
    logWriter->close = close;
@@ -134,6 +166,7 @@ static void initRootNode(void) {
       return;
    }
    logWriter = (CFL_LOG_WRITERP) malloc(sizeof(CFL_LOG_WRITER));
+   memset(logWriter, 0, sizeof(CFL_LOG_WRITER));
    logWriter->data = stderr;
    logWriter->write = default_log_writer;
    logWriter->close = default_log_close;
@@ -148,6 +181,7 @@ static void initRootNode(void) {
 
 static CFL_LOGGER_NODEP addNode(CFL_LOGGER_NODEP parent, CFL_LOGGERP logger, CFL_STRP id) {
    CFL_LOGGER_NODEP node = (CFL_LOGGER_NODEP) malloc(sizeof(CFL_LOGGER_NODE));
+   memset(node, 0, sizeof(CFL_LOGGER_NODE));
    cfl_list_add(&parent->children, node);
    cfl_str_initValue(&node->id, cfl_str_getPtr(id));
    cfl_list_init(&node->children, 0);
@@ -156,6 +190,7 @@ static CFL_LOGGER_NODEP addNode(CFL_LOGGER_NODEP parent, CFL_LOGGERP logger, CFL
    node->format = parent->format;
    set_log_writer(node, parent->writer);
    logger->level = parent->logger->level;
+   logger->node = node;
    return node;
 }
 
@@ -203,7 +238,11 @@ static CFL_LOGGER_NODEP findNodePath(CFL_LOGGER_NODEP rootNode, CFL_STRP searchP
          }
       }
       if (nodeFound == NULL && createMissing) {
-         nodeFound = addNode(parent, parent->logger, &nodeId);
+         CRL_LOGGERP logger = malloc(sizeof(struct _CFL_LOGGER));
+         logger->id = s_missingId;
+         logger->parentId = s_missingId;
+         nodeFound = addNode(parent, logger, &nodeId);
+         start = nextNodeId(&nodeId, searchPath, start);
       }
       parent = nodeFound;
    }
@@ -231,17 +270,20 @@ static void default_log_writer(void *handle, char *data, CFL_UINT32 len) {
    }
 }
 
-static void default_log_formatter(CFL_LOG_LEVEL level, CFL_STRP buffer, char *message, va_list varArgs) {
+static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, char *filePathname, CFL_UINT32 line, char *message, va_list varArgs) {
    time_t curTime;
    struct tm *tm;
    time(&curTime);
    tm = localtime(&curTime);
-   if (level >= LOG_LEVEL_DEBUG) {
-      cfl_str_setFormat(buffer, "%04d-%02d-%02dT%02d:%02d:%02d - %s: ",
-                           1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, level_name[level]);
+
+   cfl_str_setFormat(buffer, "%04d-%02d-%02dT%02d:%02d:%02d - %s",
+                     1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, 
+                     level_name[level]);
+   if (level >= LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
+      char *subPathname = sub_path(filePathname, 5);
+      cfl_str_appendFormat(buffer, (subPathname != filePathname) ? " (...%s:%u): " : " (%s:%u): ", subPathname, line);
    } else {
-      cfl_str_setFormat(buffer, "%04d-%02d-%02dT%02d:%02d:%02d - %s: ",
-                           1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, level_name[level]);
+      cfl_str_appendLen(buffer, ": ", 2);
    }
    cfl_str_appendFormatArgs(buffer, message, varArgs);
    cfl_str_appendChar(buffer, '\n');
@@ -263,16 +305,37 @@ static int gelf_log_level(CFL_LOG_LEVEL level) {
    }
 }
 
-static void gelf_log_formatter(CFL_LOG_LEVEL level, CFL_STRP buffer, char *message, va_list varArgs) {
+static void gelf_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, char *filePathname, CFL_UINT32 line, char *message, va_list varArgs) {
    time_t curTime;
    struct tm *tm;
    time(&curTime);
    tm = localtime(&curTime);
-   cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
-                              "\"timestamp\":%ld,"
-                              "\"host\":\"%s\","
-                              "\"short_message\":\"",
-           time(NULL), hostName());
+   if (level >= LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
+      char *subPathname = sub_path(filePathname, 5);
+      if (subPathname != filePathname) {
+         cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
+                                    "\"timestamp\":%ld,"
+                                    "\"host\":\"%s\","
+                                    "\"_source\":\"...%s\","
+                                    "\"_line\":\"%s\","
+                                    "\"short_message\":\"",
+                 time(NULL), hostName(), subPathname, line);
+      } else {
+         cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
+                                    "\"timestamp\":%ld,"
+                                    "\"host\":\"%s\","
+                                    "\"_source\":\"%s\","
+                                    "\"_line\":\"%s\","
+                                    "\"short_message\":\"",
+                 time(NULL), hostName(), subPathname, line);
+      }
+   } else {
+      cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
+                                 "\"timestamp\":%ld,"
+                                 "\"host\":\"%s\","
+                                 "\"short_message\":\"",
+              time(NULL), hostName());
+   }
    cfl_str_appendFormatArgs(buffer, message, varArgs);
    cfl_str_appendFormat(buffer, "\",\"level\":%d}\n", gelf_log_level(level));
 }
@@ -298,6 +361,10 @@ void cfl_log_register(CFL_LOGGERP logger) {
          node = addNode(parentNode, logger, &strId);
       } else {
          logger->level = node->logger->level;
+         logger->node = node;
+         if (node->logger->id == s_missingId) {
+            free(node->logger);
+         }
          node->logger = logger;
       }
    }
@@ -317,7 +384,7 @@ CFL_LOGGERP cfl_log_find(CFL_LOGGERP logger, char *loggerPathname) {
 
    cfl_str_initConst(&path, loggerPathname);
    LOCK_INIT_LOGGER(s_locked);
-   node = findNodePath((CFL_LOGGER_NODEP) logger->node, &path, CFL_FALSE);
+   node = findNodePath(logger_node(logger), &path, CFL_TRUE);
    UNLOCK_INIT_LOGGER(s_locked);
    cfl_str_free(&path);
    return node != NULL ? node->logger : NULL;
@@ -338,7 +405,7 @@ void cfl_log_writeArgs(CFL_LOGGERP logger, CFL_LOG_LEVEL level, char *message, v
    if (logger->level >= level) {
       CFL_STR buffer;
       cfl_str_init(&buffer);
-      node->format(level, &buffer, message, varArgs);
+      node->format(&buffer, level, NULL, 0, message, varArgs);
       node->writer->write(node->writer->data, cfl_str_getPtr(&buffer), cfl_str_length(&buffer));
       cfl_str_free(&buffer);
    }
@@ -348,6 +415,30 @@ void cfl_log_write(CFL_LOGGERP logger, CFL_LOG_LEVEL level, char *message, ...) 
    va_list varArgs;
    va_start(varArgs, message);
    cfl_log_writeArgs(logger, level, message, varArgs);
+   va_end(varArgs);
+}
+
+void cfl_log_writeArgsFL(CFL_LOGGERP logger, CFL_LOG_LEVEL level, char *filePathname, CFL_UINT32 line, char *message, va_list varArgs) {
+   CFL_LOGGER_NODEP node = (CFL_LOGGER_NODEP) logger->node;
+   if (node == NULL) {
+      LOCK_INIT_LOGGER(s_locked);
+      cfl_log_register(logger);
+      node = (CFL_LOGGER_NODEP) logger->node;
+      UNLOCK_INIT_LOGGER(s_locked);
+   }
+   if (logger->level >= level) {
+      CFL_STR buffer;
+      cfl_str_init(&buffer);
+      node->format(&buffer, level, filePathname, line, message, varArgs);
+      node->writer->write(node->writer->data, cfl_str_getPtr(&buffer), cfl_str_length(&buffer));
+      cfl_str_free(&buffer);
+   }
+}
+
+void cfl_log_writeFL(CFL_LOGGERP logger, CFL_LOG_LEVEL level, char *filePathname, CFL_UINT32 line, char *message, ...) {
+   va_list varArgs;
+   va_start(varArgs, message);
+   cfl_log_writeArgsFL(logger, level, filePathname, line, message, varArgs);
    va_end(varArgs);
 }
 
@@ -383,10 +474,8 @@ CFL_LOG_LEVEL cfl_log_level(CFL_LOGGERP logger) {
 }
 
 void cfl_log_setLevel(CFL_LOGGERP logger, CFL_LOG_LEVEL newLevel) {
-   CFL_LOGGER_NODEP node;
    LOCK_INIT_LOGGER(s_locked);
-   node = logger_node(logger);
-   node_setLevel(node, newLevel);
+   node_setLevel(logger_node(logger), newLevel);
    UNLOCK_INIT_LOGGER(s_locked);
 }
 
@@ -413,3 +502,9 @@ void cfl_log_setFormatter(CFL_LOGGERP logger, CFL_LOG_FORMATTER formatter) {
    node_setFormatter(node, formatter);
    UNLOCK_INIT_LOGGER(s_locked);
 }
+
+DEFINE_LOGGER_FUN(error, LOG_LEVEL_ERROR)
+DEFINE_LOGGER_FUN(warn , LOG_LEVEL_WARN)
+DEFINE_LOGGER_FUN(info , LOG_LEVEL_INFO)
+DEFINE_LOGGER_FUN(debug, LOG_LEVEL_DEBUG)
+DEFINE_LOGGER_FUN(trace, LOG_LEVEL_TRACE)

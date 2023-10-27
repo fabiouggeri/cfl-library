@@ -120,6 +120,11 @@ typedef unsigned char CFL_BOOL;
 
 #define CFL_UNUSED(x) (void)(x)
 
+#if __STDC_VERSION__ >= 199901L
+   #define CFL_INLINE inline
+#else
+   #define CFL_INLINE
+#endif
 
 struct _CFL_HASH_ENTRY;
 typedef struct _CFL_HASH_ENTRY CFL_HASH_ENTRY;
@@ -263,7 +268,6 @@ typedef struct _CFL_MAP CFL_MAP;
 typedef struct _CFL_MAP *CFL_MAPP;
 
 struct _CFL_LOGGER;
-typedef struct _CFL_LOGGER CFL_LOGGER;
 typedef struct _CFL_LOGGER *CFL_LOGGERP;
 
 enum _CFL_LOG_LEVEL;
