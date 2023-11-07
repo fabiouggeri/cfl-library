@@ -21,7 +21,12 @@
 
 #define _CFL_INTS_H
 
+
 #if (defined(_MSC_VER) && _MSC_VER < 1600) || (defined(__BORLANDC__) && __BORLANDC__ < 0x0600)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
    typedef signed char      int8_t;
    typedef signed short     int16_t;
    typedef signed long      int32_t;
@@ -30,6 +35,11 @@
    typedef unsigned short   uint16_t;
    typedef unsigned long    uint32_t;
    typedef unsigned __int64 uint64_t;
+
+#ifdef __cplusplus
+}
+#endif
+
 #else
    #include <stdint.h>
 #endif

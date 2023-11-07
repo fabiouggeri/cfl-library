@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CFL_DATE_YEAR   0
 #define CFL_DATE_MONTH  1
 #define CFL_DATE_DAY    2
@@ -81,5 +85,9 @@ extern void cfl_date_copy(CFL_DATEP fromDate, CFL_DATEP toDate);
 //extern void cfl_date_set(CFL_DATEP date, CFL_UINT8 field, CFL_UINT16 value);
 //extern CFL_DATEP cfl_date_diff(CFL_DATEP date1, CFL_DATEP date2);
 //extern CFL_UINT64 cfl_date_getCurrentMillis(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

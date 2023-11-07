@@ -24,6 +24,10 @@
 #include "cfl_types.h"
 #include "cfl_date.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CFL_BIG_ENDIAN    0x00
 #define CFL_LITTLE_ENDIAN 0x01
 
@@ -113,5 +117,9 @@ extern CFL_UINT32 cfl_buffer_remaining(CFL_BUFFERP buffer);
 extern CFL_BOOL cfl_buffer_haveEnough(CFL_BUFFERP buffer, CFL_UINT32 need);
 extern CFL_BOOL cfl_buffer_putFormat(CFL_BUFFERP buffer, const char *format, ...);
 extern CFL_BOOL cfl_buffer_moveTo(CFL_BUFFERP fromBuffer, CFL_BUFFERP toBuffer);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

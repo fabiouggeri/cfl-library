@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CFL_EVENT_FAIL    0
 #define CFL_EVENT_SET     1
 #define CFL_EVENT_TIMEOUT 2
@@ -46,5 +50,9 @@ extern CFL_BOOL cfl_event_wait(CFL_EVENTP event);
 extern CFL_UINT8 cfl_event_wait2(CFL_EVENTP event);
 extern CFL_BOOL cfl_event_waitTimeout(CFL_EVENTP event, CFL_INT32 timeout);
 extern CFL_UINT8 cfl_event_waitTimeout2(CFL_EVENTP event, CFL_INT32 timeout);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

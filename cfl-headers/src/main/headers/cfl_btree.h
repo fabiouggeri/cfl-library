@@ -26,7 +26,7 @@
 #define LEFT_CHILD_NODE 0
 #define RIGHT_CHILD_NODE 1
 
-#if defined( __cplusplus ) && ! defined( __IBMCPP__ )
+#if defined( __cplusplus )
    extern "C" {
 #endif
 
@@ -64,7 +64,7 @@ extern CFL_ITERATORP cfl_btree_iterator(CFL_BTREEP pTree);
 extern CFL_ITERATORP cfl_btree_iteratorLast(CFL_BTREEP pTree);
 extern CFL_BOOL cfl_btree_walk(CFL_BTREE_NODEP pNode, BTREE_WALK_CALLBACK callback);
 
-#if defined( __cplusplus ) && ! defined( __IBMCPP__ )
+#if defined( __cplusplus )
    }
 #endif
 

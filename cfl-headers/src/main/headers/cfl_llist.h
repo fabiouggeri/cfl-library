@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _CFL_LNODE {
    void *data;
    struct _CFL_LNODE *previous;
@@ -46,6 +50,10 @@ extern void *cfl_llist_getLast(CFL_LLISTP list);
 extern void *cfl_llist_getFirst(CFL_LLISTP list);
 extern void *cfl_llist_removeLast(CFL_LLISTP list);
 extern void *cfl_llist_removeFirst(CFL_LLISTP list);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

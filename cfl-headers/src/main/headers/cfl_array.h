@@ -23,6 +23,11 @@
 
 #include "cfl_types.h"
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct _CFL_ARRAY {
    CFL_UINT8  *items;
    CFL_UINT32 ulItemSize;
@@ -46,5 +51,9 @@ extern CFL_UINT32 cfl_array_length(CFL_ARRAYP array);
 extern void cfl_array_setLength(CFL_ARRAYP array, CFL_UINT32 newLen);
 extern CFL_ARRAYP cfl_array_clone(CFL_ARRAYP other);
 extern CFL_ITERATORP cfl_array_iterator(CFL_ARRAYP array);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

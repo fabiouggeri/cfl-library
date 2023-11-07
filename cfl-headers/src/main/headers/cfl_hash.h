@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef CFL_UINT32 (*HASH_KEY_FUNC) (void *k);
 typedef int        (*HASH_COMP_FUNC) (void *k1, void *k2);
 typedef void       (*HASH_FREE_FUNC) (void *k, void *v);
@@ -137,5 +141,9 @@ CFL_UINT32 cfl_hash_calc(CFL_HASHP h, void *k);
 CFL_UINT32 cfl_hash_murmur3(const void * key, CFL_UINT32 len);
 
 CFL_ITERATORP cfl_hash_iterator(CFL_HASHP h);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

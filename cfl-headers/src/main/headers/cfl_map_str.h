@@ -26,6 +26,10 @@
 #include "cfl_str.h"
 #include "cfl_array.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct _CFL_MAPSTR_ENTRY {
    CFL_STR  key;
    CFL_STR  value;
@@ -59,5 +63,9 @@ extern void cfl_mapstr_setStr(CFL_MAPSTRP map, CFL_STRP key, CFL_STRP value);
 extern void cfl_mapstr_setFormat(CFL_MAPSTRP map, const char *key, const char *format, ...);
 extern void cfl_mapstr_copy(CFL_MAPSTRP toMap, CFL_MAPSTRP fromMap);
 extern CFL_UINT32 cfl_mapstr_length(CFL_MAPSTRP map);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

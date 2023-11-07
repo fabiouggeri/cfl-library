@@ -46,6 +46,10 @@
 
 #include "cfl_ints.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef int8_t        CFL_INT8;
 typedef uint8_t       CFL_UINT8;
 typedef int16_t       CFL_INT16;
@@ -270,10 +274,6 @@ typedef struct _CFL_MAP *CFL_MAPP;
 struct _CFL_LOGGER;
 typedef struct _CFL_LOGGER *CFL_LOGGERP;
 
-enum _CFL_LOG_LEVEL;
-typedef enum _CFL_LOG_LEVEL CFL_LOG_LEVEL;
-typedef enum _CFL_LOG_LEVEL *CFL_LOG_LEVELP;
-
 struct _CFL_MAPSTR;
 typedef struct _CFL_MAPSTR CFL_MAPSTR;
 typedef struct _CFL_MAPSTR *CFL_MAPSTRP;
@@ -281,5 +281,9 @@ typedef struct _CFL_MAPSTR *CFL_MAPSTRP;
 struct _CFL_MAPSTR_ENTRY;
 typedef struct _CFL_MAPSTR_ENTRY CFL_MAPSTR_ENTRY;
 typedef struct _CFL_MAPSTR_ENTRY *CFL_MAPSTR_ENTRYP;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -21,8 +21,8 @@
 
 #define _CFL_ITERATOR_H_
 
-#if defined( __cplusplus ) && ! defined( __IBMCPP__ )
-   extern "C" {
+#if defined( __cplusplus )
+extern "C" {
 #endif
 
 #include "cfl_types.h"
@@ -57,8 +57,8 @@ extern void *cfl_iterator_previous(CFL_ITERATORP it);
 extern void cfl_iterator_last(CFL_ITERATORP it);
 extern void cfl_iterator_add(CFL_ITERATORP it, void *value);
 
-#if defined( __cplusplus ) && ! defined( __IBMCPP__ )
-   }
+#if defined( __cplusplus )
+}
 #endif
 
 #endif

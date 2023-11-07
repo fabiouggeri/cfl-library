@@ -24,6 +24,10 @@
 #include "cfl_types.h"
 #include "cfl_array.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef int  (*MAP_COMP_FUNC) (const void *k1, const void *k2);
 typedef void (*MAP_KEY_VALUE_FUNC) (const void *k, const void *v);
 
@@ -49,5 +53,8 @@ extern void cfl_map_setKeyIndex(CFL_MAPP map, CFL_UINT32 index, const void *key)
 extern void cfl_map_copy(CFL_MAPP toMap, CFL_MAPP fromMap);
 extern CFL_UINT32 cfl_map_length(CFL_MAPP map);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

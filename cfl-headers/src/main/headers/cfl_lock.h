@@ -24,6 +24,10 @@
 #include "cfl_types.h"
 #include "cfl_array.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if ! defined(__BORLANDC__)
    #define _CFL_CONDITION_VAR
 #endif
@@ -55,5 +59,9 @@ extern CFL_UINT8 cfl_lock_conditionWaitTimeout(CFL_LOCKP pLock, CFL_CONDITION_VA
 extern void cfl_lock_conditionWake(CFL_CONDITION_VARIABLEP pVar);
 extern void cfl_lock_conditionWakeAll(CFL_CONDITION_VARIABLEP pVar);
 extern CFL_INT32 cfl_lock_lastErrorCode(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

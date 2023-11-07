@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CFL_THREAD_CREATED   0x00
 #define CFL_THREAD_RUNNING   0x01
 #define CFL_THREAD_FINISHED  0x02
@@ -119,5 +123,9 @@ DECLARE_GET_SET(CFL_UINT32 , UInt32 )
 DECLARE_GET_SET(CFL_UINT64 , UInt64 )
 DECLARE_GET_SET(CFL_FLOAT32, Float32 )
 DECLARE_GET_SET(CFL_FLOAT64, Float64 )
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

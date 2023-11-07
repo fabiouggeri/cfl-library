@@ -24,6 +24,10 @@
 #include "cfl_types.h"
 #include "cfl_lock.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define DECLARE_GET_PUT(datatype, typename) \
    extern datatype cfl_sync_queue_get##typename(CFL_SYNC_QUEUEP queue); \
    extern datatype cfl_sync_queue_tryGet##typename(CFL_SYNC_QUEUEP queue, CFL_BOOL *took); \
@@ -104,5 +108,9 @@ DECLARE_DRAIN(CFL_UINT8   , UInt8  );
 DECLARE_DRAIN(CFL_UINT16  , UInt16 );
 DECLARE_DRAIN(CFL_UINT32  , UInt32 );
 DECLARE_DRAIN(CFL_UINT64  , UInt64 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

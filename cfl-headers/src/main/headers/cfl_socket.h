@@ -25,6 +25,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(CFL_OS_WINDOWS)
    #define CFL_SOCK_ERROR_CONN_RESET WSAECONNRESET
 #else 
@@ -64,5 +68,9 @@ extern CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_
 extern CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT16 lingerSeconds);
 extern CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write);
 extern char *cfl_socket_hostname(char *hostname, CFL_UINT32 hostnameLen);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

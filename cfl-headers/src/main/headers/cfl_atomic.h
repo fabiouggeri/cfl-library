@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(CFL_OS_WINDOWS) && ! defined(__GNUC__)
    #define VOLATILE_PARAM volatile
 #else
@@ -62,5 +66,9 @@ DECLARE_OPERATIONS_OP(CFL_INT32, Int32);
 #endif
 
 DECLARE_OPERATIONS_SET(void *, Pointer);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

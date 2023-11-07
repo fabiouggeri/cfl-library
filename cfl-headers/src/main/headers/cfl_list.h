@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct _CFL_LIST {
    void       **items;
    CFL_UINT32 length;
@@ -45,5 +49,9 @@ extern void cfl_list_setLength(CFL_LISTP list, CFL_UINT32 newLen);
 extern CFL_LISTP cfl_list_clone(CFL_LISTP other);
 extern void *cfl_list_remove(CFL_LISTP list, CFL_UINT32 ulIndex);
 extern void *cfl_list_removeLast(CFL_LISTP list);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

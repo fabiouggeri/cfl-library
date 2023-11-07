@@ -24,6 +24,10 @@
 #include <stdarg.h>
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CFL_STR_FREE(s) if (s != NULL) { cfl_str_free(s); s = NULL; }
 #define CFL_STR_APPEND_CONST(s, c) cfl_str_appendLen(s, c, (int) sizeof(c) - 1)
 #define CFL_STR_SET_CONST(s, c)    cfl_str_setConstLen(s, c, (int) sizeof(c) - 1)
@@ -118,5 +122,9 @@ extern CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source, CFL_UINT32
 extern CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end);
 
 extern CFL_STRP cfl_str_move(CFL_STRP dest, CFL_STRP source);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

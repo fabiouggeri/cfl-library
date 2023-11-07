@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CFL_SQL_TO_STRING(sql, str) ((CFL_SQLP)sql)->to_string((CFL_SQLP)sql, str)
 #define CFL_SQL_FREE(sql) ((CFL_SQLP)sql)->free_sql((CFL_SQLP)sql)
 
@@ -216,5 +220,9 @@ struct _CFL_SQL_BUILDER {
 };
 
 extern void cfl_sql_initBuilder(CFL_SQL_BUILDERP builder);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

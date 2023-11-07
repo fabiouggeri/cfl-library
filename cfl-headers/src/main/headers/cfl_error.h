@@ -23,6 +23,10 @@
 
 #include "cfl_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct _CFL_ERROR {
    CFL_STRP  message;
    void      *userData;
@@ -44,5 +48,9 @@ extern void cfl_error_setMessage(CFL_ERRORP pError, char *message);
 extern void * cfl_error_getUserData(CFL_ERRORP pError);
 extern void cfl_error_setUserData(CFL_ERRORP pError, void *userData);
 extern void cfl_error_clear(CFL_ERRORP pError);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
