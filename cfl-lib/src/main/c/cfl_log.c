@@ -47,7 +47,8 @@ typedef struct _CFL_LOGGER_NODE {
    CFL_LOG_FORMATTER       format;
 } CFL_LOGGER_NODE, *CFL_LOGGER_NODEP;
 
-static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *filePathname, CFL_UINT32 line, const char *message, va_list varArgs);
+static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *id, const char *filePathname, CFL_UINT32 line,
+                                  const char *message, va_list varArgs);
 static void default_log_writer(void *handle, const char *data, CFL_UINT32 len);
 static void default_log_close(void *handle);
 
@@ -270,20 +271,22 @@ static void default_log_writer(void *handle, const char *data, CFL_UINT32 len) {
    }
 }
 
-static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *filePathname, CFL_UINT32 line, const char *message, va_list varArgs) {
+static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *id, const char *filePathname, CFL_UINT32 line,
+                                  const char *message, va_list varArgs) {
    time_t curTime;
    struct tm *tm;
    time(&curTime);
    tm = localtime(&curTime);
 
-   cfl_str_setFormat(buffer, "%04d-%02d-%02dT%02d:%02d:%02d - %s",
+   cfl_str_setFormat(buffer, "%04d-%02d-%02dT%02d:%02d:%02d %-5s: ",
                      1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, 
                      level_name[level]);
+   if (id != NULL && id[0] != '\0') {
+      cfl_str_appendFormat(buffer, "[%s] ", id);
+   }
    if (level >= LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
       char *subPathname = sub_path(filePathname, 5);
-      cfl_str_appendFormat(buffer, (subPathname != filePathname) ? " (...%s:%u): " : " (%s:%u): ", subPathname, line);
-   } else {
-      cfl_str_appendLen(buffer, ": ", 2);
+      cfl_str_appendFormat(buffer, (subPathname != filePathname) ? "|...%s:%u| " : "|%s:%u| ", subPathname, line);
    }
    cfl_str_appendFormatArgs(buffer, message, varArgs);
    cfl_str_appendChar(buffer, '\n');
@@ -305,7 +308,8 @@ static int gelf_log_level(CFL_LOG_LEVEL level) {
    }
 }
 
-static void gelf_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *filePathname, CFL_UINT32 line, const char *message, va_list varArgs) {
+static void gelf_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *id, const char *filePathname, CFL_UINT32 line,
+                               const char *message, va_list varArgs) {
    time_t curTime;
    struct tm *tm;
    time(&curTime);
@@ -316,25 +320,28 @@ static void gelf_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char 
          cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
                                     "\"timestamp\":%ld,"
                                     "\"host\":\"%s\","
+                                    "\"_log_id\":\"%s\","
                                     "\"_source\":\"...%s\","
                                     "\"_line\":\"%s\","
                                     "\"short_message\":\"",
-                 time(NULL), hostName(), subPathname, line);
+                 time(NULL), hostName(), id, subPathname, line);
       } else {
          cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
                                     "\"timestamp\":%ld,"
                                     "\"host\":\"%s\","
+                                    "\"_log_id\":\"%s\","
                                     "\"_source\":\"%s\","
                                     "\"_line\":\"%s\","
                                     "\"short_message\":\"",
-                 time(NULL), hostName(), subPathname, line);
+                 time(NULL), hostName(), id != NULL && id[0] != '\0' ? id : "ROOT", subPathname, line);
       }
    } else {
       cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
                                  "\"timestamp\":%ld,"
                                  "\"host\":\"%s\","
+                                 "\"_log_id\":\"%s\","
                                  "\"short_message\":\"",
-              time(NULL), hostName());
+              time(NULL), hostName(), id != NULL && id[0] != '\0' ? id : "ROOT");
    }
    cfl_str_appendFormatArgs(buffer, message, varArgs);
    cfl_str_appendFormat(buffer, "\",\"level\":%d}\n", gelf_log_level(level));
@@ -405,7 +412,7 @@ void cfl_log_writeArgs(CFL_LOGGERP logger, CFL_LOG_LEVEL level, const char *mess
    if (logger->level >= level) {
       CFL_STR buffer;
       cfl_str_init(&buffer);
-      node->format(&buffer, level, NULL, 0, message, varArgs);
+      node->format(&buffer, level, logger->parentId, NULL, 0, message, varArgs);
       node->writer->write(node->writer->data, cfl_str_getPtr(&buffer), cfl_str_length(&buffer));
       cfl_str_free(&buffer);
    }
@@ -429,7 +436,7 @@ void cfl_log_writeArgsFL(CFL_LOGGERP logger, CFL_LOG_LEVEL level, const char *fi
    if (logger->level >= level) {
       CFL_STR buffer;
       cfl_str_init(&buffer);
-      node->format(&buffer, level, filePathname, line, message, varArgs);
+      node->format(&buffer, level, logger->parentId, filePathname, line, message, varArgs);
       node->writer->write(node->writer->data, cfl_str_getPtr(&buffer), cfl_str_length(&buffer));
       cfl_str_free(&buffer);
    }

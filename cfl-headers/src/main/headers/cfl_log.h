@@ -38,7 +38,8 @@ typedef enum {LOG_LEVEL_OFF = 0, LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO
 
 typedef void (* CFL_LOG_WRITE)(void *handle, const char *data, CFL_UINT32 len);
 typedef void (* CFL_LOG_CLOSE)(void *handle);
-typedef void (* CFL_LOG_FORMATTER)(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *filePathname, CFL_UINT32 line, const char *message, va_list varArgs);
+typedef void (* CFL_LOG_FORMATTER)(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *id, const char *filePathname, CFL_UINT32 line,
+                                   const char *message, va_list varArgs);
 
 struct _CFL_LOGGER {
    CFL_LOG_LEVEL level;
@@ -75,16 +76,18 @@ DECLARE_LOGGER_FUN(trace);
 #define CFL_LOGGER_ID(var, id)              static struct _CFL_LOGGER var = {LOG_LEVEL_TRACE, id, "", NULL}
 #define CFL_LOGGER_ID_GROUP(var, id, group) static struct _CFL_LOGGER var = {LOG_LEVEL_TRACE, id, group, NULL}
 
-#define CFL_LOG_ERROR(logger, ...) if (logger.level >= LOG_LEVEL_ERROR) \
-                                              cfl_log_writeFL(&logger, LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define CFL_LOG_WARN(logger, ...)  if (logger.level >= LOG_LEVEL_WARN) \
-                                              cfl_log_writeFL(&logger, LOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define CFL_LOG_INFO(logger, ...)  if (logger.level >= LOG_LEVEL_INFO) \
-                                              cfl_log_writeFL(&logger, LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define CFL_LOG_DEBUG(logger, ...) if (logger.level >= LOG_LEVEL_DEBUG) \
-                                              cfl_log_writeFL(&logger, LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define CFL_LOG_TRACE(logger, ...) if (logger.level >= LOG_LEVEL_TRACE) \
-                                              cfl_log_writeFL(&logger, LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#ifndef __BORLANDC__
+   #define CFL_LOG_ERROR(logger, ...) if (logger.level >= LOG_LEVEL_ERROR) \
+                                                 cfl_log_writeFL(&logger, LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+   #define CFL_LOG_WARN(logger, ...)  if (logger.level >= LOG_LEVEL_WARN) \
+                                                 cfl_log_writeFL(&logger, LOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
+   #define CFL_LOG_INFO(logger, ...)  if (logger.level >= LOG_LEVEL_INFO) \
+                                                 cfl_log_writeFL(&logger, LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
+   #define CFL_LOG_DEBUG(logger, ...) if (logger.level >= LOG_LEVEL_DEBUG) \
+                                                 cfl_log_writeFL(&logger, LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+   #define CFL_LOG_TRACE(logger, ...) if (logger.level >= LOG_LEVEL_TRACE) \
+                                                 cfl_log_writeFL(&logger, LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#endif
 
 #ifdef __cplusplus
 }
