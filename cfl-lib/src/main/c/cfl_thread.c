@@ -366,7 +366,14 @@ CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar, void *data) {
    return CFL_TRUE;
 }
 
-DEFINE_GET_SET(void *     , Pointer, NULL     )
+void *cfl_thread_varGetPointer(CFL_THREAD_VARIABLEP threadVar) {
+   return cfl_thread_varGet(threadVar);
+}
+
+CFL_BOOL cfl_thread_varSetPointer(CFL_THREAD_VARIABLEP threadVar, void *data) {
+   return cfl_thread_varSet(threadVar, data);
+}
+
 DEFINE_GET_SET(CFL_BOOL   , Boolean, CFL_FALSE)
 DEFINE_GET_SET(CFL_INT8   , Int8   , 0        )
 DEFINE_GET_SET(CFL_INT16  , Int16  , 0        )
