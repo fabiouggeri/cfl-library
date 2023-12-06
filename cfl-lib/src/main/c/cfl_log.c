@@ -20,6 +20,8 @@
 
 #define IS_ROOT_NODE(node) ((node)->parent == NULL)
 
+#define INIT_ROOT_NODE() if (s_rootNode.logger == NULL) initRootNode()
+
 #define DEFINE_LOGGER_FUN(level_name, level_value) \
    void cfl_log_##level_name(CFL_LOGGERP logger, const char *message, ...) { \
       if (logger->level >= level_value) { \
@@ -47,6 +49,7 @@ typedef struct _CFL_LOGGER_NODE {
    CFL_LOG_FORMATTER       format;
 } CFL_LOGGER_NODE, *CFL_LOGGER_NODEP;
 
+static void initRootNode(void);
 static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *id, const char *filePathname, CFL_UINT32 line,
                                   const char *message, va_list varArgs);
 static void default_log_writer(void *handle, const char *data, CFL_UINT32 len);
@@ -123,6 +126,7 @@ static void set_log_writer(CFL_LOGGER_NODEP node, CFL_LOG_WRITERP logWriter) {
 static void node_setWriter(CFL_LOGGER_NODEP node, CFL_LOG_WRITERP logWriter) {
    CFL_UINT32 i;
    CFL_UINT32 len;
+   INIT_ROOT_NODE();
    set_log_writer(node, logWriter);
    len = cfl_list_length(&node->children);
    for (i = 0; i < len; i++) {
@@ -133,6 +137,7 @@ static void node_setWriter(CFL_LOGGER_NODEP node, CFL_LOG_WRITERP logWriter) {
 static void node_setFormatter(CFL_LOGGER_NODEP node, CFL_LOG_FORMATTER formatter) {
    CFL_UINT32 i;
    CFL_UINT32 len;
+   INIT_ROOT_NODE();
    node->format = formatter;
    len = cfl_list_length(&node->children);
    for (i = 0; i < len; i++) {
@@ -144,6 +149,7 @@ static void node_setFormatter(CFL_LOGGER_NODEP node, CFL_LOG_FORMATTER formatter
 static void node_setLevel(CFL_LOGGER_NODEP node, CFL_LOG_LEVEL level) {
    CFL_UINT32 i;
    CFL_UINT32 len;
+   INIT_ROOT_NODE();
    node->logger->level = level;
    len = cfl_list_length(&node->children);
    for (i = 0; i < len; i++) {
@@ -357,9 +363,7 @@ void cfl_log_register(CFL_LOGGERP logger) {
 
    LOCK_INIT_LOGGER(s_locked);
 
-   if (s_rootNode.logger == NULL) {
-      initRootNode();
-   }
+   INIT_ROOT_NODE();
 
    parentNode = findNodePath(&s_rootNode, &strParent, CFL_TRUE);
    if (parentNode != NULL) {

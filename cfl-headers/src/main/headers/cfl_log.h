@@ -34,7 +34,12 @@ extern "C" {
 
 #define DECLARE_LOGGER_FUN(level_name) extern void cfl_log_##level_name(CFL_LOGGERP logger, const char *message, ...)
 
-typedef enum {LOG_LEVEL_OFF = 0, LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG, LOG_LEVEL_TRACE} CFL_LOG_LEVEL;
+typedef enum { LOG_LEVEL_OFF   = 0, 
+               LOG_LEVEL_ERROR = 1, 
+               LOG_LEVEL_WARN  = 2,
+               LOG_LEVEL_INFO  = 3,
+               LOG_LEVEL_DEBUG = 4,
+               LOG_LEVEL_TRACE = 5 } CFL_LOG_LEVEL;
 
 typedef void (* CFL_LOG_WRITE)(void *handle, const char *data, CFL_UINT32 len);
 typedef void (* CFL_LOG_CLOSE)(void *handle);
@@ -75,6 +80,8 @@ DECLARE_LOGGER_FUN(trace);
 #define CFL_LOGGER_GROUP(var, group)        static struct _CFL_LOGGER var = {LOG_LEVEL_TRACE, __FILE__, group, NULL}
 #define CFL_LOGGER_ID(var, id)              static struct _CFL_LOGGER var = {LOG_LEVEL_TRACE, id, "", NULL}
 #define CFL_LOGGER_ID_GROUP(var, id, group) static struct _CFL_LOGGER var = {LOG_LEVEL_TRACE, id, group, NULL}
+
+#define CFL_LOG_ACTIVE(l, ll) ((l).level >= (ll))
 
 #ifndef __BORLANDC__
    #define CFL_LOG_ERROR(logger, ...) if (logger.level >= LOG_LEVEL_ERROR) \
