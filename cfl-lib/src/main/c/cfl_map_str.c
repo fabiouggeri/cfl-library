@@ -160,6 +160,15 @@ const char * cfl_mapstr_get(CFL_MAPSTRP map, const char *key) {
    return NULL;
 }
 
+const char *cfl_mapstr_getDefault(CFL_MAPSTRP map, const char *key, const char *defaultValue) {
+   const char *value = cfl_mapstr_get(map, key);
+   if (value != NULL) {
+      return value;
+   }
+   return defaultValue;
+}
+
+
 const char *cfl_mapstr_getKeyIndex(CFL_MAPSTRP map, CFL_UINT32 index) {
    if (index >= 0 && index < cfl_array_length(&map->entries)) {
       CFL_MAPSTR_ENTRYP entry = (CFL_MAPSTR_ENTRYP) cfl_array_get(&map->entries, index);

@@ -63,7 +63,7 @@ static CFL_LOGGER_NODE s_rootNode = { 0 };
 
 static char *s_missingId = "__missing__";
 
-static struct _CFL_LOGGER s_rootLogger = {LOG_LEVEL_ERROR, "", "", &s_rootNode};
+static struct _CFL_LOGGER s_rootLogger = {CFL_LOG_LEVEL_ERROR, "", "", &s_rootNode};
 
 static char s_hostName[256] = {0};
 
@@ -290,7 +290,7 @@ static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const ch
    if (id != NULL && id[0] != '\0') {
       cfl_str_appendFormat(buffer, "[%s] ", id);
    }
-   if (level >= LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
+   if (level >= CFL_LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
       char *subPathname = sub_path(filePathname, 5);
       cfl_str_appendFormat(buffer, (subPathname != filePathname) ? "|...%s:%u| " : "|%s:%u| ", subPathname, line);
    }
@@ -300,14 +300,14 @@ static void default_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const ch
 
 static int gelf_log_level(CFL_LOG_LEVEL level) {
    switch (level) {
-      case LOG_LEVEL_ERROR:
+      case CFL_LOG_LEVEL_ERROR:
          return 3;
-      case LOG_LEVEL_WARN:
+      case CFL_LOG_LEVEL_WARN:
          return 4;
-      case LOG_LEVEL_INFO:
+      case CFL_LOG_LEVEL_INFO:
          return 6;
-      case LOG_LEVEL_DEBUG:
-      case LOG_LEVEL_TRACE:
+      case CFL_LOG_LEVEL_DEBUG:
+      case CFL_LOG_LEVEL_TRACE:
          return 7;
       default:
          return 0;
@@ -320,7 +320,7 @@ static void gelf_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char 
    struct tm *tm;
    time(&curTime);
    tm = localtime(&curTime);
-   if (level >= LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
+   if (level >= CFL_LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
       char *subPathname = sub_path(filePathname, 5);
       if (subPathname != filePathname) {
          cfl_str_setFormat(buffer, "{\"version\":\"1.1\","
@@ -386,6 +386,11 @@ void cfl_log_register(CFL_LOGGERP logger) {
 }
 
 CFL_LOGGERP cfl_log_root(void) {
+   if (s_rootNode.logger == NULL) {
+      LOCK_INIT_LOGGER(s_locked);
+      initRootNode();
+      UNLOCK_INIT_LOGGER(s_locked);
+   }
    return &s_rootLogger;
 }
 
@@ -395,6 +400,7 @@ CFL_LOGGERP cfl_log_find(CFL_LOGGERP logger, const char *loggerPathname) {
 
    cfl_str_initConst(&path, loggerPathname);
    LOCK_INIT_LOGGER(s_locked);
+   INIT_ROOT_NODE();
    node = findNodePath(logger_node(logger), &path, CFL_TRUE);
    UNLOCK_INIT_LOGGER(s_locked);
    cfl_str_free(&path);
@@ -409,8 +415,7 @@ void cfl_log_writeArgs(CFL_LOGGERP logger, CFL_LOG_LEVEL level, const char *mess
    CFL_LOGGER_NODEP node = (CFL_LOGGER_NODEP) logger->node;
    if (node == NULL) {
       LOCK_INIT_LOGGER(s_locked);
-      cfl_log_register(logger);
-      node = (CFL_LOGGER_NODEP) logger->node;
+      node = logger_node(logger);
       UNLOCK_INIT_LOGGER(s_locked);
    }
    if (logger->level >= level) {
@@ -433,8 +438,7 @@ void cfl_log_writeArgsFL(CFL_LOGGERP logger, CFL_LOG_LEVEL level, const char *fi
    CFL_LOGGER_NODEP node = (CFL_LOGGER_NODEP) logger->node;
    if (node == NULL) {
       LOCK_INIT_LOGGER(s_locked);
-      cfl_log_register(logger);
-      node = (CFL_LOGGER_NODEP) logger->node;
+      node = logger_node(logger);
       UNLOCK_INIT_LOGGER(s_locked);
    }
    if (logger->level >= level) {
@@ -490,6 +494,28 @@ void cfl_log_setLevel(CFL_LOGGERP logger, CFL_LOG_LEVEL newLevel) {
    UNLOCK_INIT_LOGGER(s_locked);
 }
 
+static CFL_LOG_LEVEL levelFromName(const char *level) {
+   if (_strnicmp(level, "off", 3) == 0) {
+      return CFL_LOG_LEVEL_OFF;
+   } else if (_strnicmp(level, "warn", 4) == 0) {
+      return CFL_LOG_LEVEL_WARN;
+   } else if (_strnicmp(level, "info", 4) == 0) {
+      return CFL_LOG_LEVEL_INFO;
+   } else if (_strnicmp(level, "debug", 5) == 0) {
+      return CFL_LOG_LEVEL_DEBUG;
+   } else if (_strnicmp(level, "trace", 5) == 0) {
+      return CFL_LOG_LEVEL_TRACE;
+   }
+   return CFL_LOG_LEVEL_ERROR;
+}
+
+void cfl_log_setLevelByName(CFL_LOGGERP logger, const char *level) {
+   CFL_LOG_LEVEL newLevel = levelFromName(level);
+   LOCK_INIT_LOGGER(s_locked);
+   node_setLevel(logger_node(logger), newLevel);
+   UNLOCK_INIT_LOGGER(s_locked);
+}
+
 void cfl_log_setDefaultFormat(CFL_LOGGERP logger) {
    CFL_LOGGER_NODEP node;
    LOCK_INIT_LOGGER(s_locked);
@@ -514,8 +540,8 @@ void cfl_log_setFormatter(CFL_LOGGERP logger, CFL_LOG_FORMATTER formatter) {
    UNLOCK_INIT_LOGGER(s_locked);
 }
 
-DEFINE_LOGGER_FUN(error, LOG_LEVEL_ERROR)
-DEFINE_LOGGER_FUN(warn , LOG_LEVEL_WARN)
-DEFINE_LOGGER_FUN(info , LOG_LEVEL_INFO)
-DEFINE_LOGGER_FUN(debug, LOG_LEVEL_DEBUG)
-DEFINE_LOGGER_FUN(trace, LOG_LEVEL_TRACE)
+DEFINE_LOGGER_FUN(error, CFL_LOG_LEVEL_ERROR)
+DEFINE_LOGGER_FUN(warn , CFL_LOG_LEVEL_WARN)
+DEFINE_LOGGER_FUN(info , CFL_LOG_LEVEL_INFO)
+DEFINE_LOGGER_FUN(debug, CFL_LOG_LEVEL_DEBUG)
+DEFINE_LOGGER_FUN(trace, CFL_LOG_LEVEL_TRACE)
