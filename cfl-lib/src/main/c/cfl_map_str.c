@@ -185,6 +185,14 @@ const char *cfl_mapstr_getIndex(CFL_MAPSTRP map, CFL_UINT32 index) {
    return NULL;
 }
 
+CFL_STRP cfl_mapstr_getKeyStrIndex(CFL_MAPSTRP map, CFL_UINT32 index) {
+   if (index >= 0 && index < cfl_array_length(&map->entries)) {
+      CFL_MAPSTR_ENTRYP entry = (CFL_MAPSTR_ENTRYP) cfl_array_get(&map->entries, index);
+      return &entry->key;
+   }
+   return NULL;
+}
+
 CFL_STRP cfl_mapstr_getStrIndex(CFL_MAPSTRP map, CFL_UINT32 index) {
    if (index >= 0 && index < cfl_array_length(&map->entries)) {
       CFL_MAPSTR_ENTRYP entry = (CFL_MAPSTR_ENTRYP) cfl_array_get(&map->entries, index);

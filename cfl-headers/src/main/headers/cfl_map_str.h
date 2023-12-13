@@ -57,6 +57,7 @@ extern const char *cfl_mapstr_get(CFL_MAPSTRP map, const char *key);
 extern const char *cfl_mapstr_getDefault(CFL_MAPSTRP map, const char *key, const char *defaultValue);
 extern const char *cfl_mapstr_getIndex(CFL_MAPSTRP map, CFL_UINT32 index);
 extern CFL_STRP cfl_mapstr_getStr(CFL_MAPSTRP map, const char *key);
+extern CFL_STRP cfl_mapstr_getKeyStrIndex(CFL_MAPSTRP map, CFL_UINT32 index);
 extern CFL_STRP cfl_mapstr_getStrIndex(CFL_MAPSTRP map, CFL_UINT32 index);
 extern CFL_BOOL cfl_mapstr_del(CFL_MAPSTRP map, const char *key);
 extern void cfl_mapstr_set(CFL_MAPSTRP map, const char *key, const char *value);
