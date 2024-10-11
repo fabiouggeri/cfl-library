@@ -78,6 +78,10 @@ extern CFL_BOOL cfl_sync_queue_putTimeout(CFL_SYNC_QUEUEP queue, void *data, CFL
 extern void cfl_sync_queue_cancel(CFL_SYNC_QUEUEP queue);
 extern CFL_BOOL cfl_sync_queue_canceled(CFL_SYNC_QUEUEP queue);
 extern void *cfl_sync_queue_drain(CFL_SYNC_QUEUEP queue, CFL_BOOL *empty);
+extern CFL_UINT32 cfl_sync_queue_waitNotEmptyTimeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp);
+extern CFL_UINT32 cfl_sync_queue_waitNotEmpty(CFL_SYNC_QUEUEP queue);
+extern CFL_UINT32 cfl_sync_queue_waitEmptyTimeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp);
+extern CFL_UINT32 cfl_sync_queue_waitEmpty(CFL_SYNC_QUEUEP queue);
 
 DECLARE_GET_PUT(CFL_BOOL    , Boolean);
 DECLARE_GET_PUT(CFL_INT8    , Int8   );

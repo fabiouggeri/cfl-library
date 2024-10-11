@@ -11,7 +11,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-release-superpom</artifactId>
-   <version>1.6.1.0</version>
+   <version>1.7.0.0</version>
 
    <name>Release Super POM for CFL library</name>
 
@@ -65,7 +65,7 @@
          </activation>
          <properties>
             <cc>mingw64</cc>
-            <cc-version>11.0.0.0</cc-version>
+            <cc-version>11.0.0.2</cc-version>
             <cc-major-version>11.x</cc-major-version>
             <cc-target>gcc</cc-target>
             <os>win</os>

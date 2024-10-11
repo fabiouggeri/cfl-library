@@ -257,7 +257,7 @@ static CFL_LOGGER_NODEP findNodePath(CFL_LOGGER_NODEP rootNode, CFL_STRP searchP
    return parent;
 }
 
-static char *hostName() {
+static char *hostName(void) {
    if (s_hostName[0] == '\0') {
       cfl_socket_hostname(s_hostName, sizeof(s_hostName));
    }
@@ -316,10 +316,6 @@ static int gelf_log_level(CFL_LOG_LEVEL level) {
 
 static void gelf_log_formatter(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *id, const char *filePathname, CFL_UINT32 line,
                                const char *message, va_list varArgs) {
-   time_t curTime;
-   struct tm *tm;
-   time(&curTime);
-   tm = localtime(&curTime);
    if (level >= CFL_LOG_LEVEL_DEBUG && filePathname != NULL && filePathname[0] != '\0') {
       char *subPathname = sub_path(filePathname, 5);
       if (subPathname != filePathname) {
@@ -369,7 +365,7 @@ void cfl_log_register(CFL_LOGGERP logger) {
    if (parentNode != NULL) {
       CFL_LOGGER_NODEP node = findNodePath(parentNode, &strId, CFL_FALSE);
       if (node == NULL) {
-         node = addNode(parentNode, logger, &strId);
+         addNode(parentNode, logger, &strId);
       } else {
          logger->level = node->logger->level;
          logger->node = node;
