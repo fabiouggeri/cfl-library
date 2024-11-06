@@ -28,7 +28,7 @@ static void map_entry_free(CFL_MAPSTR_ENTRYP entry) {
    cfl_str_free(&entry->key);
    cfl_str_free(&entry->value);
    if (entry->allocated) {
-      free(entry);
+      CFL_MEM_FREE(entry);
    }
 }
 
@@ -92,7 +92,7 @@ void cfl_mapstr_free(CFL_MAPSTRP map) {
    freeMapEntries(&map->entries);
    cfl_array_free(&map->entries);
    if (map->allocated) {
-      free(map);
+      CFL_MEM_FREE(map);
    }
 }
 
@@ -111,7 +111,7 @@ void cfl_mapstr_init(CFL_MAPSTRP map) {
  * 
  */
 CFL_MAPSTRP cfl_mapstr_new(void) {
-   CFL_MAPSTRP map = malloc(sizeof(CFL_MAPSTR));
+   CFL_MAPSTRP map = CFL_MEM_ALLOC(sizeof(CFL_MAPSTR));
    if (map != NULL) {
       cfl_mapstr_init(map);
       map->allocated = CFL_TRUE;

@@ -50,7 +50,7 @@ void cfl_map_free(CFL_MAPP map) {
    freeMapEntries(map);
    cfl_array_free(&map->entries);
    if (map->allocated) {
-      free(map);
+      CFL_MEM_FREE(map);
    }
 }
 
@@ -73,7 +73,7 @@ void cfl_map_init(CFL_MAPP map, CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_CO
  * 
  */
 CFL_MAPP cfl_map_new(CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_COMP_FUNC keyCompFunc, MAP_KEY_VALUE_FUNC freeEntryFunc) {
-   CFL_MAPP map = malloc(sizeof(CFL_MAP));
+   CFL_MAPP map = CFL_MEM_ALLOC(sizeof(CFL_MAP));
    if (map != NULL) {
       cfl_map_init(map, keySize, valueSize, keyCompFunc, freeEntryFunc);
       map->allocated = CFL_TRUE;

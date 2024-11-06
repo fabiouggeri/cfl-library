@@ -21,27 +21,19 @@
 
 #define _CFL_SOCKET_H_
 
-#include <stdio.h>
-
 #include "cfl_types.h"
+#include "cfl_str.h"
+#include "cfl_buffer.h"
+
+
+#define CFL_INVALID_SOCKET 0xFFFFFFFFFFFFFFFF
+#define CFL_SOCKET_ERROR   -1
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(CFL_OS_WINDOWS)
-   #define CFL_SOCK_ERROR_CONN_RESET WSAECONNRESET
-#else 
-   #define CFL_SOCK_ERROR_CONN_RESET ECONNRESET
-#endif
-
-//struct _CFL_SOCKET {
-//   socket     handle;
-//   CFL_INT32  errorCode;
-//   CFL_STRP   errorMessage;
-//   CFL_UINT32 bufferSize;
-//   char      *buffer;
-//};
+typedef CFL_UINT64 CFL_SOCKET;
 
 extern CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog);
 extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_UINT16 *port);
@@ -59,7 +51,7 @@ extern CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, CFL_UINT32 timeoutMill
 extern CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
 extern CFL_INT32 cfl_socket_select(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
 extern CFL_INT32 cfl_socket_lastErrorCode(void);
-extern char * cfl_socket_lastErrorDescription(void);
+extern char *cfl_socket_lastErrorDescription(char *buffer, size_t maxLen);
 extern CFL_BOOL cfl_socket_setBlockingMode(CFL_SOCKET socket, CFL_BOOL block);
 extern CFL_BOOL cfl_socket_setNoDelay(CFL_SOCKET socket, CFL_BOOL delay);
 extern CFL_BOOL cfl_socket_setReceiveBufferSize(CFL_SOCKET socket, int size);
@@ -68,6 +60,7 @@ extern CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_
 extern CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT16 lingerSeconds);
 extern CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write);
 extern char *cfl_socket_hostname(char *hostname, CFL_UINT32 hostnameLen);
+extern char *cfl_socket_hostAddress(char *hostAddress, CFL_UINT32 hostAddressLen);
 
 #ifdef __cplusplus
 }

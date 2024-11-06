@@ -19,57 +19,73 @@
 
 #include <stdlib.h>
 
-#include "cfl_types.h"
-
-#if defined(CFL_OS_LINUX)
-   #include <errno.h>
-   #include <sys/time.h>
-#endif
-
 #include "cfl_event.h"
 
-CFL_EVENTP cfl_event_new(char *name, CFL_BOOL manualReset) {
-   CFL_EVENTP event = NULL;
+#define GET_INTERNAL(e) ((CFL_EVENT_INTERNALP)e)
+
 #if defined(CFL_OS_WINDOWS)
-   HANDLE handle;
-   handle = CreateEvent(NULL, manualReset, CFL_FALSE, name ? TEXT(name) : NULL);
-   if (handle) {
-      event = malloc(sizeof (CFL_EVENT));
-      event->handle = handle;
-   }
-#elif defined(CFL_OS_LINUX)
-   int result;
-   event = malloc(sizeof (CFL_EVENT));
-   if (event == NULL) {
-      return NULL;
-   }
-   result = pthread_cond_init(&event->conditionVar, 0);
-   if (result != 0) {
-      free(event);
-      return NULL;
-   }
-   result = pthread_mutex_init(&event->mutex, 0);
-   if (result != 0) {
-      free(event);
-      return NULL;
-   }
-   event->state = CFL_FALSE;
-   event->autoReset = !manualReset;
+   #include "windows.h"
+
+   typedef struct {
+      HANDLE handle;
+   } CFL_EVENT_INTERNAL, *CFL_EVENT_INTERNALP;
+
+#else
+   #include <pthread.h>
+   #include <errno.h>
+   #include <sys/time.h>
+
+   typedef struct {
+   pthread_cond_t  conditionVar;
+   pthread_mutex_t mutex;
+   CFL_BOOL        autoReset;
+   CFL_BOOL        state;
+   } CFL_EVENT_INTERNAL, *CFL_EVENT_INTERNALP;
 #endif
+
+
+CFL_EVENTP cfl_event_new(char *name, CFL_BOOL manualReset) {
+   CFL_EVENT_INTERNALP event = CFL_MEM_ALLOC(sizeof(CFL_EVENT_INTERNAL));
+   if (event != NULL) {
+      #if defined(CFL_OS_WINDOWS)
+         HANDLE handle = CreateEvent(NULL, manualReset, CFL_FALSE, name ? TEXT(name) : NULL);
+         if (handle) {
+            event->handle = handle;
+         } else {
+            CFL_MEM_FREE(event);
+            return NULL;
+         }
+      #elif defined(CFL_OS_LINUX)
+         int result = pthread_cond_init(&event->conditionVar, 0);
+         if (result != 0) {
+            CFL_MEM_FREE(event);
+            return NULL;
+         }
+         result = pthread_mutex_init(&event->mutex, 0);
+         if (result != 0) {
+            CFL_MEM_FREE(event);
+            return NULL;
+         }
+         event->state = CFL_FALSE;
+         event->autoReset = !manualReset;
+      #endif
+   }
    return event;
 }
 
-void cfl_event_free(CFL_EVENTP event) {
+void cfl_event_free(CFL_EVENTP e) {
+   CFL_EVENT_INTERNALP event = GET_INTERNAL(e);
 #if defined(CFL_OS_WINDOWS)
    CloseHandle(event->handle);
 #elif defined(CFL_OS_LINUX)
    pthread_cond_destroy(&event->conditionVar);
    pthread_mutex_destroy(&event->mutex);
 #endif
-   free(event);
+   CFL_MEM_FREE(event);
 }
 
-void cfl_event_set(CFL_EVENTP event) {
+void cfl_event_set(CFL_EVENTP e) {
+   CFL_EVENT_INTERNALP event = GET_INTERNAL(e);
 #if defined(CFL_OS_WINDOWS)
    SetEvent(event->handle);
 #elif defined(CFL_OS_LINUX)
@@ -88,7 +104,8 @@ void cfl_event_set(CFL_EVENTP event) {
 #endif
 }
 
-void cfl_event_reset(CFL_EVENTP event) {
+void cfl_event_reset(CFL_EVENTP e) {
+   CFL_EVENT_INTERNALP event = GET_INTERNAL(e);
 #if defined(CFL_OS_WINDOWS)
    ResetEvent(event->handle);
 #elif defined(CFL_OS_LINUX)
@@ -101,7 +118,7 @@ void cfl_event_reset(CFL_EVENTP event) {
 
 
 #if defined(CFL_OS_LINUX)
-static int unlockedWaitForEvent(CFL_EVENTP event, CFL_UINT64 milliseconds) {
+static int unlockedWaitForEvent(CFL_EVENT_INTERNALP event, CFL_UINT64 milliseconds) {
    int result = 0;
    if (!event->state) {
       if (milliseconds == 0) {
@@ -136,7 +153,8 @@ static int unlockedWaitForEvent(CFL_EVENTP event, CFL_UINT64 milliseconds) {
 }
 #endif
 
-CFL_BOOL cfl_event_wait(CFL_EVENTP event) {
+CFL_BOOL cfl_event_wait(CFL_EVENTP e) {
+   CFL_EVENT_INTERNALP event = GET_INTERNAL(e);
 #if defined(CFL_OS_WINDOWS)
    return WaitForSingleObject(event->handle, INFINITE) == WAIT_OBJECT_0 ? CFL_TRUE : CFL_FALSE;
 #elif defined(CFL_OS_LINUX)
@@ -146,7 +164,8 @@ CFL_BOOL cfl_event_wait(CFL_EVENTP event) {
 #endif
 }
 
-CFL_UINT8 cfl_event_wait2(CFL_EVENTP event) {
+CFL_UINT8 cfl_event_wait2(CFL_EVENTP e) {
+   CFL_EVENT_INTERNALP event = GET_INTERNAL(e);
 #if defined(CFL_OS_WINDOWS)
    if (WaitForSingleObject(event->handle, INFINITE) == WAIT_OBJECT_0) {
       return CFL_EVENT_SET;
@@ -159,7 +178,8 @@ CFL_UINT8 cfl_event_wait2(CFL_EVENTP event) {
 #endif
 }
 
-CFL_BOOL cfl_event_waitTimeout(CFL_EVENTP event, CFL_INT32 timeout) {
+CFL_BOOL cfl_event_waitTimeout(CFL_EVENTP e, CFL_INT32 timeout) {
+   CFL_EVENT_INTERNALP event = GET_INTERNAL(e);
 #if defined(CFL_OS_WINDOWS)
    DWORD res;
    res = WaitForSingleObject(event->handle, timeout);
@@ -177,7 +197,8 @@ CFL_BOOL cfl_event_waitTimeout(CFL_EVENTP event, CFL_INT32 timeout) {
 #endif
 }
 
-CFL_UINT8 cfl_event_waitTimeout2(CFL_EVENTP event, CFL_INT32 timeout) {
+CFL_UINT8 cfl_event_waitTimeout2(CFL_EVENTP e, CFL_INT32 timeout) {
+   CFL_EVENT_INTERNALP event = GET_INTERNAL(e);
 #if defined(CFL_OS_WINDOWS)
    DWORD res;
    res = WaitForSingleObject(event->handle, timeout);

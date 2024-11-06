@@ -22,10 +22,10 @@
 #include "cfl_lock.h"
 #include "cfl_hash.h"
 
-#if defined(CFL_OS_LINUX)
-#include <sys/time.h>
-#else
+#if defined(CFL_OS_WINDOWS)
 #include <time.h>
+#else
+#include <sys/time.h>
 #endif
 
 #define SLEEP_TIMEOUT  10
@@ -152,11 +152,12 @@ static int waitCondition(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT
 }
 #endif
 
+
 CFL_LOCKP cfl_lock_new(void) {
-   CFL_LOCKP lock = malloc(sizeof(CFL_LOCK));
-   cfl_lock_init(lock);
-   lock->isAllocated = CFL_TRUE;
-   return lock;
+   CFL_LOCKP pLock = (CFL_LOCKP) CFL_MEM_ALLOC(sizeof(CFL_LOCK));
+   pLock->isAllocated = CFL_TRUE;
+   INITIALIZE_LOCK_HANDLE(pLock);
+   return pLock;
 }
 
 void cfl_lock_init(CFL_LOCKP pLock) {
@@ -168,7 +169,7 @@ void cfl_lock_free(CFL_LOCKP pLock) {
    if (pLock) {
       RELEASE_LOCK_HANDLE(pLock);
       if (pLock->isAllocated) {
-         free(pLock);
+         CFL_MEM_FREE(pLock);
       }
    }
 }
@@ -193,7 +194,7 @@ void cfl_lock_initConditionVar(CFL_CONDITION_VARIABLEP pVar) {
 }
 
 CFL_CONDITION_VARIABLEP cfl_lock_newConditionVar(void) {
-   CFL_CONDITION_VARIABLEP pVar = (CFL_CONDITION_VARIABLEP) malloc(sizeof(CFL_CONDITION_VARIABLE));
+   CFL_CONDITION_VARIABLEP pVar = (CFL_CONDITION_VARIABLEP) CFL_MEM_ALLOC(sizeof(CFL_CONDITION_VARIABLE));
    if (pVar) {
       cfl_lock_initConditionVar(pVar);
       pVar->isAllocated = CFL_TRUE;
@@ -205,7 +206,7 @@ void cfl_lock_freeConditionVar(CFL_CONDITION_VARIABLEP pVar) {
    if (pVar) {
       RELEASE_CONDITION_HANDLE(pVar);
       if (pVar->isAllocated) {
-         free(pVar);
+         CFL_MEM_FREE(pVar);
       }
    }
 }

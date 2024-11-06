@@ -27,12 +27,12 @@
 extern "C" {
 #endif
 
-struct _CFL_LIST {
+typedef struct _CFL_LIST {
    void       **items;
    CFL_UINT32 length;
    CFL_UINT32 capacity;
    CFL_BOOL   allocated;
-};
+} CFL_LIST, *CFL_LISTP;
 
 extern void cfl_list_init(CFL_LISTP list, CFL_UINT32 capacity);
 extern CFL_LISTP cfl_list_new(CFL_UINT32 capacity);

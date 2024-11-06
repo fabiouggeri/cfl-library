@@ -30,16 +30,16 @@
 extern "C" {
 #endif
 
-struct _CFL_MAPSTR_ENTRY {
+typedef struct _CFL_MAPSTR_ENTRY {
    CFL_STR  key;
    CFL_STR  value;
    CFL_BOOL allocated;
-};
+} CFL_MAPSTR_ENTRY, *CFL_MAPSTR_ENTRYP;
 
-struct _CFL_MAPSTR {
+typedef struct _CFL_MAPSTR {
    CFL_ARRAY entries;
    CFL_BOOL  allocated;
-};
+} CFL_MAPSTR, *CFL_MAPSTRP;
 
 extern void cfl_mapstr_entry_setKey(CFL_MAPSTR_ENTRYP entry, const char *key);
 extern const char *cfl_mapstr_entry_getKey(CFL_MAPSTR_ENTRYP entry);

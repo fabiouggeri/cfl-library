@@ -22,6 +22,8 @@
 #define CFL_SQL_H_
 
 #include "cfl_types.h"
+#include "cfl_str.h"
+#include "cfl_list.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +32,53 @@ extern "C" {
 #define CFL_SQL_TO_STRING(sql, str) ((CFL_SQLP)sql)->to_string((CFL_SQLP)sql, str)
 #define CFL_SQL_FREE(sql) ((CFL_SQLP)sql)->free_sql((CFL_SQLP)sql)
 
+struct _CFL_SQL;
+typedef struct _CFL_SQL CFL_SQL;
+typedef struct _CFL_SQL *CFL_SQLP;
+
+struct _CFL_SQL_QUERY;
+typedef struct _CFL_SQL_QUERY CFL_SQL_QUERY;
+typedef struct _CFL_SQL_QUERY *CFL_SQL_QUERYP;
+
+struct _CFL_SQL_INSERT;
+typedef struct _CFL_SQL_INSERT CFL_SQL_INSERT;
+typedef struct _CFL_SQL_INSERT *CFL_SQL_INSERTP;
+
+struct _CFL_SQL_UPDATE;
+typedef struct _CFL_SQL_UPDATE CFL_SQL_UPDATE;
+typedef struct _CFL_SQL_UPDATE *CFL_SQL_UPDATEP;
+
+struct _CFL_SQL_DELETE;
+typedef struct _CFL_SQL_DELETE CFL_SQL_DELETE;
+typedef struct _CFL_SQL_DELETE *CFL_SQL_DELETEP;
+
+struct _CFL_SQL_CUSTOM;
+typedef struct _CFL_SQL_CUSTOM CFL_SQL_CUSTOM;
+typedef struct _CFL_SQL_CUSTOM *CFL_SQL_CUSTOMP;
+
+struct _CFL_SQL_FUN;
+typedef struct _CFL_SQL_FUN CFL_SQL_FUN;
+typedef struct _CFL_SQL_FUN *CFL_SQL_FUNP;
+
+struct _CFL_SQL_DOUBLE_OP;
+typedef struct _CFL_SQL_DOUBLE_OP CFL_SQL_DOUBLE_OP;
+typedef struct _CFL_SQL_DOUBLE_OP *CFL_SQL_DOUBLE_OPP;
+
+struct _CFL_SQL_SINGLE_OP;
+typedef struct _CFL_SQL_SINGLE_OP CFL_SQL_SINGLE_OP;
+typedef struct _CFL_SQL_SINGLE_OP *CFL_SQL_SINGLE_OPP;
+
+struct _CFL_SQL_WRAP;
+typedef struct _CFL_SQL_WRAP CFL_SQL_WRAP;
+typedef struct _CFL_SQL_WRAP *CFL_SQL_WRAPP;
+
+struct _CFL_SQL_BLOCK;
+typedef struct _CFL_SQL_BLOCK CFL_SQL_BLOCK;
+typedef struct _CFL_SQL_BLOCK *CFL_SQL_BLOCKP;
+
+struct _CFL_SQL_BUILDER;
+typedef struct _CFL_SQL_BUILDER CFL_SQL_BUILDER;
+typedef struct _CFL_SQL_BUILDER *CFL_SQL_BUILDERP;
 typedef void (* CFL_SQL_TO_STRING_FUN )(CFL_SQLP element, CFL_STRP str);
 typedef void (* CFL_SQL_FREE_FUN )(CFL_SQLP item);
 

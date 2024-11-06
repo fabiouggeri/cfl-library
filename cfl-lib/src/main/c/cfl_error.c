@@ -23,7 +23,7 @@
 #include "cfl_str.h"
 
 CFL_ERRORP cfl_error_new() {
-   CFL_ERRORP pError = (CFL_ERRORP) malloc(sizeof(CFL_ERROR));
+   CFL_ERRORP pError = (CFL_ERRORP) CFL_MEM_ALLOC(sizeof(CFL_ERROR));
    cfl_error_init(pError);
    pError->allocated = CFL_TRUE;
    return pError;
@@ -33,7 +33,7 @@ void cfl_error_free(CFL_ERRORP pError){
    if (pError) {
       cfl_str_free(pError->message);
       if (pError->allocated) {
-         free(pError);
+         CFL_MEM_FREE(pError);
       }
    }
 }

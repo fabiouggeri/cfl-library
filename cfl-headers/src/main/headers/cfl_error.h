@@ -22,18 +22,19 @@
 #define CFL_ERROR_H_
 
 #include "cfl_types.h"
+#include "cfl_str.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct _CFL_ERROR {
+typedef struct _CFL_ERROR {
    CFL_STRP  message;
    void      *userData;
    CFL_INT32 code;
    CFL_UINT8 type;
    CFL_BOOL  allocated;
-};
+} CFL_ERROR, *CFL_ERRORP;
 
 extern CFL_ERRORP cfl_error_new();
 extern void cfl_error_free(CFL_ERRORP pError);

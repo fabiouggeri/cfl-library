@@ -26,6 +26,7 @@
 
 #include "cfl_types.h"
 #include "cfl_str.h"
+#include "cfl_buffer.h"
 
 
 #ifdef __cplusplus
@@ -46,12 +47,12 @@ typedef void (* CFL_LOG_CLOSE)(void *handle);
 typedef void (* CFL_LOG_FORMATTER)(CFL_STRP buffer, CFL_LOG_LEVEL level, const char *id, const char *filePathname, CFL_UINT32 line,
                                    const char *message, va_list varArgs);
 
-struct _CFL_LOGGER {
+typedef struct _CFL_LOGGER {
    CFL_LOG_LEVEL level;
    const char    *id;
    const char    *parentId;
    void          *node;
-};
+} CFL_LOGGER, *CFL_LOGGERP;
 
 extern void cfl_log_register(CFL_LOGGERP logger);
 extern CFL_LOGGERP cfl_log_root(void);
@@ -70,6 +71,7 @@ extern void cfl_log_setLevelByName(CFL_LOGGERP logger, const char *level);
 extern void cfl_log_setDefaultFormat(CFL_LOGGERP logger);
 extern void cfl_log_setGelfFormat(CFL_LOGGERP logger);
 extern void cfl_log_setFormatter(CFL_LOGGERP logger, CFL_LOG_FORMATTER formatter);
+extern void __cfl_log_debug(char *filePathname, char *message, ...);
 
 DECLARE_LOGGER_FUN(error);
 DECLARE_LOGGER_FUN(warn);

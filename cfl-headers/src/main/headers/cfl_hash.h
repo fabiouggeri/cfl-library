@@ -22,10 +22,15 @@
 #define CFL_HASH_H_
 
 #include "cfl_types.h"
+#include "cfl_iterator.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct _CFL_HASH_ENTRY;
+typedef struct _CFL_HASH_ENTRY CFL_HASH_ENTRY;
+typedef CFL_HASH_ENTRY         *CFL_HASH_ENTRYP;
 
 typedef CFL_UINT32 (*HASH_KEY_FUNC) (void *k);
 typedef int        (*HASH_COMP_FUNC) (void *k1, void *k2);
@@ -38,7 +43,7 @@ struct _CFL_HASH_ENTRY {
     CFL_UINT32 hash;
 };
 
-struct _CFL_HASH {
+typedef struct _CFL_HASH {
    CFL_HASH_ENTRY **table;
    HASH_KEY_FUNC  hashfn;
    HASH_COMP_FUNC eqfn;
@@ -47,7 +52,7 @@ struct _CFL_HASH {
    CFL_UINT32     entrycount;
    CFL_UINT32     loadlimit;
    CFL_UINT32     primeindex;
-};
+} CFL_HASH, *CFL_HASHP;
 
 /*****************************************************************************
  * cfl_hash_new

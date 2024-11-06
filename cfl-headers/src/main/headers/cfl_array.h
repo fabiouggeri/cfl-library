@@ -22,19 +22,19 @@
 #define CFL_ARRAY_H_
 
 #include "cfl_types.h"
-
+#include "cfl_iterator.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct _CFL_ARRAY {
+typedef struct _CFL_ARRAY {
    CFL_UINT8  *items;
    CFL_UINT32 ulItemSize;
    CFL_UINT32 ulLength;
    CFL_UINT32 ulCapacity;
    CFL_BOOL   allocated;
-};
+} CFL_ARRAY, *CFL_ARRAYP;
 
 extern void cfl_array_init(CFL_ARRAYP array, CFL_UINT32 ulCapacity, CFL_UINT32 ulItemSize);
 extern CFL_ARRAYP cfl_array_new(CFL_UINT32 ulCapacity, CFL_UINT32 ulItemSize);

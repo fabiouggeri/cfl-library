@@ -17,34 +17,19 @@
  * under the License.
  */
 
-#ifndef CFL_BITMAP_H_
+#include "cfl_process.h"
 
-#define CFL_BITMAP_H_
-
-#include "cfl_types.h"
-
-
-#ifdef __cplusplus
-extern "C" {
+#ifdef CFL_OS_WINDOWS
+   #include "windows.h"
+#else
+   #include <unistd.h>
 #endif
 
-typedef struct _CFL_BITMAP {
-   CFL_UINT8  *map;
-   CFL_UINT16 uiSize;
-} CFL_BITMAP, *CFL_BITMAPP;
 
-extern CFL_BITMAPP cfl_bitmap_new(CFL_UINT16 numBits);
-extern void cfl_bitmap_free(CFL_BITMAPP pBitMap);
-extern void cfl_bitmap_set(CFL_BITMAPP pBitMap, CFL_UINT16 uiPos) ;
-extern void cfl_bitmap_reset(CFL_BITMAPP pBitMap, CFL_UINT16 uiPos);
-extern CFL_UINT8 cfl_bitmap_get(CFL_BITMAPP bitMap, CFL_UINT16 uiPos);
-extern void cfl_bitmap_clear(CFL_BITMAPP pBitMap);
-extern CFL_BOOL cfl_bitmap_equals(CFL_BITMAPP pBitMap1, CFL_BITMAPP pBitMap2);
-extern CFL_BOOL cfl_bitmap_isSubSet(CFL_BITMAPP pBitMap1, CFL_BITMAPP pBitMap2);
-extern CFL_BITMAPP cfl_bitmap_clone(CFL_BITMAPP pBitMap);
-
-#ifdef __cplusplus
+CFL_INT64 cfl_process_getId(void) {
+#ifdef CFL_OS_WINDOWS
+   return (CFL_INT64) GetCurrentProcessId();
+#else
+   return (CFL_INT64) getpid();
+#endif
 }
-#endif
-
-#endif

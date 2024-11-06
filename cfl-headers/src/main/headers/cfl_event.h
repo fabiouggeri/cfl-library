@@ -31,16 +31,7 @@ extern "C" {
 #define CFL_EVENT_SET     1
 #define CFL_EVENT_TIMEOUT 2
 
-struct _CFL_EVENT {
-#if defined(CFL_OS_WINDOWS)
-   HANDLE handle;
-#elif defined(CFL_OS_LINUX)
-   pthread_cond_t  conditionVar;
-   pthread_mutex_t mutex;
-   CFL_BOOL        autoReset;
-   CFL_BOOL        state;
-#endif
-};
+typedef void *CFL_EVENTP;
 
 extern CFL_EVENTP cfl_event_new(char *name, CFL_BOOL manualReset);
 extern void cfl_event_free(CFL_EVENTP event);

@@ -4,7 +4,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-super-pom</artifactId>
-   <version>1.7.0.0</version>
+   <version>1.8.0.0</version>
    <packaging>pom</packaging>
 
    <name>CFL - Common Functions Library ${project.version}</name>
@@ -66,7 +66,7 @@
       <msc-includes-path>${cc-path}\include;${cc-path}\include\um;${cc-path}\include\msclr</msc-includes-path>
       <msc-libs-path>${cc-path}\lib;${cc-path}\lib\sdk</msc-libs-path>
       <msc-libs>shell32.lib;user32.lib;kernel32.lib;advapi32.lib;winspool.lib;ole32.lib;oleaut32.lib;ws2_32.lib;libcmt.lib;gdi32.lib;comdlg32.lib;msvcrt.lib;oldnames.lib;iphlpapi.lib</msc-libs>
-      <msc-cmd>cl.exe #{?debug='true', '/Zi'} /W3 /GA /c /Gs /Gd /arch:AVX /O2 /MT #{?mode='cpp', '/TP'} #{!mode, '/TC'} #{includesPaths, '/I"', '" /I"', '"'} /D_CRT_SECURE_NO_WARNINGS #{defines, '/D', ' /D', '='} /Fo"#{outputFile}" "#{inputFile}"</msc-cmd>
+      <msc-cmd>cl.exe #{?debug='true', '/DEBUG:FULL /Z7 /Oy- /Ob0 /EHsc'} /W3 /GA /c /Gs /Gd /arch:AVX /O2 /MT #{?mode='cpp', '/TP'} #{!mode, '/TC'} #{includesPaths, '/I"', '" /I"', '"'} /D_CRT_SECURE_NO_WARNINGS #{defines, '/D', ' /D', '='} /Fo"#{outputFile}" "#{inputFile}"</msc-cmd>
       <msc-link-options>/IGNORE:4006,4078,4088 /INCREMENTAL:no /NODEFAULTLIB /SUBSYSTEM:CONSOLE /FORCE:MULTIPLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'} #{inputLibraries, '"', '" "', '"'}</msc-link-options>
       <msc-link-cmd>link.exe @"${project.basedir}\target\classes\${c-classifier}\lnk_options.rsp"</msc-link-cmd>
       <msc-lib-cmd>lib.exe /SUBSYSTEM:CONSOLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'}</msc-lib-cmd>

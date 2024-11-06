@@ -125,13 +125,13 @@ CFL_HASHP cfl_hash_new(CFL_UINT32 minSize, HASH_KEY_FUNC hashFunc, HASH_COMP_FUN
          break;
       }
    }
-   hash = (CFL_HASHP) malloc(sizeof (CFL_HASH));
+   hash = (CFL_HASHP) CFL_MEM_ALLOC(sizeof (CFL_HASH));
    if (NULL == hash) {
       return NULL;
    }
-   hash->table = (CFL_HASH_ENTRY **) malloc(sizeof (CFL_HASH_ENTRYP) * size);
+   hash->table = (CFL_HASH_ENTRY **) CFL_MEM_ALLOC(sizeof (CFL_HASH_ENTRYP) * size);
    if (NULL == hash->table) {
-      free(hash);
+      CFL_MEM_FREE(hash);
       return NULL;
    } /*oom*/
    memset(hash->table, 0, size * sizeof (CFL_HASH_ENTRYP));
@@ -170,7 +170,7 @@ static int hash_expand(CFL_HASHP hash) {
    }
    newsize = s_primes[++(hash->primeindex)];
 
-   newtable = (CFL_HASH_ENTRY **) malloc(sizeof (CFL_HASH_ENTRYP) * newsize);
+   newtable = (CFL_HASH_ENTRY **) CFL_MEM_ALLOC(sizeof (CFL_HASH_ENTRYP) * newsize);
    if (NULL != newtable) {
       memset(newtable, 0, newsize * sizeof (CFL_HASH_ENTRYP));
       /* This algorithm is not 'stable'. ie. it reverses the list
@@ -183,12 +183,12 @@ static int hash_expand(CFL_HASHP hash) {
             newtable[index] = e;
          }
       }
-      free(hash->table);
+      CFL_MEM_FREE(hash->table);
       hash->table = newtable;
 
       /* Plan B: realloc instead */
    } else {
-      newtable = (CFL_HASH_ENTRY **) realloc(hash->table, newsize * sizeof (CFL_HASH_ENTRYP));
+      newtable = (CFL_HASH_ENTRY **) CFL_MEM_REALLOC(hash->table, newsize * sizeof (CFL_HASH_ENTRYP));
       if (NULL == newtable) {
          (hash->primeindex)--;
          return 0;
@@ -230,7 +230,7 @@ int cfl_hash_insert(CFL_HASHP hash, void *key, void *value) {
        * element may be ok. Next time we insert, we'll try expanding again.*/
       hash_expand(hash);
    }
-   e = (CFL_HASH_ENTRYP) malloc(sizeof (CFL_HASH_ENTRY));
+   e = (CFL_HASH_ENTRYP) CFL_MEM_ALLOC(sizeof (CFL_HASH_ENTRY));
    if (NULL == e) {
       --(hash->entrycount);
       return 0;
@@ -282,7 +282,7 @@ void * cfl_hash_remove(CFL_HASHP hash, void *key) {
          hash->entrycount--;
          v = e->value;
          hash->freefn(e->key, NULL);
-         free(e);
+         CFL_MEM_FREE(e);
          return v;
       }
       pE = &(e->next);
@@ -306,7 +306,7 @@ void cfl_hash_free(CFL_HASHP hash, CFL_BOOL freeValues) {
             f = e;
             e = e->next;
             hash->freefn(f->key, f->value);
-            free(f);
+            CFL_MEM_FREE(f);
          }
       }
    } else {
@@ -315,12 +315,12 @@ void cfl_hash_free(CFL_HASHP hash, CFL_BOOL freeValues) {
          while (NULL != e) {
             f = e;
             e = e->next;
-            free(f);
+            CFL_MEM_FREE(f);
          }
       }
    }
-   free(hash->table);
-   free(hash);
+   CFL_MEM_FREE(hash->table);
+   CFL_MEM_FREE(hash);
 }
 
 /*****************************************************************************/
@@ -339,7 +339,7 @@ void cfl_hash_clear(CFL_HASHP hash, CFL_BOOL freeValues) {
             f = e;
             e = e->next;
             hash->freefn(f->key, f->value);
-            free(f);
+            CFL_MEM_FREE(f);
          }
       }
    } else {
@@ -349,7 +349,7 @@ void cfl_hash_clear(CFL_HASHP hash, CFL_BOOL freeValues) {
          while (NULL != e) {
             f = e;
             e = e->next;
-            free(f);
+            CFL_MEM_FREE(f);
          }
       }
    }
@@ -399,14 +399,14 @@ static void iteratorRemove(CFL_ITERATORP it) {
       }
       itHash->hash->freefn(itHash->currEntry->key, NULL);
       --itHash->hash->entrycount;
-      free(itHash->currEntry);
+      CFL_MEM_FREE(itHash->currEntry);
       itHash->currEntry = NULL;
       itHash->currIndex = 0;
    }
 }
 
 static void iteratorFree(CFL_ITERATORP it) {
-   free(it);
+   CFL_MEM_FREE(it);
 }
 
 static void iteratorFirst(CFL_ITERATORP it) {
@@ -421,7 +421,7 @@ static void iteratorFirst(CFL_ITERATORP it) {
 }
 
 CFL_ITERATORP cfl_hash_iterator(CFL_HASHP hash) {
-   HASH_ITERATORP pIt = (HASH_ITERATORP) malloc(sizeof(HASH_ITERATOR));
+   HASH_ITERATORP pIt = (HASH_ITERATORP) CFL_MEM_ALLOC(sizeof(HASH_ITERATOR));
    pIt->iterator.itClass = (CFL_ITERATOR_CLASS *) &s_hashIteratorClass;
    pIt->hash = hash;
    pIt->lastIndex = 0;

@@ -22,16 +22,21 @@
 #include <string.h>
 
 #include "cfl_thread.h"
-
-#if defined(CFL_OS_LINUX)
-   #include <signal.h>
-#endif
-
-#if defined(__BORLANDC__) && __BORLANDC__ < 0x0600
-   #define YieldProcessor() Sleep(0)
-#endif
-
 #include "cfl_lock.h"
+#include "cfl_atomic.h"
+
+#if defined(CFL_THREAD_WINRAWAPI)
+   #define THREAD_STARTFUNC(f) static DWORD WINAPI f(LPVOID param)
+   #define THREAD_END(r)       return r;
+#elif defined(CFL_OS_WINDOWS)
+   #include <process.h>
+
+   #define THREAD_STARTFUNC(f) static unsigned __stdcall f(void *param)
+   #define THREAD_END(r)       _endthreadex(r); return r;
+#else
+   #define THREAD_STARTFUNC(f) static void* f(void *param)
+   #define THREAD_END(r)       return NULL;
+#endif
 
 #define DEFINE_GET_SET(datatype, typename, defaultValue) \
    datatype cfl_thread_varGet##typename(CFL_THREAD_VARIABLEP threadVar) { \
@@ -58,13 +63,19 @@
 
 */
 
+static CFL_INT32 s_thredCount = 0;
 /***********
  * WINDOWS *
  ***********/
 #if defined(CFL_OS_WINDOWS)
 
+typedef HRESULT (WINAPI *TSetThreadDescription)(HANDLE, PCWSTR);
+
 static volatile LONG s_threadStoreInitialized = 0;
 static DWORD s_threadStorageKey = TLS_OUT_OF_INDEXES;
+
+static CFL_BOOL s_procAddressLoaded = CFL_FALSE;
+static volatile TSetThreadDescription s_SetThreadDescriptionPtr = NULL;
 
 #define GET_CURRENT_THREAD_ID GetCurrentThreadId()
 
@@ -87,6 +98,20 @@ static DWORD s_threadStorageKey = TLS_OUT_OF_INDEXES;
 #define SET_THREAD(t) TlsSetValue(s_threadStorageKey, t)
 
 #define KILL_THREAD(t) (TerminateThread((t)->handle, 1))
+
+static TSetThreadDescription getSetThreadDescriptionPtr(void) {
+  HMODULE hKernel32;
+  if (s_SetThreadDescriptionPtr != NULL || s_procAddressLoaded) {
+      return s_SetThreadDescriptionPtr;
+  }
+  hKernel32 = GetModuleHandleA("KernelBase.dll");
+  if (hKernel32 == NULL) {
+    return NULL;
+  }
+  s_SetThreadDescriptionPtr = (TSetThreadDescription) GetProcAddress(hKernel32, "SetThreadDescription");
+  s_procAddressLoaded = CFL_TRUE;
+  return s_SetThreadDescriptionPtr;
+}
 
 /*********
  * POSIX *
@@ -135,8 +160,25 @@ static void freeVarData(void *data) {
 
 #endif
 
+static void setDescription(CFL_THREADP thread) {
+   #ifdef CFL_OS_WINDOWS
+      TSetThreadDescription setDescFunction = getSetThreadDescriptionPtr();
+      if (setDescFunction != NULL) {
+         CFL_UINT32 len = cfl_str_length(&thread->description);
+         wchar_t *threadDescription;
+         threadDescription = CFL_MEM_ALLOC(sizeof(wchar_t) * (len + 1));
+         MultiByteToWideChar(0, 0, cfl_str_getPtr(&thread->description), len, threadDescription, len);
+         setDescFunction(thread->handle, threadDescription);
+         CFL_MEM_FREE(threadDescription);
+      }
+   #else
+      pthread_setname_np(thread->handle, cfl_str_getPtr(&thread->description));
+   #endif
+}
+
 static CFL_THREADP initCurrentThread(void) {
-   CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
+   CFL_THREADP thread = CFL_MEM_ALLOC(sizeof(CFL_THREAD));
+   CFL_INT64 threadNum;
    if (thread == NULL) {
       return NULL;
    }
@@ -145,12 +187,17 @@ static CFL_THREADP initCurrentThread(void) {
    thread->manualAllocation = CFL_FALSE;
    thread->joined = CFL_FALSE;
    thread->status = CFL_THREAD_RUNNING;
+   threadNum = cfl_atomic_addInt32(&s_thredCount, 1) + 1;
+   cfl_str_init(&thread->description);
+   cfl_str_setFormat(&thread->description, "CFL Thread %ld", threadNum);
+   setDescription(thread);
    SET_THREAD(thread);
    return thread;
 }
 
 CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
-   CFL_THREADP thread = malloc(sizeof(CFL_THREAD));
+   CFL_THREADP thread = CFL_MEM_ALLOC(sizeof(CFL_THREAD));
+   CFL_INT64 threadNum;
    if (thread == NULL) {
       return NULL;
    }
@@ -159,10 +206,38 @@ CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func) {
    thread->joined = CFL_FALSE;
    thread->func = func;
    thread->status = CFL_THREAD_CREATED;
+   threadNum = cfl_atomic_addInt32(&s_thredCount, 1) + 1;
+   cfl_str_init(&thread->description);
+   cfl_str_setFormat(&thread->description, "CFL Thread %ld", threadNum);
    return thread;
 }
 
+CFL_THREADP cfl_thread_newWithDescription(CFL_THREAD_FUNC func, const char *description) {
+   CFL_THREADP thread = CFL_MEM_ALLOC(sizeof(CFL_THREAD));
+   if (thread == NULL) {
+      return NULL;
+   }
+   memset(thread, 0, sizeof(CFL_THREAD));
+   thread->manualAllocation = CFL_TRUE;
+   thread->joined = CFL_FALSE;
+   thread->func = func;
+   thread->status = CFL_THREAD_CREATED;
+   cfl_str_initValue(&thread->description, description);
+   return thread;
+}
+
+void cfl_thread_setDescription(CFL_THREADP thread, const char *description) {
+   cfl_str_setValue(&thread->description, description);
+   if (thread->status == CFL_THREAD_RUNNING) {
+      setDescription(thread);
+   }
+}
+
+
 void cfl_thread_free(CFL_THREADP thread) {
+   if (thread == NULL) {
+      return;
+   }
    INIT_THREAD_STORAGE
    SET_THREAD(NULL);
 #if defined(CFL_OS_WINDOWS)
@@ -172,7 +247,7 @@ void cfl_thread_free(CFL_THREADP thread) {
       pthread_detach(thread->handle);
    }
 #endif
-   free(thread);
+   CFL_MEM_FREE(thread);
 }
 
 CFL_BOOL cfl_thread_equals(CFL_THREAD_ID th1, CFL_THREAD_ID th2) {
@@ -194,43 +269,34 @@ CFL_THREADP cfl_thread_getCurrent(void) {
    return thread;
 }
 
-#if defined(CFL_OS_WINDOWS)
-
-static DWORD WINAPI startFunction(LPVOID param) {
-   CFL_THREADP thread = (CFL_THREADP) param;
-
-   thread->status = CFL_THREAD_RUNNING;
-   INIT_THREAD_STORAGE
-   SET_THREAD(thread);
-   if (thread->func != NULL) {
-      thread->func(thread->param);
+THREAD_STARTFUNC( startFunction ) {
+   if (param != NULL) {
+      CFL_THREADP thread = (CFL_THREADP) param;
+      setDescription(thread);
+      thread->status = CFL_THREAD_RUNNING;
+      INIT_THREAD_STORAGE
+      SET_THREAD(thread);
+      if (thread->func != NULL) {
+         thread->func(thread->param);
+      }
+      thread->status = CFL_THREAD_FINISHED;
+      THREAD_END(1)
+   } else {
+      THREAD_END(0)
    }
-   thread->status = CFL_THREAD_FINISHED;
-   return 1;
 }
-
-#else
-
-static void *startFunction(void *param) {
-   CFL_THREADP thread = (CFL_THREADP) param;
-
-   thread->status = CFL_THREAD_RUNNING;
-   INIT_THREAD_STORAGE
-   SET_THREAD(thread);
-   if (thread->func != NULL) {
-      thread->func(thread->param);
-   }
-   thread->status = CFL_THREAD_FINISHED;
-   return NULL;
-}
-#endif
 
 CFL_BOOL cfl_thread_start(CFL_THREADP thread, void * param) {
 #if defined(CFL_OS_WINDOWS)
    if (thread->handle == NULL) {
-      DWORD threadId;
-      thread->param = param;
-      thread->handle = CreateThread(NULL, 0, startFunction, thread, 0, &threadId);
+      #ifdef CFL_THREAD_WINRAWAPI
+         DWORD threadId;
+         thread->param = param;
+         thread->handle = CreateThread(NULL, 0, startFunction, thread, 0, &threadId);
+      #else
+         thread->param = param;
+         thread->handle = ( HANDLE ) _beginthreadex( NULL, 0, startFunction, thread, 0, NULL );
+      #endif
       return thread->handle != NULL ? CFL_TRUE : CFL_FALSE;
    }
    return CFL_FALSE;
@@ -333,7 +399,7 @@ static CFL_THREAD_VAR_DATA *thread_dataGet(CFL_THREAD_VARIABLEP threadVar) {
    varData = (CFL_THREAD_VAR_DATA *) GET_DATA(threadVar);
    if (varData == NULL) {
       size_t dataSize = DATA_SIZE(threadVar);
-      varData = malloc(sizeof(CFL_THREAD_VAR_DATA) + dataSize);
+      varData = CFL_MEM_ALLOC(sizeof(CFL_THREAD_VAR_DATA) + dataSize);
       if (varData != NULL) {
          SET_DATA(threadVar, varData);
          if (threadVar->initData != NULL) {

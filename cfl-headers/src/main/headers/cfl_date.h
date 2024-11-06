@@ -40,7 +40,7 @@ extern "C" {
 #define CFL_MIN_PER_HOUR   60
 #define CFL_HOUR_PER_DAY   60
 
-struct _CFL_DATE {
+typedef struct _CFL_DATE {
    CFL_UINT16 millis;
    CFL_INT16  year;
    CFL_UINT8  month;
@@ -49,7 +49,7 @@ struct _CFL_DATE {
    CFL_UINT8  min;
    CFL_UINT8  sec;
    CFL_BOOL   allocated;
-};
+} CFL_DATE, *CFL_DATEP;
 
 extern void cfl_date_init(CFL_DATEP date);
 extern CFL_DATEP cfl_date_new(void);

@@ -21,7 +21,7 @@
 #include "cfl_iterator.h"
 
 CFL_ITERATORP cfl_iterator_new(size_t dataSize) {
-   CFL_ITERATORP it = malloc(sizeof(CFL_ITERATOR) + dataSize);
+   CFL_ITERATORP it = CFL_MEM_ALLOC(sizeof(CFL_ITERATOR) + dataSize);
    return it;
 }
 
@@ -31,7 +31,7 @@ void * cfl_iterator_data(CFL_ITERATORP it) {
 
 void cfl_iterator_free(CFL_ITERATORP it) {
    if (it->itClass->free == NULL) {
-      free(it);
+      CFL_MEM_FREE(it);
    } else {
       it->itClass->free(it);
    }

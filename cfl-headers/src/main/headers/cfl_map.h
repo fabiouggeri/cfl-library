@@ -31,14 +31,14 @@ extern "C" {
 typedef int  (*MAP_COMP_FUNC) (const void *k1, const void *k2);
 typedef void (*MAP_KEY_VALUE_FUNC) (const void *k, const void *v);
 
-struct _CFL_MAP {
+typedef struct _CFL_MAP {
    CFL_ARRAY          entries;
    CFL_UINT32         keySize;
    CFL_UINT32         valueSize;
    MAP_COMP_FUNC      keyCompFunc;
    MAP_KEY_VALUE_FUNC freeEntryFunc;
    CFL_BOOL           allocated;
-};
+} CFL_MAP, *CFL_MAPP;
 
 extern void cfl_map_init(CFL_MAPP map, CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_COMP_FUNC keyCompFunc, MAP_KEY_VALUE_FUNC freeEntryFunc);
 extern CFL_MAPP cfl_map_new(CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_COMP_FUNC keyCompFunc, MAP_KEY_VALUE_FUNC freeEntryFunc);

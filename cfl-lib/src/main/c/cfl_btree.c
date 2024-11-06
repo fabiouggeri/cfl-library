@@ -53,7 +53,7 @@ static CFL_ITERATOR_CLASS cfl_btree_iterator_class = {
 };
 
 static CFL_BTREE_NODEP cfl_btree_node_new(CFL_BTREEP pTree) {
-   CFL_BTREE_NODEP pNode = (CFL_BTREE_NODEP) malloc(sizeof(CFL_BTREE_NODE) + (sizeof(void *) * pTree->lKeys * 2));
+   CFL_BTREE_NODEP pNode = (CFL_BTREE_NODEP) CFL_MEM_ALLOC(sizeof(CFL_BTREE_NODE) + (sizeof(void *) * pTree->lKeys * 2));
    pNode->pTree = pTree;
    pNode->lNumKeys = 0;
    pNode->bIsLeafNode = CFL_TRUE;
@@ -62,7 +62,7 @@ static CFL_BTREE_NODEP cfl_btree_node_new(CFL_BTREEP pTree) {
 }
 
 static void cfl_btree_node_free(CFL_BTREE_NODEP pNode) {
-   free(pNode);
+   CFL_MEM_FREE(pNode);
 }
 
 static CFL_INT16 cfl_btree_compareValues(CFL_BTREEP pTree, void * pValue1, void * pValue2, CFL_BOOL bExact) {
@@ -190,7 +190,7 @@ static CFL_INT32 cfl_btree_node_subtreeRootNodeIndex(CFL_BTREE_NODEP pNode, void
 
 CFL_BTREEP cfl_btree_new(CFL_INT32 lKeys, BTREE_CMP_VALUE_FUNC pCompareValues) {
    CFL_BTREEP pTree;
-   pTree = (CFL_BTREEP) malloc(sizeof(CFL_BTREE));
+   pTree = (CFL_BTREEP) CFL_MEM_ALLOC(sizeof(CFL_BTREE));
    pTree->lKeys = lKeys;
    pTree->pCompareValues = pCompareValues;
    pTree->pRoot = cfl_btree_node_new(pTree);
@@ -217,7 +217,7 @@ static void cfl_btree_freeNodes(CFL_BTREE_NODEP pNode, BTREE_FREE_KEY_FUNC pFree
 
 void cfl_btree_free(CFL_BTREEP pTree, BTREE_FREE_KEY_FUNC pFreeKey) {
    cfl_btree_freeNodes(pTree->pRoot, pFreeKey);
-   free(pTree);
+   CFL_MEM_FREE(pTree);
 }
 
 // Split the node, node, of a B-Tree into two nodes that both contain T-1 elements and move node's median key up to the pParentNode.
@@ -591,7 +591,7 @@ void * cfl_btree_searchLike(CFL_BTREEP pTree, void * pKey) {
 }
 
 static BTreeIterator *cfl_btree_iteratorCreate(CFL_BTREE_NODEP pNode, CFL_INT32 lKey, BTreeIterator *pPreviousIt) {
-   BTreeIterator *pIt = (BTreeIterator *) malloc(sizeof(BTreeIterator));
+   BTreeIterator *pIt = (BTreeIterator *) CFL_MEM_ALLOC(sizeof(BTreeIterator));
    pIt->iterator.itClass = &cfl_btree_iterator_class;
    pIt->pNode = pNode;
    pIt->lKey = lKey;
@@ -645,7 +645,7 @@ static BTreeIterator *cfl_btree_iteratorSearchLikeFromNode(CFL_BTREE_NODEP pNode
    }
    /* Se nao encontrar a chave libera o iterator pai antes de retornar */
    if (pParentIt != NULL) {
-      free(pParentIt);
+      CFL_MEM_FREE(pParentIt);
    }
    return NULL;
 }
@@ -678,7 +678,7 @@ static BTreeIterator *cfl_btree_iteratorSoftSearchLikeFromNode(CFL_BTREE_NODEP p
    }
    /* Se nao encontrar a chave libera o iterator pai antes de retornar */
    if (pParentIt != NULL) {
-      free(pParentIt);
+      CFL_MEM_FREE(pParentIt);
    }
    return NULL;
 }
@@ -710,7 +710,7 @@ static BTreeIterator *cfl_btree_iteratorSearchLastLikeFromNode(CFL_BTREE_NODEP p
    }
    /* Se nao encontrar a chave libera o iterator pai antes de retornar */
    if (pParentIt != NULL) {
-      free(pParentIt);
+      CFL_MEM_FREE(pParentIt);
    }
    return NULL;
 }
@@ -742,7 +742,7 @@ static BTreeIterator *cfl_btree_iteratorSoftSearchLastLikeFromNode(CFL_BTREE_NOD
    }
    /* Se nao encontrar a chave libera o iterator pai antes de retornar */
    if (pParentIt != NULL) {
-      free(pParentIt);
+      CFL_MEM_FREE(pParentIt);
    }
    return NULL;
 }
@@ -783,7 +783,7 @@ static void cfl_btree_iterator_free(CFL_ITERATORP iterator) {
    BTreeIterator *pIt = (BTreeIterator *) iterator;
    while (pIt != NULL) {
       BTreeIterator *pPrevIt = pIt->pPreviousIt;
-      free(pIt);
+      CFL_MEM_FREE(pIt);
       pIt = pPrevIt;
    }
 }
@@ -796,7 +796,7 @@ static void cfl_btree_iterator_first(CFL_ITERATORP iterator) {
    pPreviousIt = pIt->pPreviousIt;
    while (pPreviousIt != NULL) {
       BTreeIterator *pAuxIt = pPreviousIt->pPreviousIt;
-      free(pPreviousIt);
+      CFL_MEM_FREE(pPreviousIt);
       pPreviousIt = pAuxIt;
    }
    pPreviousIt = NULL;
@@ -818,7 +818,7 @@ static void cfl_btree_iterator_last(CFL_ITERATORP iterator) {
    pPreviousIt = pIt->pPreviousIt;
    while (pPreviousIt != NULL) {
       BTreeIterator *pAuxIt = pPreviousIt->pPreviousIt;
-      free(pPreviousIt);
+      CFL_MEM_FREE(pPreviousIt);
       pPreviousIt = pAuxIt;
    }
    pPreviousIt = NULL;
@@ -868,7 +868,7 @@ static void * cfl_btree_iterator_next(CFL_ITERATORP iterator) {
             return GET_KEY(pIt->pNode, (pIt->lKey)++);
          } else {
             CFL_BTREE_NODEP pChildNode = GET_CHILD(pIt->pNode, pIt->lKey);
-            BTreeIterator *pParentIt = (BTreeIterator *) malloc(sizeof(BTreeIterator));
+            BTreeIterator *pParentIt = (BTreeIterator *) CFL_MEM_ALLOC(sizeof(BTreeIterator));
             memcpy(pParentIt, pIt, sizeof (BTreeIterator));
             pIt->pNode = pChildNode;
             pIt->lKey = 0;
@@ -880,7 +880,7 @@ static void * cfl_btree_iterator_next(CFL_ITERATORP iterator) {
          pIt->pNode = pAuxIt->pNode;
          pIt->lKey = pAuxIt->lKey;
          pIt->pPreviousIt = pAuxIt->pPreviousIt;
-         free(pAuxIt);
+         CFL_MEM_FREE(pAuxIt);
          bGoingback = CFL_TRUE;
          continue;
       }
@@ -906,7 +906,7 @@ static void * cfl_btree_iterator_previous(CFL_ITERATORP iterator) {
             return GET_KEY(pIt->pNode, --(pIt->lKey));
          } else {
             CFL_BTREE_NODEP pChildNode = GET_CHILD(pIt->pNode, pIt->lKey);
-            BTreeIterator *pParentIt = (BTreeIterator *) malloc(sizeof(BTreeIterator));
+            BTreeIterator *pParentIt = (BTreeIterator *) CFL_MEM_ALLOC(sizeof(BTreeIterator));
             memcpy(pParentIt, pIt, sizeof(BTreeIterator));
             pIt->pNode = pChildNode;
             pIt->lKey = pChildNode->lNumKeys;
@@ -918,7 +918,7 @@ static void * cfl_btree_iterator_previous(CFL_ITERATORP iterator) {
          pIt->pNode = pAuxIt->pNode;
          pIt->lKey = pAuxIt->lKey;
          pIt->pPreviousIt = pAuxIt->pPreviousIt;
-         free(pAuxIt);
+         CFL_MEM_FREE(pAuxIt);
          bGoingback = CFL_TRUE;
          continue;
       }

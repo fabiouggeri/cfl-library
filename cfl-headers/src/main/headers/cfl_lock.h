@@ -24,6 +24,7 @@
 #include "cfl_types.h"
 #include "cfl_array.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,15 +37,36 @@ extern "C" {
 #define CFL_LOCK_ERROR   1
 #define CFL_LOCK_TIMEOUT 2
 
-struct _CFL_CONDITION_VARIABLE {
+#if defined(CFL_OS_WINDOWS)
+   #include "windows.h"
+
+   #ifdef SRWLOCK_INIT  
+      typedef SRWLOCK               CFL_LOCK_HANDLE;
+   #else  
+      typedef CRITICAL_SECTION      CFL_LOCK_HANDLE;
+   #endif
+   #if defined(CONDITION_VARIABLE_INIT)
+      typedef CONDITION_VARIABLE    CFL_CONDITION_HANDLE;
+   #else
+      typedef int                   CFL_CONDITION_HANDLE;
+   #endif
+#else
+   #include <pthread.h>
+   #include <errno.h>
+
+   typedef pthread_mutex_t          CFL_LOCK_HANDLE;
+   typedef pthread_cond_t           CFL_CONDITION_HANDLE;
+#endif
+
+typedef struct _CFL_CONDITION_VARIABLE {
    CFL_CONDITION_HANDLE handle;
    CFL_BOOL             isAllocated;
-};
+} CFL_CONDITION_VARIABLE, *CFL_CONDITION_VARIABLEP;
 
-struct _CFL_LOCK {
+typedef struct _CFL_LOCK {
    CFL_LOCK_HANDLE handle;
    CFL_BOOL        isAllocated;
-};
+} CFL_LOCK, *CFL_LOCKP;
 
 extern CFL_LOCKP cfl_lock_new(void);
 extern void cfl_lock_free(CFL_LOCKP pLock);

@@ -23,7 +23,7 @@
 
 
 CFL_LLISTP cfl_llist_new(CFL_UINT32 maxNodeCache) {
-   CFL_LLISTP list = (CFL_LLISTP) malloc(sizeof(CFL_LLIST));
+   CFL_LLISTP list = (CFL_LLISTP) CFL_MEM_ALLOC(sizeof(CFL_LLIST));
    list->maxNodeCache = maxNodeCache;
    list->nodeCount = 0;
    list->first = NULL;
@@ -38,10 +38,10 @@ void cfl_llist_free(CFL_LLISTP list) {
       CFL_LNODEP node = list->first;
       while (node) {
          CFL_LNODEP next = node->next;
-         free(node);
+         CFL_MEM_FREE(node);
          node = next;
       }
-      free(list);
+      CFL_MEM_FREE(list);
    }
 }
 
@@ -69,7 +69,7 @@ void cfl_llist_addLast(CFL_LLISTP list, void *item) {
          list->last = node;
       /* New node at the end of chain */
       } else {
-         node = (CFL_LNODEP) malloc(sizeof(CFL_LNODE));
+         node = (CFL_LNODEP) CFL_MEM_ALLOC(sizeof(CFL_LNODE));
          node->previous = list->tail;
          node->next = NULL;
          list->tail->next = node;
@@ -84,7 +84,7 @@ void cfl_llist_addLast(CFL_LLISTP list, void *item) {
       list->tail = node;
    /* First node in chain */
    } else {
-      node = (CFL_LNODEP) malloc(sizeof(CFL_LNODE));
+      node = (CFL_LNODEP) CFL_MEM_ALLOC(sizeof(CFL_LNODE));
       node->previous = NULL;
       node->next = NULL;
       list->first = node;
@@ -120,7 +120,7 @@ void cfl_llist_addFirst(CFL_LLISTP list, void *item) {
          list->first = node;
       /* New node at beginning of chain */
       } else {
-         node = (CFL_LNODEP) malloc(sizeof(CFL_LNODE));
+         node = (CFL_LNODEP) CFL_MEM_ALLOC(sizeof(CFL_LNODE));
          node->next = list->head;
          node->previous = NULL;
          list->head->previous = node;
@@ -135,7 +135,7 @@ void cfl_llist_addFirst(CFL_LLISTP list, void *item) {
       list->tail = node;
    /* First node in chain */
    } else {
-      node = (CFL_LNODEP) malloc(sizeof(CFL_LNODE));
+      node = (CFL_LNODEP) CFL_MEM_ALLOC(sizeof(CFL_LNODE));
       node->previous = NULL;
       node->next = NULL;
       list->first = node;
@@ -164,7 +164,7 @@ static void checkCacheOverflow(CFL_LLISTP list) {
          node->next->previous = NULL;
       }
       list->first = node->next;
-      free(node);
+      CFL_MEM_FREE(node);
       --(list->nodeCount);
    }
    /* Has nodes yet */
@@ -176,7 +176,7 @@ static void checkCacheOverflow(CFL_LLISTP list) {
             node->previous->next = NULL;
          }
          list->last = node->previous;
-         free(node);
+         CFL_MEM_FREE(node);
          --(list->nodeCount);
       }
    } else {

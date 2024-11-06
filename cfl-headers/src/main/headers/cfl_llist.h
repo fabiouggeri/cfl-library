@@ -33,14 +33,14 @@ typedef struct _CFL_LNODE {
    struct _CFL_LNODE *next;
 } CFL_LNODE, *CFL_LNODEP;
 
-struct _CFL_LLIST {
+typedef struct _CFL_LLIST {
    CFL_LNODEP first;
    CFL_LNODEP last;
    CFL_LNODEP head;
    CFL_LNODEP tail;
    CFL_UINT32 maxNodeCache;
    CFL_UINT32 nodeCount;
-};
+} CFL_LLIST, *CFL_LLISTP;
 
 extern CFL_LLISTP cfl_llist_new(CFL_UINT32 maxNodeCache);
 extern void cfl_llist_free(CFL_LLISTP list);

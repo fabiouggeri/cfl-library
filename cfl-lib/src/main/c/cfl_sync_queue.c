@@ -67,7 +67,7 @@ CFL_SYNC_QUEUEP cfl_sync_queue_new(CFL_UINT32 size) {
    if (size == 0) {
       return NULL;
    }
-   queue = (CFL_SYNC_QUEUEP) malloc(sizeof(CFL_SYNC_QUEUE) + (size * sizeof(CFL_SYNC_QUEUE_ITEM)));
+   queue = (CFL_SYNC_QUEUEP) CFL_MEM_ALLOC(sizeof(CFL_SYNC_QUEUE) + (size * sizeof(CFL_SYNC_QUEUE_ITEM)));
    if (queue) {
       cfl_lock_init(&queue->lock);
       queue->notEmpty = cfl_lock_newConditionVar();
@@ -86,7 +86,7 @@ void cfl_sync_queue_free(CFL_SYNC_QUEUEP queue) {
       cfl_lock_freeConditionVar(queue->notEmpty);
       cfl_lock_freeConditionVar(queue->notFull);
       cfl_lock_free(&queue->lock);
-      free(queue);
+      CFL_MEM_FREE(queue);
    }
 }
 

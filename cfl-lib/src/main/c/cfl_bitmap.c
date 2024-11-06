@@ -22,17 +22,17 @@
 #include "cfl_bitmap.h"
 
 CFL_BITMAPP cfl_bitmap_new(CFL_UINT16 uiNumBits) {
-   CFL_BITMAPP bitMap = (CFL_BITMAPP) malloc(sizeof(CFL_BITMAP));
+   CFL_BITMAPP bitMap = (CFL_BITMAPP) CFL_MEM_ALLOC(sizeof(CFL_BITMAP));
    bitMap->uiSize = (uiNumBits / 8) + 1;
-   bitMap->map = (CFL_UINT8 *) malloc(bitMap->uiSize);
+   bitMap->map = (CFL_UINT8 *) CFL_MEM_ALLOC(bitMap->uiSize);
    memset(bitMap->map, 0, bitMap->uiSize);
    return bitMap;
 }
 
 void cfl_bitmap_free(CFL_BITMAPP bitMap) {
    if (bitMap != NULL) {
-      free(bitMap->map);
-      free(bitMap);
+      CFL_MEM_FREE(bitMap->map);
+      CFL_MEM_FREE(bitMap);
    }
 }
 
@@ -79,9 +79,9 @@ void cfl_bitmap_clear(CFL_BITMAPP bitMap) {
 }
 
 CFL_BITMAPP cfl_bitmap_clone(CFL_BITMAPP bitMap) {
-   CFL_BITMAPP pClone = (CFL_BITMAPP) malloc(sizeof(CFL_BITMAP));
+   CFL_BITMAPP pClone = (CFL_BITMAPP) CFL_MEM_ALLOC(sizeof(CFL_BITMAP));
    pClone->uiSize = bitMap->uiSize;
-   pClone->map = (CFL_UINT8*) malloc(pClone->uiSize);
+   pClone->map = (CFL_UINT8*) CFL_MEM_ALLOC(pClone->uiSize);
    memcpy(pClone->map, bitMap->map, pClone->uiSize);
    return pClone;
 }

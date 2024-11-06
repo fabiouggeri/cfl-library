@@ -17,34 +17,28 @@
  * under the License.
  */
 
-#ifndef CFL_BITMAP_H_
+#ifndef _CFL_OS_H_
 
-#define CFL_BITMAP_H_
-
-#include "cfl_types.h"
+   #define _CFL_OS_H_
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct _CFL_BITMAP {
-   CFL_UINT8  *map;
-   CFL_UINT16 uiSize;
-} CFL_BITMAP, *CFL_BITMAPP;
-
-extern CFL_BITMAPP cfl_bitmap_new(CFL_UINT16 numBits);
-extern void cfl_bitmap_free(CFL_BITMAPP pBitMap);
-extern void cfl_bitmap_set(CFL_BITMAPP pBitMap, CFL_UINT16 uiPos) ;
-extern void cfl_bitmap_reset(CFL_BITMAPP pBitMap, CFL_UINT16 uiPos);
-extern CFL_UINT8 cfl_bitmap_get(CFL_BITMAPP bitMap, CFL_UINT16 uiPos);
-extern void cfl_bitmap_clear(CFL_BITMAPP pBitMap);
-extern CFL_BOOL cfl_bitmap_equals(CFL_BITMAPP pBitMap1, CFL_BITMAPP pBitMap2);
-extern CFL_BOOL cfl_bitmap_isSubSet(CFL_BITMAPP pBitMap1, CFL_BITMAPP pBitMap2);
-extern CFL_BITMAPP cfl_bitmap_clone(CFL_BITMAPP pBitMap);
-
-#ifdef __cplusplus
-}
+#if defined(_WIN32)
+   #define CFL_OS_WINDOWS
+   #if defined(_WIN64)
+      #define CFL_ARCH_64
+   #else
+      #define CFL_ARCH_32
+   #endif
+#elif defined(__linux__)
+   #include <pthread.h>
+   #include <errno.h>
+   #include <sched.h>
+   #define CFL_OS_LINUX
+   #if defined(__LP64__) || defined(__x86_64__) || defined(__ppc64__)
+      #define CFL_ARCH_64
+   #else
+      #define CFL_ARCH_32
+   #endif
 #endif
 
 #endif

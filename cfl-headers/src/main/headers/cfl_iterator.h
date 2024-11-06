@@ -27,6 +27,16 @@ extern "C" {
 
 #include "cfl_types.h"
 
+struct _CFL_ITERATOR;
+typedef struct _CFL_ITERATOR CFL_ITERATOR;
+typedef CFL_ITERATOR *CFL_ITERATORP;
+
+struct _CFL_ITERATOR_CLASS;
+typedef struct _CFL_ITERATOR_CLASS CFL_ITERATOR_CLASS;
+typedef CFL_ITERATOR_CLASS *CFL_ITERATOR_CLASSP;
+
+typedef void (*CFL_ITERATOR_FUNC)(void *);
+
 struct _CFL_ITERATOR_CLASS {
    CFL_BOOL (*has_next)(CFL_ITERATORP it);
    void *(*next)(CFL_ITERATORP it);

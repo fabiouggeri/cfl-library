@@ -22,7 +22,34 @@
 #define CFL_THREAD_H_
 
 #include "cfl_types.h"
+#include "cfl_str.h"
 
+#if defined(CFL_OS_WINDOWS)
+   #include <windows.h>
+   
+   typedef HANDLE      CFL_THREAD_HANDLE;
+   typedef DWORD       CFL_THREAD_ID;
+   
+   #if defined( _MSC_VER ) && ( _MSC_VER <= 1500 )
+      #define CFL_THREAD_WINRAWAPI
+   #endif
+
+   #if defined(__BORLANDC__) && __BORLANDC__ < 0x0600
+      #define YieldProcessor() Sleep(0)
+      #define CFL_THREAD_WINRAWAPI
+   #endif
+
+#else
+
+   #include <pthread.h>
+   #include <errno.h>
+   #include <sched.h>
+   #include <signal.h>
+
+   typedef pthread_t   CFL_THREAD_HANDLE;
+   typedef pthread_t   CFL_THREAD_ID;
+
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,8 +75,7 @@ extern "C" {
 #endif
 
 typedef void (* CFL_THREAD_VAR_FUNC)(void *param);
-
-typedef CFL_INT32 (* CFL_THREAD_FUNC)(void *param);
+typedef void (* CFL_THREAD_FUNC)(void *param);
 
 typedef union {
    CFL_BOOL    asBoolean;
@@ -66,12 +92,7 @@ typedef union {
    void       *asPointer;
 } VAR_DATA;
 
-typedef struct _CFL_THREAD_VAR_DATA {
-   CFL_THREAD_VARIABLEP var;
-   CFL_UINT8            data[1];
-} CFL_THREAD_VAR_DATA;
-
-struct _CFL_THREAD_VARIABLE {
+typedef struct _CFL_THREAD_VARIABLE {
    #if defined(CFL_OS_WINDOWS)
       volatile LONG    initialized;
       DWORD            storageKey;
@@ -82,19 +103,27 @@ struct _CFL_THREAD_VARIABLE {
    size_t              dataSize;
    CFL_THREAD_VAR_FUNC initData;
    CFL_THREAD_VAR_FUNC freeData;
-};
+} CFL_THREAD_VARIABLE, *CFL_THREAD_VARIABLEP;
 
-struct _CFL_THREAD {
+typedef struct _CFL_THREAD_VAR_DATA {
+   CFL_THREAD_VARIABLEP var;
+   CFL_UINT8            data[1];
+} CFL_THREAD_VAR_DATA;
+
+typedef struct _CFL_THREAD {
    CFL_THREAD_FUNC   func;
    void              *param;
+   CFL_STR           description;
    CFL_THREAD_HANDLE handle;
    CFL_BOOL          manualAllocation;
    CFL_BOOL          joined;
    CFL_UINT8         status;
-};
+} CFL_THREAD, *CFL_THREADP;
 
 extern CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func);
+extern CFL_THREADP cfl_thread_newWithDescription(CFL_THREAD_FUNC func, const char *description);
 extern void cfl_thread_free(CFL_THREADP thread);
+extern void cfl_thread_setDescription(CFL_THREADP thread, const char *description);
 extern CFL_THREAD_ID cfl_thread_id(void);
 extern CFL_BOOL cfl_thread_equals(CFL_THREAD_ID th1, CFL_THREAD_ID th2);
 extern CFL_THREADP cfl_thread_getCurrent(void);

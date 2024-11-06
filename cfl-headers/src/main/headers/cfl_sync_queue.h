@@ -54,7 +54,7 @@ typedef union _CFL_SYNC_QUEUE_ITEM {
    CFL_UINT64 asUInt64;
 } CFL_SYNC_QUEUE_ITEM;
 
-struct _CFL_SYNC_QUEUE {
+typedef struct _CFL_SYNC_QUEUE {
    CFL_LOCK                lock;
    CFL_CONDITION_VARIABLEP notEmpty;
    CFL_CONDITION_VARIABLEP notFull;
@@ -63,7 +63,7 @@ struct _CFL_SYNC_QUEUE {
 	CFL_UINT32              itemCount;
    CFL_BOOL                canceled;
 	CFL_SYNC_QUEUE_ITEM     data[1];
-};
+} CFL_SYNC_QUEUE, *CFL_SYNC_QUEUEP;
 
 extern CFL_SYNC_QUEUEP cfl_sync_queue_new(CFL_UINT32 size);
 extern void cfl_sync_queue_free(CFL_SYNC_QUEUEP queue);

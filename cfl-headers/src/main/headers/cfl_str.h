@@ -42,17 +42,18 @@ extern "C" {
 #define CFL_STR_EMPTY    { "", 0            , 1        , 0, CFL_FALSE, CFL_FALSE }
 #define CFL_STR_CONST(s) { s , sizeof(s) - 1, sizeof(s), 0, CFL_FALSE, CFL_FALSE }
 
-struct _CFL_STR {
+typedef struct _CFL_STR {
    char *data;
    CFL_UINT32 length;
-   CFL_UINT32 capacity;
+   CFL_UINT32 dataSize;
    CFL_UINT32 hashValue;
    CFL_BOOL   isVarData;
    CFL_BOOL   isAllocated;
-};
+} CFL_STR, *CFL_STRP;
 
 extern void cfl_str_init(CFL_STRP str);
 extern void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity);
+extern void cfl_str_initConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 extern void cfl_str_initConst(CFL_STRP str, const char *buffer);
 extern void cfl_str_initValue(CFL_STRP str, const char *buffer);
 extern CFL_STRP cfl_str_new(CFL_UINT32  iniCapacity);

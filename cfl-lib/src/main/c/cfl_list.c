@@ -26,14 +26,14 @@ void cfl_list_init(CFL_LISTP list, CFL_UINT32 capacity) {
    list->capacity = capacity;
    list->allocated = CFL_FALSE;
    if (capacity > 0) {
-      list->items = (void *)malloc(capacity * sizeof(void *));
+      list->items = (void *)CFL_MEM_ALLOC(capacity * sizeof(void *));
    } else {
       list->items = NULL;
    }
 }
 
 CFL_LISTP cfl_list_new(CFL_UINT32 capacity) {
-   CFL_LISTP list = (CFL_LISTP) malloc(sizeof(CFL_LIST));
+   CFL_LISTP list = (CFL_LISTP) CFL_MEM_ALLOC(sizeof(CFL_LIST));
    if (list == NULL) {
       return NULL;
    }
@@ -43,7 +43,7 @@ CFL_LISTP cfl_list_new(CFL_UINT32 capacity) {
 }
 
 CFL_LISTP cfl_list_newLen(CFL_UINT32 len) {
-   CFL_LISTP list = (CFL_LISTP) malloc(sizeof(CFL_LIST));
+   CFL_LISTP list = (CFL_LISTP) CFL_MEM_ALLOC(sizeof(CFL_LIST));
    if (list == NULL) {
       return NULL;
    }
@@ -56,9 +56,9 @@ CFL_LISTP cfl_list_newLen(CFL_UINT32 len) {
 
 void cfl_list_free(CFL_LISTP list) {
    if (list != NULL) {
-      free(list->items);
+      CFL_MEM_FREE(list->items);
       if (list->allocated) {
-         free(list);
+         CFL_MEM_FREE(list);
       }
    }
 }
@@ -67,10 +67,10 @@ void cfl_list_add(CFL_LISTP list, void *item) {
    if (list->length >= list->capacity) {
       if ( list->capacity > 0 ) {
          list->capacity = ( list->capacity >> 1 ) + 1 + list->length;
-         list->items = (void *) realloc(list->items, list->capacity * sizeof(void *));
+         list->items = (void *) CFL_MEM_REALLOC(list->items, list->capacity * sizeof(void *));
       } else {
          list->capacity = 12;
-         list->items = (void *) malloc(list->capacity * sizeof(void *));
+         list->items = (void *) CFL_MEM_ALLOC(list->capacity * sizeof(void *));
       }
    }
    list->items[list->length] = item;
@@ -150,7 +150,7 @@ void cfl_list_setLength(CFL_LISTP list, CFL_UINT32 newLen) {
    } else if (newLen > list->length) {
       if (newLen > list->capacity) {
          list->capacity = ( newLen >> 1 ) + 1 + newLen;
-         list->items = (void *) realloc(list->items, list->capacity * sizeof(void *));
+         list->items = (void *) CFL_MEM_REALLOC(list->items, list->capacity * sizeof(void *));
       }
       memset(&list->items[list->length] ,0 , (newLen - list->length) * sizeof(void *));
       list->length = newLen;

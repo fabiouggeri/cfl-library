@@ -140,7 +140,7 @@ static CFL_UINT32 leapYearsBetween(CFL_INT16 startYear, CFL_INT16 endYear) {
 
 static CFL_DATEP newDateInit(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
    CFL_DATEP date;
-   date = (CFL_DATEP) malloc(sizeof(CFL_DATE));
+   date = (CFL_DATEP) CFL_MEM_ALLOC(sizeof(CFL_DATE));
    SET_YEAR(date, year);
    SET_MONTH(date, month);
    SET_DAY(date, day);
@@ -158,7 +158,7 @@ void cfl_date_init(CFL_DATEP date) {
 
 CFL_DATEP cfl_date_new(void) {
    CFL_DATEP date;
-   date = (CFL_DATEP) malloc(sizeof(CFL_DATE));
+   date = (CFL_DATEP) CFL_MEM_ALLOC(sizeof(CFL_DATE));
    cfl_date_init(date);
    date->allocated = CFL_TRUE;
    return date;
@@ -166,7 +166,7 @@ CFL_DATEP cfl_date_new(void) {
 
 void cfl_date_free(CFL_DATEP date) {
    if (date->allocated) {
-      free(date);
+      CFL_MEM_FREE(date);
    }
 }
 

@@ -32,126 +32,159 @@
 static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {
    if (! str->isVarData) {
       char *curData = str->data;
-      str->capacity = (newLen >> 1) + 1 + newLen;
-      str->data = (char *) malloc(sizeof(char) * str->capacity);
-      str->isVarData = CFL_TRUE;
+      str->dataSize = (newLen >> 1) + 1 + newLen;
+      str->data = (char *) CFL_MEM_ALLOC(sizeof(char) * str->dataSize);
       if (str->data != NULL) {
+         str->isVarData = CFL_TRUE;
          memcpy(str->data, curData, str->length);
          str->data[str->length] = '\0';
+      } else {
+         str->dataSize = 0;
       }
-   } else if (newLen >= str->capacity) {
-      str->capacity = (str->capacity >> 1) + 1 + newLen;
-      str->data = (char *) realloc(str->data, str->capacity);
+   } else if (newLen >= str->dataSize) {
+      str->dataSize = (str->dataSize >> 1) + 1 + newLen;
+      str->data = (char *) CFL_MEM_REALLOC(str->data, str->dataSize);
    }
    return str->data != NULL;
 }
 
 void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity) {
-   if (str != NULL) {
-      str->capacity = iniCapacity + 1;
-      str->length = 0;
-      str->hashValue = 0;
-      str->isAllocated = CFL_FALSE;
-      if (iniCapacity >0) {
-         str->data = (char *) malloc((iniCapacity + 1) * sizeof(char));
-         if (str->data != NULL) {
-            str->data[0] = '\0';
-            str->isVarData = CFL_TRUE;
-         } else {
-            str->isVarData = CFL_FALSE;
-         }
+   if (str == NULL) {
+      return;
+   }
+   str->length = 0;
+   str->hashValue = 0;
+   str->isAllocated = CFL_FALSE;
+   if (iniCapacity > 0) {
+      str->dataSize = iniCapacity + 1;
+      str->data = (char *) CFL_MEM_ALLOC(str->dataSize * sizeof(char));
+      if (str->data != NULL) {
+         str->data[0] = '\0';
+         str->isVarData = CFL_TRUE;
       } else {
          str->data = "";
          str->isVarData = CFL_FALSE;
       }
+   } else {
+      str->dataSize = 0;
+      str->data = "";
+      str->isVarData = CFL_FALSE;
    }
 }
 
 void cfl_str_init(CFL_STRP str) {
-   if (str != NULL) {
-      str->capacity = 0;
+   if (str == NULL) {
+      return;
+   }
+   str->dataSize = 0;
+   str->length = 0;
+   str->hashValue = 0;
+   str->isVarData = CFL_FALSE;
+   str->isAllocated = CFL_FALSE;
+   str->data = "";
+}
+
+void cfl_str_initConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 len) {
+   if (str == NULL) {
+      return;
+   }
+   str->hashValue = 0;
+   str->isVarData = CFL_FALSE;
+   str->isAllocated = CFL_FALSE;
+   if (buffer != NULL && len > 0) {
+      str->dataSize = (CFL_UINT32) len + 1;
+      str->length = (CFL_UINT32) len;
+      str->data = (char* ) buffer;
+   } else {
+      str->dataSize = 0;
       str->length = 0;
-      str->hashValue = 0;
-      str->isVarData = CFL_FALSE;
-      str->isAllocated = CFL_FALSE;
       str->data = "";
    }
 }
 
 void cfl_str_initConst(CFL_STRP str, const char *buffer) {
-   if (str != NULL) {
-      size_t len = buffer != NULL ? strlen(buffer) : 0;
-      str->capacity = (CFL_UINT32) len;
-      str->length = (CFL_UINT32) len;
-      str->hashValue = 0;
-      str->isVarData = CFL_FALSE;
-      str->isAllocated = CFL_FALSE;
-      str->data = (char* ) (buffer != NULL ? buffer : "");
-   }
+   cfl_str_initConstLen(str, buffer, buffer == NULL ? 0 : (CFL_UINT32) strlen(buffer));
 }
 
 void cfl_str_initValue(CFL_STRP str, const char *buffer) {
-   if (str != NULL) {
-      size_t len = buffer != NULL ? strlen(buffer) : 0;
-      str->capacity = (CFL_UINT32) len;
-      str->length = (CFL_UINT32) len;
-      str->hashValue = 0;
-      str->isAllocated = CFL_FALSE;
-      if (len > 0) {
+   size_t len;
+   if (str == NULL) {
+      return;
+   }
+   len = buffer != NULL ? strlen(buffer) : 0;
+   str->length = (CFL_UINT32) len;
+   str->hashValue = 0;
+   str->isAllocated = CFL_FALSE;
+   if (len > 0) {
+      str->dataSize = (CFL_UINT32) len + 1;
+      str->data = (char *) CFL_MEM_ALLOC(str->dataSize * sizeof(char));
+      if (str->data != NULL) {
+         memcpy(str->data, (void *) buffer, len * sizeof (char));
          str->isVarData = CFL_TRUE;
-         str->data = (char *) malloc((len + 1) * sizeof(char));
-         if (str->data != NULL) {
-            memcpy(str->data, (void *) buffer, len * sizeof (char));
-            str->data[len] = 0;
-         }
+         str->data[len] = '\0';
       } else {
          str->isVarData = CFL_FALSE;
+         str->dataSize = 0;
          str->data = "";
       }
+   } else {
+      str->isVarData = CFL_FALSE;
+      str->dataSize = 0;
+      str->data = "";
    }
 }
 
 CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
    CFL_STRP str;
-   str = (CFL_STRP) malloc(sizeof(CFL_STR));
-   if (str != NULL) {
-      str->capacity = iniCapacity + 1;
-      str->length = 0;
-      str->hashValue = 0;
-      str->isAllocated = CFL_TRUE;
+   if (iniCapacity == 0) {
+      return cfl_str_newConstLen(NULL, 0);
+   }
+   str = (CFL_STRP) CFL_MEM_ALLOC(sizeof(CFL_STR));
+   if (str == NULL) {
+      return NULL;
+   }
+   str->length = 0;
+   str->hashValue = 0;
+   str->isAllocated = CFL_TRUE;
+   if (iniCapacity > 0) {
       str->isVarData = CFL_TRUE;
-      str->data = (char *) malloc((iniCapacity + 1) * sizeof(char));
+      str->dataSize = iniCapacity + 1;
+      str->data = (char *) CFL_MEM_ALLOC(str->dataSize * sizeof(char));
       if (str->data != NULL) {
          str->data[0] = '\0';
       } else {
-         free(str);
+         CFL_MEM_FREE(str);
          str = NULL;
       }
+   } else {
+      str->isVarData = CFL_FALSE;
+      str->dataSize = 0;
+      str->data = "";
    }
    return str;
 }
 
 CFL_STRP cfl_str_newBufferLen(const char *buffer, CFL_UINT32 len) {
    CFL_STRP str;
-   if (buffer != NULL && len >= 0) {
-      str = (CFL_STRP) malloc(sizeof(CFL_STR));
-      if (str != NULL) {
-         str->capacity = (CFL_UINT32) len + 1;
-         str->length = (CFL_UINT32) len;
-         str->hashValue = 0;
-         str->isVarData = CFL_TRUE;
-         str->isAllocated = CFL_TRUE;
-         str->data = (char *) malloc(sizeof(char) * str->capacity);
-         if (str->data != NULL) {
-            memcpy(str->data, (void *) buffer, len * sizeof(char));
-            str->data[len] = '\0';
-         } else {
-            free(str);
-            str = NULL;
-         }
-      }
+   if (buffer == NULL || len == 0) {
+      return cfl_str_newConstLen(NULL, 0);
+   }
+   str = (CFL_STRP) CFL_MEM_ALLOC(sizeof(CFL_STR));
+   if (str == NULL) {
+      return NULL;
+   }
+   str->hashValue = 0;
+   str->isAllocated = CFL_TRUE;
+   str->length = (CFL_UINT32) len;
+   str->dataSize = (CFL_UINT32) len + 1;
+   str->isVarData = CFL_TRUE;
+   str->data = (char *) CFL_MEM_ALLOC(sizeof(char) * str->dataSize);
+   if (str->data != NULL) {
+      memcpy(str->data, (void *) buffer, len * sizeof(char));
+      str->data[len] = '\0';
    } else {
-      str = cfl_str_new(DEFAULT_CAPACITY);
+      CFL_MEM_FREE(str);
+      str = NULL;
    }
    return str;
 }
@@ -161,20 +194,21 @@ CFL_STRP cfl_str_newBuffer(const char *buffer) {
 }
 
 CFL_STRP cfl_str_newConstLen(const char *buffer, CFL_UINT32 len) {
-   CFL_STRP str = (CFL_STRP) malloc(sizeof(CFL_STR));
-   if (str != NULL) {
-      str->hashValue = 0;
-      if (buffer != NULL && len > 0) {
-         str->data = (char *) buffer;
-         str->capacity = (CFL_UINT32) len + 1;
-         str->length = (CFL_UINT32) len;
-      } else {
-         str->data = "";
-         str->capacity = 0;
-         str->length = 0;
-      }
-      str->isVarData = CFL_FALSE;
-      str->isAllocated = CFL_TRUE;
+   CFL_STRP str = (CFL_STRP) CFL_MEM_ALLOC(sizeof(CFL_STR));
+   if (str == NULL) {
+      return NULL;
+   }
+   str->isAllocated = CFL_TRUE;
+   str->hashValue = 0;
+   str->isVarData = CFL_FALSE;
+   if (buffer != NULL && len > 0) {
+      str->length = (CFL_UINT32) len;
+      str->dataSize = (CFL_UINT32) len + 1;
+      str->data = (char *) buffer;
+   } else {
+      str->length = 0;
+      str->dataSize = 0;
+      str->data = "";
    }
    return str;
 }
@@ -185,37 +219,43 @@ CFL_STRP cfl_str_newConst(const char *buffer) {
 
 CFL_STRP cfl_str_newStr(CFL_STRP strSet) {
    CFL_STRP str;
-   if (strSet != NULL && strSet->length > 0) {
-      str = (CFL_STRP) malloc(sizeof(CFL_STR));
-      if (str != NULL) {
-         str->capacity = strSet->length + 1;
-         str->length = strSet->length;
-         str->hashValue = 0;
-         str->data = (char *) malloc(sizeof(char) * str->capacity);
-         str->isVarData = CFL_TRUE;
-         str->isAllocated = CFL_TRUE;
-         if (str->data != NULL) {
-            memcpy(str->data, (void *) strSet->data, strSet->length * sizeof(char));
-            str->data[str->length] = '\0';
-         } else {
-            free(str);
-            str = NULL;
-         }
+   if (strSet == NULL || strSet->length == 0) {
+      return cfl_str_newConstLen(NULL, 0);
+   }
+   str = (CFL_STRP) CFL_MEM_ALLOC(sizeof(CFL_STR));
+   if (str == NULL) {
+      return NULL;
+   }
+   str->isAllocated = CFL_TRUE;
+   str->length = strSet->length;
+   str->isVarData = strSet->isVarData;
+   str->hashValue = strSet->hashValue;
+   if (strSet->isVarData) {
+      str->dataSize = strSet->length + 1;
+      str->data = (char *) CFL_MEM_ALLOC(sizeof(char) * str->dataSize);
+      if (str->data != NULL) {
+         memcpy(str->data, (void *) strSet->data, strSet->length * sizeof(char));
+         str->data[str->length] = '\0';
+      } else {
+         CFL_MEM_FREE(str);
+         str = NULL;
       }
    } else {
-      str = cfl_str_new(DEFAULT_CAPACITY);
+      str->dataSize = strSet->dataSize;
+      str->data = strSet->data;
    }
    return str;
 }
 
 void cfl_str_free(CFL_STRP str) {
-   if (str != NULL) {
-      if (str->isVarData && str->data != NULL) {
-         free(str->data);
-      }
-      if (str->isAllocated) {
-         free(str);
-      }
+   if (str == NULL) {
+      return;
+   }
+   if (str->isVarData && str->data != NULL) {
+      CFL_MEM_FREE(str->data);
+   }
+   if (str->isAllocated) {
+      CFL_MEM_FREE(str);
    }
 }
 
@@ -228,7 +268,8 @@ CFL_STRP cfl_str_appendChar(CFL_STRP str, char c) {
       bSuccess = ensureCapacityForLen(str, str->length + 1);
    }
    if (bSuccess) {
-      str->data[(str->length)++] = c;
+      str->data[str->length] = c;
+      str->length++;
       str->data[str->length] = '\0';
       str->hashValue = 0;
    }
@@ -409,7 +450,7 @@ void cfl_str_clear(CFL_STRP str) {
       str->data[0] = '\0';
    } else {
       str->data = "";
-      str->capacity = 0;
+      str->dataSize = 0;
    }
    str->hashValue = 0;
    str->length = 0;
@@ -450,7 +491,7 @@ CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 buffer
       return cfl_str_newConstLen(buffer, bufferLen);
    } else {
       if (str->isVarData) {
-         free(str->data);
+         CFL_MEM_FREE(str->data);
       }
       if (buffer != NULL && bufferLen > 0) {
          str->data = (char *) buffer;
@@ -459,7 +500,7 @@ CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 buffer
          str->data = "";
          str->length = 0;
       }
-      str->capacity = 0;
+      str->dataSize = 0;
       str->hashValue = 0;
       str->isVarData = CFL_FALSE;
       return str;
@@ -905,14 +946,14 @@ CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT
 
 CFL_STRP cfl_str_move(CFL_STRP dest, CFL_STRP source) {
    if (dest->isVarData && dest->data != NULL) {
-      free(dest->data);
+      CFL_MEM_FREE(dest->data);
    }
    dest->data = source->data;
    dest->length = source->length;
-   dest->capacity = source->capacity;
+   dest->dataSize = source->dataSize;
    dest->hashValue = source->hashValue;
    dest->isVarData = source->isVarData;
-   source->capacity = 0;
+   source->dataSize = 0;
    source->length = 0;
    source->hashValue = 0;
    source->isVarData = CFL_FALSE;

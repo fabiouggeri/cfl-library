@@ -22,6 +22,7 @@
 #define _CFL_BUFFER_H_
 
 #include "cfl_types.h"
+#include "cfl_str.h"
 #include "cfl_date.h"
 
 #ifdef __cplusplus
@@ -31,14 +32,14 @@ extern "C" {
 #define CFL_BIG_ENDIAN    0x00
 #define CFL_LITTLE_ENDIAN 0x01
 
-struct _CFL_BUFFER {
+typedef struct _CFL_BUFFER {
 	CFL_UINT8  *data;
 	CFL_UINT32 length;
 	CFL_UINT32 position;
 	CFL_UINT32 capacity;
 	CFL_BOOL   allocated;
    CFL_UINT8  endian;
-};
+} CFL_BUFFER, *CFL_BUFFERP;
 
 extern void cfl_buffer_init(CFL_BUFFERP buffer);
 extern CFL_BUFFERP cfl_buffer_new(void);

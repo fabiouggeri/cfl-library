@@ -22,6 +22,7 @@
 #define _CFL_BTREE_H_
 
 #include "cfl_types.h"
+#include "cfl_iterator.h"
 
 #define LEFT_CHILD_NODE 0
 #define RIGHT_CHILD_NODE 1
@@ -34,6 +35,18 @@
 #define GET_CHILD(t,i)   ((CFL_BTREE_NODEP)t->pPointers[i*2])
 #define SET_KEY(t,i,p)   (t->pPointers[(i*2)+1]=(void *)p)
 #define SET_CHILD(t,i,p) (t->pPointers[i*2]=(void *)p)
+
+struct _CFL_BTREE;
+typedef struct _CFL_BTREE CFL_BTREE;
+typedef CFL_BTREE         *CFL_BTREEP;
+
+struct _CFL_BTREE_NODE;
+typedef struct _CFL_BTREE_NODE CFL_BTREE_NODE; 
+typedef CFL_BTREE_NODE         *CFL_BTREE_NODEP; 
+
+typedef CFL_INT16 (* BTREE_CMP_VALUE_FUNC)(void *pValue1, void *pValue2, CFL_BOOL bExact);
+typedef void (* BTREE_FREE_KEY_FUNC)(void *pValue);
+typedef CFL_BOOL (* BTREE_WALK_CALLBACK)(void *pValue);
 
 struct _CFL_BTREE_NODE {
   CFL_BTREEP  pTree;

@@ -26,7 +26,7 @@
 #include "cfl_list.h"
 
 #define DOUBLE_OP(fun_name, oper) static CFL_SQLP fun_name(CFL_SQLP left, CFL_SQLP right) { \
-                                     CFL_SQL_DOUBLE_OPP newOp = (CFL_SQL_DOUBLE_OPP) malloc(sizeof(CFL_SQL_DOUBLE_OP)); \
+                                     CFL_SQL_DOUBLE_OPP newOp = (CFL_SQL_DOUBLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_DOUBLE_OP)); \
                                      newOp->sql.to_string = double_op_to_string; \
                                      newOp->sql.free_sql = double_op_free; \
                                      newOp->left = left; \
@@ -36,7 +36,7 @@
                                   }
 
 #define POS_OP(fun_name, oper) static CFL_SQLP fun_name(CFL_SQLP expr) { \
-                                  CFL_SQL_SINGLE_OPP newOp = (CFL_SQL_SINGLE_OPP) malloc(sizeof(CFL_SQL_SINGLE_OP)); \
+                                  CFL_SQL_SINGLE_OPP newOp = (CFL_SQL_SINGLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_SINGLE_OP)); \
                                   newOp->sql.to_string = pos_op_to_string; \
                                   newOp->sql.free_sql = single_op_free; \
                                   newOp->expr = expr; \
@@ -45,7 +45,7 @@
                                }
 
 #define CONST_CUSTOM_SQL(fun_name, str) static CFL_SQLP fun_name(void) { \
-                                           CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM)); \
+                                           CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM)); \
                                            stmt->sql.to_string = custom_to_string; \
                                            stmt->sql.free_sql = custom_free; \
                                            stmt->value = cfl_str_newConstLen(str, sizeof(str) - 1); \
@@ -53,7 +53,7 @@
                                         }
 
 #define CUSTOM_SQL(fun_name) static CFL_SQLP fun_name(CFL_STRP str) { \
-                                CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM)); \
+                                CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM)); \
                                 stmt->sql.to_string = custom_to_string; \
                                 stmt->sql.free_sql = custom_free; \
                                 stmt->value = cfl_str_newStr(str); \
@@ -61,7 +61,7 @@
                              }
 
 #define C_CUSTOM_SQL(fun_name) static CFL_SQLP fun_name(char *str) { \
-                                  CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM)); \
+                                  CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM)); \
                                   stmt->sql.to_string = custom_to_string; \
                                   stmt->sql.free_sql = custom_free; \
                                   stmt->value = cfl_str_newBuffer(str); \
@@ -69,14 +69,14 @@
                                }
 
 #define CUSTOM_SQL2(fun_name, str_fun) static CFL_SQLP fun_name(CFL_STRP str) { \
-                                          CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM)); \
+                                          CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM)); \
                                           stmt->sql.to_string = str_fun; \
                                           stmt->sql.free_sql = custom_free; \
                                           stmt->value = cfl_str_newStr(str); \
                                           return (CFL_SQLP) stmt; \
                                        }
 #define C_CUSTOM_SQL2(fun_name, str_fun) static CFL_SQLP fun_name(char *str) { \
-                                            CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM)); \
+                                            CFL_SQL_CUSTOMP stmt = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM)); \
                                             stmt->sql.to_string = str_fun; \
                                             stmt->sql.free_sql = custom_free; \
                                             stmt->value = cfl_str_newBuffer(str); \
@@ -215,7 +215,7 @@ static void query_free(CFL_SQLP sql) {
    if (query->orders != NULL) {
       list_free(query->orders);
    }
-   free(query);
+   CFL_MEM_FREE(query);
 }
 
 static CFL_SQL_QUERYP query_hint(CFL_SQL_QUERYP query, CFL_STRP value) {
@@ -262,7 +262,7 @@ static CFL_SQL_QUERYP query_for_update(CFL_SQL_QUERYP query, CFL_UINT16 wait) {
 }
 
 static CFL_SQL_QUERYP query_new(void) {
-   CFL_SQL_QUERYP query = (CFL_SQL_QUERYP) malloc(sizeof(CFL_SQL_QUERY));
+   CFL_SQL_QUERYP query = (CFL_SQL_QUERYP) CFL_MEM_ALLOC(sizeof(CFL_SQL_QUERY));
    query->sql.to_string = query_to_string;
    query->sql.free_sql = query_free;
    query->hintValue = NULL;
@@ -321,7 +321,7 @@ static void insert_free(CFL_SQLP sql) {
    if (ins->returningParams != NULL) {
       list_free(ins->returningParams);
    }
-   free(ins);
+   CFL_MEM_FREE(ins);
 }
 
 static CFL_SQL_INSERTP insert_into(CFL_SQL_INSERTP ins, CFL_SQLP table) {
@@ -361,7 +361,7 @@ static CFL_SQL_INSERTP insert_returning(CFL_SQL_INSERTP ins, CFL_SQLP col, CFL_S
 }
 
 static CFL_SQL_INSERTP insert_new(void) {
-   CFL_SQL_INSERTP ins = (CFL_SQL_INSERTP) malloc(sizeof(CFL_SQL_INSERT));
+   CFL_SQL_INSERTP ins = (CFL_SQL_INSERTP) CFL_MEM_ALLOC(sizeof(CFL_SQL_INSERT));
    ins->sql.to_string = insert_to_string;
    ins->sql.free_sql = insert_free;
    ins->tableName = NULL;
@@ -419,7 +419,7 @@ static void update_free(CFL_SQLP sql) {
    if (upd->returningParams != NULL) {
       list_free(upd->returningParams);
    }
-   free(upd);
+   CFL_MEM_FREE(upd);
 }
 
 static CFL_SQL_UPDATEP update_table(CFL_SQL_UPDATEP upd, CFL_SQLP table) {
@@ -463,7 +463,7 @@ static CFL_SQL_UPDATEP update_returning(CFL_SQL_UPDATEP upd, CFL_SQLP col, CFL_S
 }
 
 static CFL_SQL_UPDATEP update_new(void) {
-   CFL_SQL_UPDATEP upd = (CFL_SQL_UPDATEP) malloc(sizeof(CFL_SQL_UPDATE));
+   CFL_SQL_UPDATEP upd = (CFL_SQL_UPDATEP) CFL_MEM_ALLOC(sizeof(CFL_SQL_UPDATE));
    upd->sql.to_string = update_to_string;
    upd->sql.free_sql = update_free;
    upd->tableName = NULL;
@@ -512,7 +512,7 @@ static void delete_free(CFL_SQLP sql) {
    if (del->returningParams != NULL) {
       list_free(del->returningParams);
    }
-   free(del);
+   CFL_MEM_FREE(del);
 }
 
 static CFL_SQL_DELETEP delete_from(CFL_SQL_DELETEP del, CFL_SQLP table) {
@@ -544,7 +544,7 @@ static CFL_SQL_DELETEP delete_returning(CFL_SQL_DELETEP del, CFL_SQLP col, CFL_S
 }
 
 static CFL_SQL_DELETEP delete_new(void) {
-   CFL_SQL_DELETEP del = (CFL_SQL_DELETEP) malloc(sizeof(CFL_SQL_DELETE));
+   CFL_SQL_DELETEP del = (CFL_SQL_DELETEP) CFL_MEM_ALLOC(sizeof(CFL_SQL_DELETE));
    del->sql.to_string = delete_to_string;
    del->sql.free_sql = delete_free;
    del->tableName = NULL;
@@ -573,11 +573,11 @@ static void custom_free(CFL_SQLP sql) {
    if (((CFL_SQL_CUSTOMP) sql)->value != NULL) {
       cfl_str_free(((CFL_SQL_CUSTOMP) sql)->value);
    }   
-   free(sql);
+   CFL_MEM_FREE(sql);
 }
 
 static CFL_SQLP quali_id_new(CFL_STRP first, ...) {
-   CFL_SQL_CUSTOMP id = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM));
+   CFL_SQL_CUSTOMP id = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM));
    CFL_STRP item;
    va_list args;
    
@@ -596,7 +596,7 @@ static CFL_SQLP quali_id_new(CFL_STRP first, ...) {
 }
 
 static CFL_SQLP c_quali_id_new(char *first, ...) {
-   CFL_SQL_CUSTOMP id = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM));
+   CFL_SQL_CUSTOMP id = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM));
    char *item;
    va_list args;
    
@@ -651,7 +651,7 @@ static void double_op_free(CFL_SQLP sql) {
    if (((CFL_SQL_DOUBLE_OPP) sql)->right != NULL) {
       ((CFL_SQL_DOUBLE_OPP) sql)->right->free_sql(((CFL_SQL_DOUBLE_OPP) sql)->right);
    }   
-   free(sql);
+   CFL_MEM_FREE(sql);
 }
 
 DOUBLE_OP(equal_new, "=")
@@ -673,7 +673,7 @@ DOUBLE_OP(mult_new, "*")
 static CFL_SQLP and_new(CFL_SQLP left, CFL_SQLP right) {
    if (left != NULL) {
       if (right != NULL) {
-         CFL_SQL_DOUBLE_OPP newOp = (CFL_SQL_DOUBLE_OPP) malloc(sizeof(CFL_SQL_DOUBLE_OP));
+         CFL_SQL_DOUBLE_OPP newOp = (CFL_SQL_DOUBLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_DOUBLE_OP));
          newOp->sql.to_string = double_op_to_string;
          newOp->sql.free_sql = double_op_free;
          newOp->left = left;
@@ -691,7 +691,7 @@ static CFL_SQLP and_new(CFL_SQLP left, CFL_SQLP right) {
 static CFL_SQLP or_new(CFL_SQLP left, CFL_SQLP right) {
    if (left != NULL) {
       if (right != NULL) {
-         CFL_SQL_DOUBLE_OPP newOp = (CFL_SQL_DOUBLE_OPP) malloc(sizeof(CFL_SQL_DOUBLE_OP));
+         CFL_SQL_DOUBLE_OPP newOp = (CFL_SQL_DOUBLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_DOUBLE_OP));
          newOp->sql.to_string = double_op_to_string;
          newOp->sql.free_sql = double_op_free;
          newOp->left = left;
@@ -723,14 +723,14 @@ static void single_op_free(CFL_SQLP sql) {
    if (((CFL_SQL_SINGLE_OPP) sql)->expr != NULL) {
       ((CFL_SQL_SINGLE_OPP) sql)->expr->free_sql(((CFL_SQL_SINGLE_OPP) sql)->expr);
    }   
-   free(sql);
+   CFL_MEM_FREE(sql);
 }
 
 POS_OP(is_null_new, "is null")
 POS_OP(is_not_null_new, "is not null")
 
 static CFL_SQLP expr_alias_new(CFL_SQLP expr, CFL_STRP alias) {
-   CFL_SQL_SINGLE_OPP newOp = (CFL_SQL_SINGLE_OPP) malloc(sizeof(CFL_SQL_SINGLE_OPP));
+   CFL_SQL_SINGLE_OPP newOp = (CFL_SQL_SINGLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_SINGLE_OPP));
    newOp->sql.to_string = pos_op_to_string;
    newOp->sql.free_sql = single_op_free;
    newOp->expr = expr;
@@ -745,7 +745,7 @@ static void wrap_free(CFL_SQLP sql) {
    if (((CFL_SQL_WRAPP) sql)->expr != NULL) {
       ((CFL_SQL_WRAPP) sql)->expr->free_sql(((CFL_SQL_WRAPP) sql)->expr);
    }   
-   free(sql);
+   CFL_MEM_FREE(sql);
 }
 
 static void par_to_string(CFL_SQLP sql, CFL_STRP str) {
@@ -765,7 +765,7 @@ static void asc_to_string(CFL_SQLP sql, CFL_STRP str) {
 }
 
 static CFL_SQLP parentheses_new(CFL_SQLP expr) {
-   CFL_SQL_WRAPP newOp = (CFL_SQL_WRAPP) malloc(sizeof(CFL_SQL_WRAP));
+   CFL_SQL_WRAPP newOp = (CFL_SQL_WRAPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_WRAP));
    newOp->sql.to_string = par_to_string;
    newOp->sql.free_sql = wrap_free;
    newOp->expr = expr;
@@ -773,7 +773,7 @@ static CFL_SQLP parentheses_new(CFL_SQLP expr) {
 }
 
 static CFL_SQLP desc_new(CFL_SQLP expr) {
-   CFL_SQL_WRAPP newOp = (CFL_SQL_WRAPP) malloc(sizeof(CFL_SQL_WRAP));
+   CFL_SQL_WRAPP newOp = (CFL_SQL_WRAPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_WRAP));
    newOp->sql.to_string = desc_to_string;
    newOp->sql.free_sql = wrap_free;
    newOp->expr = expr;
@@ -781,7 +781,7 @@ static CFL_SQLP desc_new(CFL_SQLP expr) {
 }
 
 static CFL_SQLP asc_new(CFL_SQLP expr) {
-   CFL_SQL_WRAPP newOp = (CFL_SQL_WRAPP) malloc(sizeof(CFL_SQL_WRAP));
+   CFL_SQL_WRAPP newOp = (CFL_SQL_WRAPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_WRAP));
    newOp->sql.to_string = asc_to_string;
    newOp->sql.free_sql = wrap_free;
    newOp->expr = expr;
@@ -807,11 +807,11 @@ static void fun_free(CFL_SQLP sql) {
    if (((CFL_SQL_FUNP) sql)->args != NULL) {
       list_free(((CFL_SQL_FUNP) sql)->args);
    }
-   free(sql);
+   CFL_MEM_FREE(sql);
 }
 
 static CFL_SQLP fun_new(CFL_STRP funName, ...) {
-   CFL_SQL_FUNP fun = (CFL_SQL_FUNP) malloc(sizeof(CFL_SQL_FUN));
+   CFL_SQL_FUNP fun = (CFL_SQL_FUNP) CFL_MEM_ALLOC(sizeof(CFL_SQL_FUN));
    CFL_SQLP item;
    va_list args;
    
@@ -834,7 +834,7 @@ static CFL_SQLP fun_new(CFL_STRP funName, ...) {
 }
 
 static CFL_SQLP c_fun_new(char *funName, ...) {
-   CFL_SQL_FUNP fun = (CFL_SQL_FUNP) malloc(sizeof(CFL_SQL_FUN));
+   CFL_SQL_FUNP fun = (CFL_SQL_FUNP) CFL_MEM_ALLOC(sizeof(CFL_SQL_FUN));
    CFL_SQLP item;
    va_list args;
    
@@ -857,7 +857,7 @@ static CFL_SQLP c_fun_new(char *funName, ...) {
 }
 
 static CFL_SQLP format_new(const char *format, ...) {
-   CFL_SQL_CUSTOMP custom = (CFL_SQL_CUSTOMP) malloc(sizeof(CFL_SQL_CUSTOM));
+   CFL_SQL_CUSTOMP custom = (CFL_SQL_CUSTOMP) CFL_MEM_ALLOC(sizeof(CFL_SQL_CUSTOM));
    va_list args;
    custom->sql.to_string = custom_to_string;
    custom->sql.free_sql = custom_free;
@@ -899,7 +899,7 @@ static void block_free(CFL_SQLP sql) {
    if (block->statements != NULL) {
       list_free(block->statements);
    }
-   free(block);
+   CFL_MEM_FREE(block);
 }
 
 static void var_to_string(CFL_SQLP sql, CFL_STRP str) {
@@ -915,7 +915,7 @@ static void var_to_string(CFL_SQLP sql, CFL_STRP str) {
 }
 
 static CFL_SQLP var_new(CFL_STRP varName, CFL_SQLP varType, CFL_SQLP varValue) {
-   CFL_SQL_DOUBLE_OPP varSql = (CFL_SQL_DOUBLE_OPP) malloc(sizeof(CFL_SQL_DOUBLE_OP));
+   CFL_SQL_DOUBLE_OPP varSql = (CFL_SQL_DOUBLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_DOUBLE_OP));
    varSql->sql.to_string = var_to_string;
    varSql->sql.free_sql = double_op_free;
    varSql->op = cfl_str_newStr(varName);
@@ -950,7 +950,7 @@ static CFL_SQL_BLOCKP block_statement(CFL_SQL_BLOCKP block, CFL_SQLP stmt) {
 }
 
 static CFL_SQL_BLOCKP block_new(void) {
-   CFL_SQL_BLOCKP block = (CFL_SQL_BLOCKP) malloc(sizeof(CFL_SQL_BLOCK));
+   CFL_SQL_BLOCKP block = (CFL_SQL_BLOCKP) CFL_MEM_ALLOC(sizeof(CFL_SQL_BLOCK));
    block->sql.to_string = block_to_string;
    block->sql.free_sql = block_free;
    block->vars = NULL;

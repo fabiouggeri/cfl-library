@@ -114,7 +114,7 @@ static void set_log_writer(CFL_LOGGER_NODEP node, CFL_LOG_WRITERP logWriter) {
          if (node->writer->close != NULL) {
             node->writer->close(node->writer->data);
          }
-         free(node->writer);
+         CFL_MEM_FREE(node->writer);
       }
    }
    if (logWriter != NULL) {
@@ -158,7 +158,7 @@ static void node_setLevel(CFL_LOGGER_NODEP node, CFL_LOG_LEVEL level) {
 }
 
 static CFL_LOG_WRITERP newLoggerWriter(void *data, CFL_LOG_WRITE write, CFL_LOG_CLOSE close) {
-   CFL_LOG_WRITERP logWriter = (CFL_LOG_WRITERP) malloc(sizeof(CFL_LOG_WRITER));
+   CFL_LOG_WRITERP logWriter = (CFL_LOG_WRITERP) CFL_MEM_ALLOC(sizeof(CFL_LOG_WRITER));
    memset(logWriter, 0, sizeof(CFL_LOG_WRITER));
    logWriter->data = data;
    logWriter->write = write;
@@ -172,7 +172,7 @@ static void initRootNode(void) {
    if (s_rootNode.logger != NULL) {
       return;
    }
-   logWriter = (CFL_LOG_WRITERP) malloc(sizeof(CFL_LOG_WRITER));
+   logWriter = (CFL_LOG_WRITERP) CFL_MEM_ALLOC(sizeof(CFL_LOG_WRITER));
    memset(logWriter, 0, sizeof(CFL_LOG_WRITER));
    logWriter->data = stderr;
    logWriter->write = default_log_writer;
@@ -187,7 +187,7 @@ static void initRootNode(void) {
 }
 
 static CFL_LOGGER_NODEP addNode(CFL_LOGGER_NODEP parent, CFL_LOGGERP logger, CFL_STRP id) {
-   CFL_LOGGER_NODEP node = (CFL_LOGGER_NODEP) malloc(sizeof(CFL_LOGGER_NODE));
+   CFL_LOGGER_NODEP node = (CFL_LOGGER_NODEP) CFL_MEM_ALLOC(sizeof(CFL_LOGGER_NODE));
    memset(node, 0, sizeof(CFL_LOGGER_NODE));
    cfl_list_add(&parent->children, node);
    cfl_str_initValue(&node->id, cfl_str_getPtr(id));
@@ -245,7 +245,7 @@ static CFL_LOGGER_NODEP findNodePath(CFL_LOGGER_NODEP rootNode, CFL_STRP searchP
          }
       }
       if (nodeFound == NULL && createMissing) {
-         CFL_LOGGERP logger = malloc(sizeof(struct _CFL_LOGGER));
+         CFL_LOGGERP logger = CFL_MEM_ALLOC(sizeof(struct _CFL_LOGGER));
          logger->id = s_missingId;
          logger->parentId = s_missingId;
          nodeFound = addNode(parent, logger, &nodeId);
@@ -370,7 +370,7 @@ void cfl_log_register(CFL_LOGGERP logger) {
          logger->level = node->logger->level;
          logger->node = node;
          if (node->logger->id == s_missingId) {
-            free(node->logger);
+            CFL_MEM_FREE(node->logger);
          }
          node->logger = logger;
       }
@@ -534,6 +534,15 @@ void cfl_log_setFormatter(CFL_LOGGERP logger, CFL_LOG_FORMATTER formatter) {
    node = logger_node(logger);
    node_setFormatter(node, formatter);
    UNLOCK_INIT_LOGGER(s_locked);
+}
+
+void __cfl_log_debug(char *filePathname, char *message, ...) {
+   va_list args;
+   FILE *v = fopen(filePathname, "a"); 
+   va_start(args, message);
+   vfprintf(v, message, args); 
+   va_end(args);
+   fclose(v); 
 }
 
 DEFINE_LOGGER_FUN(error, CFL_LOG_LEVEL_ERROR)

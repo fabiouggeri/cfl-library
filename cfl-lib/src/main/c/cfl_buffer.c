@@ -57,7 +57,7 @@ const int i = 1;
 
 static CFL_BOOL ensureCapacity(CFL_BUFFERP buffer, CFL_UINT32 minCapacity) {
    if (minCapacity > buffer->capacity) {
-      buffer->data = (CFL_UINT8 *) realloc(buffer->data, minCapacity * sizeof(CFL_UINT8));
+      buffer->data = (CFL_UINT8 *) CFL_MEM_REALLOC(buffer->data, minCapacity * sizeof(CFL_UINT8));
       if (buffer->data != NULL) {
          buffer->capacity = minCapacity;
       } else {
@@ -73,7 +73,7 @@ static void bufferInit(CFL_BUFFERP buffer, CFL_UINT32 initialCapacity) {
    buffer->length = 0;
    buffer->position = 0;
    buffer->endian = ENDIANNESS(initialCapacity);
-   buffer->data = (CFL_UINT8 *) malloc(buffer->capacity * sizeof(CFL_UINT8));
+   buffer->data = (CFL_UINT8 *) CFL_MEM_ALLOC(buffer->capacity * sizeof(CFL_UINT8));
 }
 
 void cfl_buffer_init(CFL_BUFFERP buffer) {
@@ -81,7 +81,7 @@ void cfl_buffer_init(CFL_BUFFERP buffer) {
 }
 
 CFL_BUFFERP cfl_buffer_new(void) {
-   CFL_BUFFERP buffer = (CFL_BUFFERP) malloc(sizeof(CFL_BUFFER));
+   CFL_BUFFERP buffer = (CFL_BUFFERP) CFL_MEM_ALLOC(sizeof(CFL_BUFFER));
    if (buffer != NULL) {
       bufferInit(buffer, BUFFER_INI_SIZE);
       buffer->allocated = CFL_TRUE;
@@ -90,7 +90,7 @@ CFL_BUFFERP cfl_buffer_new(void) {
 }
 
 CFL_BUFFERP cfl_buffer_newCapacity(CFL_UINT32 initialCapacity) {
-   CFL_BUFFERP buffer = (CFL_BUFFERP) malloc(sizeof(CFL_BUFFER));
+   CFL_BUFFERP buffer = (CFL_BUFFERP) CFL_MEM_ALLOC(sizeof(CFL_BUFFER));
    if (buffer != NULL) {
       bufferInit(buffer, initialCapacity);
       buffer->allocated = CFL_TRUE;
@@ -99,14 +99,14 @@ CFL_BUFFERP cfl_buffer_newCapacity(CFL_UINT32 initialCapacity) {
 }
 
 CFL_BUFFERP cfl_buffer_clone(CFL_BUFFERP other) {
-   CFL_BUFFERP buffer = (CFL_BUFFERP) malloc(sizeof(CFL_BUFFER));
+   CFL_BUFFERP buffer = (CFL_BUFFERP) CFL_MEM_ALLOC(sizeof(CFL_BUFFER));
    if (buffer != NULL) {
       buffer->allocated = CFL_TRUE;
       buffer->capacity = other->length > 0 ? other->length : other->capacity;
       buffer->length = other->length;
       buffer->position = other->position;
       buffer->endian = other->endian;
-      buffer->data = (CFL_UINT8 *) malloc(buffer->capacity * sizeof(CFL_UINT8));
+      buffer->data = (CFL_UINT8 *) CFL_MEM_ALLOC(buffer->capacity * sizeof(CFL_UINT8));
       if (other->length > 0) {
          memcpy(buffer->data, other->data, other->length);
       }
@@ -117,10 +117,10 @@ CFL_BUFFERP cfl_buffer_clone(CFL_BUFFERP other) {
 void cfl_buffer_free(CFL_BUFFERP buffer) {
    if (buffer != NULL) {
       if (buffer->data) {
-         free(buffer->data);
+         CFL_MEM_FREE(buffer->data);
       }
       if (buffer->allocated) {
-         free(buffer);
+         CFL_MEM_FREE(buffer);
       }
    }
 }
@@ -219,7 +219,7 @@ CFL_BOOL cfl_buffer_setCapacity(CFL_BUFFERP buffer, CFL_UINT32 newCapacity) {
       if (newCapacity > buffer->capacity) {
          return ensureCapacity(buffer, newCapacity);
       } else {
-         buffer->data = realloc(buffer->data, newCapacity);
+         buffer->data = CFL_MEM_REALLOC(buffer->data, newCapacity);
          if (buffer->data != NULL) {
             buffer->capacity = newCapacity;
             if (buffer->length > newCapacity) {
@@ -466,7 +466,7 @@ char * cfl_buffer_getCharArray(CFL_BUFFERP buffer) {
    CFL_UINT32 len;
 
    len = GET_BUFFER(CFL_UINT32, buffer);
-   str = (char *) malloc((len + 1) * sizeof(char));
+   str = (char *) CFL_MEM_ALLOC((len + 1) * sizeof(char));
    if (len > 0) {
       memcpy((void *)str, (void *)&buffer->data[buffer->position], len * sizeof(char));
       buffer->position += len;
@@ -563,7 +563,7 @@ CFL_BOOL cfl_buffer_putDatePtr(CFL_BUFFERP buffer, CFL_DATEP value) {
 }
 
 CFL_UINT8 *cfl_buffer_get(CFL_BUFFERP buffer, CFL_UINT32 size) {
-   void *res = malloc(size);
+   void *res = CFL_MEM_ALLOC(size);
 
    memcpy(res, (CFL_UINT8 *)&buffer->data[buffer->position], size);
    buffer->position += size;
@@ -668,7 +668,7 @@ CFL_BOOL cfl_buffer_moveTo(CFL_BUFFERP fromBuffer, CFL_BUFFERP toBuffer) {
       return CFL_FALSE;
    }
    if (toBuffer->data != NULL) {
-      free(toBuffer->data);
+      CFL_MEM_FREE(toBuffer->data);
    }
 	toBuffer->data      = fromBuffer->data;
 	toBuffer->length    = fromBuffer->length;
