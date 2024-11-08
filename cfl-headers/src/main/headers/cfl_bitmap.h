@@ -37,11 +37,11 @@ extern CFL_BITMAPP cfl_bitmap_new(CFL_UINT16 numBits);
 extern void cfl_bitmap_free(CFL_BITMAPP pBitMap);
 extern void cfl_bitmap_set(CFL_BITMAPP pBitMap, CFL_UINT16 uiPos) ;
 extern void cfl_bitmap_reset(CFL_BITMAPP pBitMap, CFL_UINT16 uiPos);
-extern CFL_UINT8 cfl_bitmap_get(CFL_BITMAPP bitMap, CFL_UINT16 uiPos);
+extern CFL_UINT8 cfl_bitmap_get(const CFL_BITMAPP bitMap, CFL_UINT16 uiPos);
 extern void cfl_bitmap_clear(CFL_BITMAPP pBitMap);
 extern CFL_BOOL cfl_bitmap_equals(CFL_BITMAPP pBitMap1, CFL_BITMAPP pBitMap2);
 extern CFL_BOOL cfl_bitmap_isSubSet(CFL_BITMAPP pBitMap1, CFL_BITMAPP pBitMap2);
-extern CFL_BITMAPP cfl_bitmap_clone(CFL_BITMAPP pBitMap);
+extern CFL_BITMAPP cfl_bitmap_clone(const CFL_BITMAPP pBitMap);
 
 #ifdef __cplusplus
 }

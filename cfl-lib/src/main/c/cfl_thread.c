@@ -368,7 +368,7 @@ void cfl_thread_signalError(CFL_THREADP thread) {
    thread->status = CFL_THREAD_ERROR;
 }
 
-CFL_UINT8 cfl_thread_status(CFL_THREADP thread) {
+CFL_UINT8 cfl_thread_status(const CFL_THREADP thread) {
    return thread->status;
 }
 CFL_BOOL cfl_thread_currentIsHandled(void) {
@@ -418,7 +418,7 @@ void *cfl_thread_varGet(CFL_THREAD_VARIABLEP threadVar) {
    return varData != NULL ? &varData->data[0] : NULL;
 }
 
-CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar, void *data) {
+CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar, const void *data) {
    CFL_THREAD_VAR_DATA *varData = thread_dataGet(threadVar);
    if (varData == NULL || varData == data) {
       return CFL_FALSE;

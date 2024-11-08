@@ -78,7 +78,7 @@ void cfl_list_add(CFL_LISTP list, void *item) {
 }
 
 void cfl_list_del(CFL_LISTP list, CFL_UINT32 ulIndex) {
-   if (ulIndex >= 0 && ulIndex < list->length) {
+   if (ulIndex < list->length) {
       CFL_UINT32 i;
       --(list->length);
       for (i = ulIndex; i < list->length; i++) {
@@ -88,7 +88,7 @@ void cfl_list_del(CFL_LISTP list, CFL_UINT32 ulIndex) {
    }
 }
 
-void cfl_list_delItem(CFL_LISTP list, void *item) {
+void cfl_list_delItem(CFL_LISTP list, const void *item) {
    CFL_UINT32 i;
    for (i = 0; i < list->length; i++) {
       if (list->items[i] == item) {
@@ -101,7 +101,7 @@ void cfl_list_delItem(CFL_LISTP list, void *item) {
 }
 
 void *cfl_list_remove(CFL_LISTP list, CFL_UINT32 ulIndex) {
-   if (ulIndex >= 0 && ulIndex < list->length) {
+   if (ulIndex < list->length) {
       CFL_UINT32 i;
       void *removed = list->items[ulIndex];
       --(list->length);
@@ -118,15 +118,15 @@ void *cfl_list_removeLast(CFL_LISTP list) {
    return cfl_list_remove(list, list->length - 1);
 }
 
-void *cfl_list_get(CFL_LISTP list, CFL_UINT32 ulIndex) {
-   if (ulIndex >= 0 && ulIndex < list->length) {
+void *cfl_list_get(const CFL_LISTP list, CFL_UINT32 ulIndex) {
+   if (ulIndex < list->length) {
       return list->items[ ulIndex ];
    }
    return NULL;
 }
 
 void cfl_list_set(CFL_LISTP list, CFL_UINT32 ulIndex, void *item) {
-   if (ulIndex >= 0 && ulIndex < list->length) {
+   if (ulIndex < list->length) {
       list->items[ ulIndex ] = item;
    }
 }
@@ -137,7 +137,7 @@ void cfl_list_clear(CFL_LISTP list) {
    }
 }
 
-CFL_UINT32 cfl_list_length(CFL_LISTP list) {
+CFL_UINT32 cfl_list_length(const CFL_LISTP list) {
    if (list != NULL) {
       return list->length;
    }
@@ -157,7 +157,7 @@ void cfl_list_setLength(CFL_LISTP list, CFL_UINT32 newLen) {
    }
 }
 
-CFL_LISTP cfl_list_clone(CFL_LISTP other) {
+CFL_LISTP cfl_list_clone(const CFL_LISTP other) {
    CFL_LISTP clone = cfl_list_newLen(other->length);
    memcpy(clone->items, other->items, other->length * sizeof(void *));
    return clone;

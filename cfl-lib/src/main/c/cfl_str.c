@@ -31,7 +31,7 @@
 
 static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {
    if (! str->isVarData) {
-      char *curData = str->data;
+      const char *curData = str->data;
       str->dataSize = (newLen >> 1) + 1 + newLen;
       str->data = (char *) CFL_MEM_ALLOC(sizeof(char) * str->dataSize);
       if (str->data != NULL) {
@@ -146,20 +146,14 @@ CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
    str->length = 0;
    str->hashValue = 0;
    str->isAllocated = CFL_TRUE;
-   if (iniCapacity > 0) {
-      str->isVarData = CFL_TRUE;
-      str->dataSize = iniCapacity + 1;
-      str->data = (char *) CFL_MEM_ALLOC(str->dataSize * sizeof(char));
-      if (str->data != NULL) {
-         str->data[0] = '\0';
-      } else {
-         CFL_MEM_FREE(str);
-         str = NULL;
-      }
+   str->isVarData = CFL_TRUE;
+   str->dataSize = iniCapacity + 1;
+   str->data = (char *) CFL_MEM_ALLOC(str->dataSize * sizeof(char));
+   if (str->data != NULL) {
+      str->data[0] = '\0';
    } else {
-      str->isVarData = CFL_FALSE;
-      str->dataSize = 0;
-      str->data = "";
+      CFL_MEM_FREE(str);
+      str = NULL;
    }
    return str;
 }
@@ -277,7 +271,6 @@ CFL_STRP cfl_str_appendChar(CFL_STRP str, char c) {
 }
 
 CFL_STRP cfl_str_append(CFL_STRP str, const char * buffer, ...) {
-   CFL_UINT32 len;
    va_list va;
    char * strPtr = (char *) buffer;
 
@@ -286,7 +279,7 @@ CFL_STRP cfl_str_append(CFL_STRP str, const char * buffer, ...) {
    }
    va_start(va, buffer);
    while (strPtr) {
-      len = (CFL_UINT32) strlen(strPtr);
+      CFL_UINT32 len = (CFL_UINT32) strlen(strPtr);
       if (len > 0) {
          if (ensureCapacityForLen(str, str->length + len )) {
             memcpy(&str->data[str->length], (void *) strPtr, len * sizeof(char));
@@ -414,11 +407,11 @@ CFL_STRP cfl_str_setChar(CFL_STRP str, CFL_UINT32 index, char c) {
    return str;
 }
 
-char *cfl_str_getPtr(CFL_STRP str) {
+char *cfl_str_getPtr(const CFL_STRP str) {
    return str->data;
 }
 
-char *cfl_str_getPtrAt(CFL_STRP str, CFL_UINT32 index) {
+char *cfl_str_getPtrAt(const CFL_STRP str, CFL_UINT32 index) {
    if (index >= str->length) {
       return NULL;
    }
@@ -426,11 +419,11 @@ char *cfl_str_getPtrAt(CFL_STRP str, CFL_UINT32 index) {
 }
 
 /* #DEPRECATE. Use cfl_str_length */
-CFL_UINT32 cfl_str_getLength(CFL_STRP str) {
+CFL_UINT32 cfl_str_getLength(const CFL_STRP str) {
    return str->length;
 }
 
-CFL_UINT32 cfl_str_length(CFL_STRP str) {
+CFL_UINT32 cfl_str_length(const CFL_STRP str) {
    return str->length;
 }
 
@@ -456,7 +449,7 @@ void cfl_str_clear(CFL_STRP str) {
    str->length = 0;
 }
 
-CFL_STRP cfl_str_setStr(CFL_STRP str, CFL_STRP src) {
+CFL_STRP cfl_str_setStr(CFL_STRP str, const CFL_STRP src) {
    if (src != NULL && src->length > 0) {
       return cfl_str_setValueLen(str, src->data, src->length);
    } else {
@@ -469,9 +462,7 @@ CFL_STRP cfl_str_setValueLen(CFL_STRP str, const char *buffer, CFL_UINT32 buffer
       return cfl_str_newBufferLen(buffer, bufferLen);
    } else if (buffer != NULL && bufferLen > 0) {
       if (ensureCapacityForLen(str, bufferLen)) {
-         if (bufferLen > 0) {
-            memcpy(str->data, (void *) buffer, bufferLen * sizeof (char));
-         }
+         memcpy(str->data, (void *) buffer, bufferLen * sizeof (char));
          str->length = bufferLen;
          str->hashValue = 0;
          str->data[bufferLen] = '\0';
@@ -511,7 +502,7 @@ CFL_STRP cfl_str_setConst(CFL_STRP str, const char *buffer) {
    return cfl_str_setConstLen(str, buffer, buffer != NULL ? (CFL_UINT32) strlen(buffer) : 0);
 }
 
-CFL_INT16 cfl_str_compare(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExact) {
+CFL_INT16 cfl_str_compare(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact) {
    char *s1;
    char *s2;
    char c1;
@@ -539,7 +530,7 @@ CFL_INT16 cfl_str_compare(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExact) {
    return 0;
 }
 
-CFL_INT16 cfl_str_compareIgnoreCase(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExact) {
+CFL_INT16 cfl_str_compareIgnoreCase(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact) {
    char *s1;
    char *s2;
    int c1;
@@ -567,21 +558,21 @@ CFL_INT16 cfl_str_compareIgnoreCase(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExac
    return 0;
 }
 
-CFL_BOOL cfl_str_startsWith(CFL_STRP str, CFL_STRP strStart) {
+CFL_BOOL cfl_str_startsWith(const CFL_STRP str, const CFL_STRP strStart) {
    if (strStart->length > str->length) {
       return CFL_FALSE;
    }
    return cfl_str_bufferStartsWith(str, strStart->data);
 }
 
-CFL_BOOL cfl_str_startsWithIgnoreCase(CFL_STRP str, CFL_STRP strStart) {
+CFL_BOOL cfl_str_startsWithIgnoreCase(const CFL_STRP str, const CFL_STRP strStart) {
    if (strStart->length > str->length) {
       return CFL_FALSE;
    }
    return cfl_str_bufferStartsWithIgnoreCase(str, strStart->data);
 }
 
-CFL_BOOL cfl_str_bufferStartsWith(CFL_STRP str, const char *buffer) {
+CFL_BOOL cfl_str_bufferStartsWith(const CFL_STRP str, const char *buffer) {
    char *s1;
    char *s2;
    char c1;
@@ -608,7 +599,7 @@ CFL_BOOL cfl_str_bufferStartsWith(CFL_STRP str, const char *buffer) {
    return CFL_FALSE;
 }
 
-CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(CFL_STRP str, const char *buffer) {
+CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(const CFL_STRP str, const char *buffer) {
    char *s1;
    char *s2;
    int c1;
@@ -635,21 +626,21 @@ CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(CFL_STRP str, const char *buffer) {
    return CFL_FALSE;
 }
 
-CFL_BOOL cfl_str_equals(CFL_STRP str1, CFL_STRP str2) {
+CFL_BOOL cfl_str_equals(const CFL_STRP str1, const CFL_STRP str2) {
    if (str1->length != str2->length) {
       return CFL_FALSE;
    }
    return cfl_str_compare(str1, str2, CFL_TRUE) == 0;
 }
 
-CFL_BOOL cfl_str_equalsIgnoreCase(CFL_STRP str1, CFL_STRP str2) {
+CFL_BOOL cfl_str_equalsIgnoreCase(const CFL_STRP str1, const CFL_STRP str2) {
    if (str1->length != str2->length) {
       return CFL_FALSE;
    }
    return cfl_str_compareIgnoreCase(str1, str2, CFL_TRUE) == 0;
 }
 
-CFL_INT16 cfl_str_bufferCompare(CFL_STRP str, const char *buffer, CFL_BOOL bExact) {
+CFL_INT16 cfl_str_bufferCompare(const CFL_STRP str, const char *buffer, CFL_BOOL bExact) {
    char *s1;
    char *s2;
    char c1;
@@ -677,7 +668,7 @@ CFL_INT16 cfl_str_bufferCompare(CFL_STRP str, const char *buffer, CFL_BOOL bExac
    return 0;
 }
 
-CFL_INT16 cfl_str_bufferCompareIgnoreCase(CFL_STRP str, const char *buffer, CFL_BOOL bExact) {
+CFL_INT16 cfl_str_bufferCompareIgnoreCase(const CFL_STRP str, const char *buffer, CFL_BOOL bExact) {
    char *s1;
    char *s2;
    int c1;
@@ -705,11 +696,11 @@ CFL_INT16 cfl_str_bufferCompareIgnoreCase(CFL_STRP str, const char *buffer, CFL_
    return 0;
 }
 
-CFL_BOOL cfl_str_bufferEquals(CFL_STRP str1, const char *str2) {
+CFL_BOOL cfl_str_bufferEquals(const CFL_STRP str1, const char *str2) {
    return cfl_str_bufferCompare(str1, str2, CFL_TRUE) == 0;
 }
 
-CFL_BOOL cfl_str_bufferEqualsIgnoreCase(CFL_STRP str1, const char *str2) {
+CFL_BOOL cfl_str_bufferEqualsIgnoreCase(const CFL_STRP str1, const char *str2) {
    return cfl_str_bufferCompareIgnoreCase(str1, str2, CFL_TRUE) == 0;
 }
 
@@ -818,14 +809,14 @@ CFL_STRP cfl_str_trim(CFL_STRP str) {
    return str;
 }
 
-CFL_BOOL cfl_str_isEmpty(CFL_STRP str) {
+CFL_BOOL cfl_str_isEmpty(const CFL_STRP str) {
    if (str && str->length > 0) {
       return CFL_FALSE;
    }
    return CFL_TRUE;
 }
 
-CFL_BOOL cfl_str_isBlank(CFL_STRP str) {
+CFL_BOOL cfl_str_isBlank(const CFL_STRP str) {
    if (str && str->length > 0) {
       CFL_UINT32 i;
       for (i = 0; i < str->length; i++) {
@@ -837,7 +828,7 @@ CFL_BOOL cfl_str_isBlank(CFL_STRP str) {
    return CFL_TRUE;
 }
 
-CFL_STRP cfl_str_substr(CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end) {
+CFL_STRP cfl_str_substr(const CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end) {
    CFL_STRP subs;
    if (start < str->length) {
       if (end > str->length) {
@@ -852,7 +843,7 @@ CFL_STRP cfl_str_substr(CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end) {
 }
 
 
-CFL_INT32 cfl_str_indexOf(CFL_STRP str, char search, CFL_UINT32 start) {
+CFL_INT32 cfl_str_indexOf(const CFL_STRP str, char search, CFL_UINT32 start) {
    CFL_UINT32 i;
    for (i = start; i < str->length; i++) {
       if (search == str->data[i]) {
@@ -862,7 +853,7 @@ CFL_INT32 cfl_str_indexOf(CFL_STRP str, char search, CFL_UINT32 start) {
    return -1;
 }
 
-CFL_INT32 cfl_str_indexOfBuffer(CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start) {
+CFL_INT32 cfl_str_indexOfBuffer(const CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start) {
    CFL_UINT32 index;
    CFL_UINT32 maxLen;
    if (searchLen == 0 || str->length - start < searchLen) {
@@ -883,16 +874,16 @@ CFL_INT32 cfl_str_indexOfBuffer(CFL_STRP str, const char *search, CFL_UINT32 sea
    return -1;
 }
 
-CFL_INT32 cfl_str_indexOfStr(CFL_STRP str, CFL_STRP search, CFL_UINT32 start) {
+CFL_INT32 cfl_str_indexOfStr(const CFL_STRP str, const CFL_STRP search, CFL_UINT32 start) {
    return cfl_str_indexOfBuffer(str, search->data, search->length, start);
 }
 
-char cfl_str_charAt(CFL_STRP str, CFL_UINT32 index) {
-   return (index >= 0 && index < str->length) ? str->data[index] : '\0';
+char cfl_str_charAt(const CFL_STRP str, CFL_UINT32 index) {
+   return index < str->length ? str->data[index] : '\0';
 }
 
-char cfl_str_charRAt(CFL_STRP str, CFL_UINT32 index) {
-   return (index >= 0 && index < str->length) ? str->data[str->length - index - 1] : '\0';
+char cfl_str_charRAt(const CFL_STRP str, CFL_UINT32 index) {
+   return index < str->length ? str->data[str->length - index - 1] : '\0';
 }
 
 CFL_UINT32 cfl_str_replaceChar(CFL_STRP str, char oldChar, char newChar) {
@@ -940,7 +931,7 @@ CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source, CFL_UINT32 start,
    return cfl_str_copyBufferLen(dest, source, (CFL_UINT32) strlen(source), start, end);
 }
 
-CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end) {
+CFL_STRP cfl_str_copy(CFL_STRP dest, const CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end) {
    return cfl_str_copyBufferLen(dest, source->data, source->length, start, end);
 }
 

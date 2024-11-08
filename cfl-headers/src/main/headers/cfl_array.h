@@ -43,13 +43,13 @@ extern void cfl_array_free(CFL_ARRAYP array);
 extern void *cfl_array_add(CFL_ARRAYP array);
 extern void *cfl_array_insert(CFL_ARRAYP array, CFL_UINT32 ulIndex);
 extern void cfl_array_del(CFL_ARRAYP array, CFL_UINT32 ulIndex);
-extern void *cfl_array_get(CFL_ARRAYP array, CFL_UINT32 ulIndex);
-extern CFL_UINT32 cfl_array_getItemPos(CFL_ARRAYP array, void *item);
-extern void cfl_array_set(CFL_ARRAYP array, CFL_UINT32 ulIndex, void *item);
+extern void *cfl_array_get(const CFL_ARRAYP array, CFL_UINT32 ulIndex);
+extern CFL_UINT32 cfl_array_getItemPos(const CFL_ARRAYP array, void *item);
+extern void cfl_array_set(CFL_ARRAYP array, CFL_UINT32 ulIndex, const void *item);
 extern void cfl_array_clear(CFL_ARRAYP array);
 extern CFL_UINT32 cfl_array_length(CFL_ARRAYP array);
 extern void cfl_array_setLength(CFL_ARRAYP array, CFL_UINT32 newLen);
-extern CFL_ARRAYP cfl_array_clone(CFL_ARRAYP other);
+extern CFL_ARRAYP cfl_array_clone(const CFL_ARRAYP other);
 extern CFL_ITERATORP cfl_array_iterator(CFL_ARRAYP array);
 
 #ifdef __cplusplus

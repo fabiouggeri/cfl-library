@@ -148,14 +148,14 @@ void cfl_array_del(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
    }
 }
 
-void *cfl_array_get(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
+void *cfl_array_get(const CFL_ARRAYP array, CFL_UINT32 ulIndex) {
    if (ulIndex < array->ulLength) {
       return (void *) &array->items[ ulIndex * array->ulItemSize];
    }
    return NULL;
 }
 
-CFL_UINT32 cfl_array_getItemPos(CFL_ARRAYP array, void *item) {
+CFL_UINT32 cfl_array_getItemPos(const CFL_ARRAYP array, void *item) {
    if (array->ulLength > 0 &&
        (CFL_UINT8 *) item >= array->items &&
        (CFL_UINT8 *)item <= &array->items[(array->ulLength - 1) * array->ulItemSize]) {
@@ -164,7 +164,7 @@ CFL_UINT32 cfl_array_getItemPos(CFL_ARRAYP array, void *item) {
    return array->ulLength;
 }
 
-void cfl_array_set(CFL_ARRAYP array, CFL_UINT32 ulIndex, void *item) {
+void cfl_array_set(CFL_ARRAYP array, CFL_UINT32 ulIndex, const void *item) {
    if (ulIndex < array->ulLength) {
       if (item != NULL) {
          memcpy(&array->items[ulIndex * array->ulItemSize], item, array->ulItemSize);
@@ -203,7 +203,7 @@ void cfl_array_setLength(CFL_ARRAYP array, CFL_UINT32 newLen) {
    }
 }
 
-CFL_ARRAYP cfl_array_clone(CFL_ARRAYP other) {
+CFL_ARRAYP cfl_array_clone(const CFL_ARRAYP other) {
    CFL_ARRAYP clone = cfl_array_newLen(other->ulLength, other->ulItemSize);
    memcpy(clone->items, other->items, other->ulLength * other->ulItemSize);
    return clone;
@@ -245,7 +245,7 @@ static void iteratorFirst(CFL_ITERATORP it) {
 }
 
 static CFL_BOOL iteratorHasPrevious(CFL_ITERATORP it) {
-   ARRAY_ITERATORP data = (ARRAY_ITERATORP) cfl_iterator_data(it);
+   const ARRAY_ITERATORP data = (ARRAY_ITERATORP) cfl_iterator_data(it);
    return data->index > 1;
 }
 

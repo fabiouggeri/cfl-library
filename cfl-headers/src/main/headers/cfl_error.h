@@ -39,14 +39,14 @@ typedef struct _CFL_ERROR {
 extern CFL_ERRORP cfl_error_new();
 extern void cfl_error_free(CFL_ERRORP pError);
 extern void cfl_error_init(CFL_ERRORP pError);
-extern CFL_UINT8 cfl_error_getType(CFL_ERRORP pError);
+extern CFL_UINT8 cfl_error_getType(const CFL_ERRORP pError);
 extern void cfl_error_setType(CFL_ERRORP pError, CFL_UINT8 type);
-extern CFL_UINT32 cfl_error_getCode(CFL_ERRORP pError);
+extern CFL_UINT32 cfl_error_getCode(const CFL_ERRORP pError);
 extern void cfl_error_setCode(CFL_ERRORP pError, CFL_UINT32 code);
-extern CFL_STRP cfl_error_getMessage(CFL_ERRORP pError);
-extern const char * cfl_error_getMessageStr(CFL_ERRORP pError);
-extern void cfl_error_setMessage(CFL_ERRORP pError, char *message);
-extern void * cfl_error_getUserData(CFL_ERRORP pError);
+extern CFL_STRP cfl_error_getMessage(const CFL_ERRORP pError);
+extern const char * cfl_error_getMessageStr(const CFL_ERRORP pError);
+extern void cfl_error_setMessage(CFL_ERRORP pError, const char *message);
+extern void * cfl_error_getUserData(const CFL_ERRORP pError);
 extern void cfl_error_setUserData(CFL_ERRORP pError, void *userData);
 extern void cfl_error_clear(CFL_ERRORP pError);
 

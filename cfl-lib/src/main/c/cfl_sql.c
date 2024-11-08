@@ -730,7 +730,7 @@ POS_OP(is_null_new, "is null")
 POS_OP(is_not_null_new, "is not null")
 
 static CFL_SQLP expr_alias_new(CFL_SQLP expr, CFL_STRP alias) {
-   CFL_SQL_SINGLE_OPP newOp = (CFL_SQL_SINGLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_SINGLE_OPP));
+   CFL_SQL_SINGLE_OPP newOp = (CFL_SQL_SINGLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_SINGLE_OP));
    newOp->sql.to_string = pos_op_to_string;
    newOp->sql.free_sql = single_op_free;
    newOp->expr = expr;

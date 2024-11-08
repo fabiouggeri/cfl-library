@@ -131,14 +131,14 @@ extern CFL_BOOL cfl_thread_start(CFL_THREADP thread, void * param);
 extern CFL_BOOL cfl_thread_wait(CFL_THREADP thread);
 extern CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout);
 extern CFL_BOOL cfl_thread_kill(CFL_THREADP thread);
-extern CFL_UINT8 cfl_thread_status(CFL_THREADP thread);
+extern CFL_UINT8 cfl_thread_status(const CFL_THREADP thread);
 extern void cfl_thread_signalError(CFL_THREADP thread);
 extern CFL_BOOL cfl_thread_currentIsHandled(void);
 extern CFL_BOOL cfl_thread_sleep(CFL_UINT32 time);
 extern void cfl_thread_yield(void);
 
 extern void *cfl_thread_varGet(CFL_THREAD_VARIABLEP threadVar);
-extern CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar, void *data);
+extern CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar, const void *data);
 
 DECLARE_GET_SET(void *     , Pointer)
 DECLARE_GET_SET(CFL_BOOL   , Boolean)

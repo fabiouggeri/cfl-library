@@ -46,8 +46,8 @@ extern CFL_LLISTP cfl_llist_new(CFL_UINT32 maxNodeCache);
 extern void cfl_llist_free(CFL_LLISTP list);
 extern void cfl_llist_addLast(CFL_LLISTP list, void *item);
 extern void cfl_llist_addFirst(CFL_LLISTP list, void *item);
-extern void *cfl_llist_getLast(CFL_LLISTP list);
-extern void *cfl_llist_getFirst(CFL_LLISTP list);
+extern void *cfl_llist_getLast(const CFL_LLISTP list);
+extern void *cfl_llist_getFirst(const CFL_LLISTP list);
 extern void *cfl_llist_removeLast(CFL_LLISTP list);
 extern void *cfl_llist_removeFirst(CFL_LLISTP list);
 

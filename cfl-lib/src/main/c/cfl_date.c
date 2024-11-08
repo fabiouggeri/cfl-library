@@ -71,73 +71,6 @@ static CFL_BOOL isLeapYear(CFL_INT16 year) {
    }
 }
 
-static CFL_UINT8 daysInMonth(CFL_INT16 year, CFL_UINT8 month) {
-   switch(month) {
-      case 1:
-      case 3:
-      case 5:
-      case 7:
-      case 8:
-      case 10:
-      case 12:
-         return 31;
-      case 2:
-         return isLeapYear(year) ? 29 : 28;
-
-      default:
-         return 30;
-   }
-}
-
-static CFL_UINT16 daysInYear(CFL_INT16 year) {
-   return isLeapYear(year) ? 366 : 365;
-}
-
-static CFL_UINT16 daysBetweenMonths(CFL_INT16 year, CFL_UINT8 fromMonth, CFL_UINT8 toMonth) {
-   CFL_UINT16 days = 0;
-   CFL_UINT8 month;
-   for (month = fromMonth; month < toMonth; month++) {
-      days += daysInMonth(year, month);
-   }
-   return days;
-}
-
-static CFL_UINT16 countLeapYears(CFL_INT16 year) {
-   CFL_UINT16 count;
-
-   if (year > GREGORIAN_BASE) {
-      year++;
-      count = (CFL_UINT16)((year / 4) - (year / 100) + (year / 400));                                // Leap years with Gregorian method
-      count -= (CFL_UINT16)((GREGORIAN_BASE / 4) - (GREGORIAN_BASE / 100) + (GREGORIAN_BASE / 400)); // - Leap years before 1583 with Gregorian method
-      count += (CFL_UINT16)(GREGORIAN_BASE / 4);                                                     // + Leap years with Julian method
-      count += 13;                                                                                   // + Leap years between -45..-9
-   } else if (year >= 8) {
-      year++;
-      count = (CFL_UINT16)((year / 4) + 13);
-   } else if (year >= -8) {
-      count = 13;
-   } else if (year >= -45) {
-      count =  (CFL_UINT16)((year + 48) / 3);
-   } else {
-      count = 0;
-   }
-   return count;
-}
-
-static CFL_UINT32 leapYearsBetween(CFL_INT16 startYear, CFL_INT16 endYear) {
-   CFL_UINT32 countStart;
-   CFL_UINT32 countEnd;
-
-   if (endYear >= startYear) {
-      countStart = countLeapYears(startYear);
-      countEnd = countLeapYears(endYear);
-   } else {
-      countStart = countLeapYears(endYear);
-      countEnd = countLeapYears(startYear);
-   }
-   return countEnd - countStart;
-}
-
 static CFL_DATEP newDateInit(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, CFL_UINT8 hour, CFL_UINT8 min, CFL_UINT8 sec, CFL_UINT16 millis) {
    CFL_DATEP date;
    date = (CFL_DATEP) CFL_MEM_ALLOC(sizeof(CFL_DATE));
@@ -180,7 +113,7 @@ CFL_DATEP cfl_date_newDateTime(CFL_INT16 year, CFL_UINT8 month, CFL_UINT8 day, C
 
 CFL_DATEP cfl_date_getCurrent(CFL_DATEP date) {
    time_t curTime;
-   struct tm *tm;
+   const struct tm *tm;
 
    time(&curTime);
    tm = localtime(&curTime);
@@ -194,20 +127,20 @@ CFL_DATEP cfl_date_getCurrent(CFL_DATEP date) {
    return date;
 }
 
-void cfl_date_getDate(CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day) {
+void cfl_date_getDate(const CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day) {
    *year = GET_YEAR(date);
    *month = GET_MONTH(date);
    *day = GET_DAY(date);
 }
 
-void cfl_date_getTime(CFL_DATEP date, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis) {
+void cfl_date_getTime(const CFL_DATEP date, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis) {
    *hour = GET_HOUR(date);
    *min = GET_MIN(date);
    *sec = GET_SEC(date);
    *millis = GET_MILLIS(date);
 }
 
-void cfl_date_getDateTime(CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis) {
+void cfl_date_getDateTime(const CFL_DATEP date, CFL_INT16 *year, CFL_UINT8 *month, CFL_UINT8 *day, CFL_UINT8 *hour, CFL_UINT8 *min, CFL_UINT8 *sec, CFL_UINT16 *millis) {
    *year = GET_YEAR(date);
    *month = GET_MONTH(date);
    *day = GET_DAY(date);
@@ -240,31 +173,31 @@ void cfl_date_setDateTime(CFL_DATEP date, CFL_INT16 year, CFL_UINT8 month, CFL_U
    SET_MILLIS(date, millis);
 }
 
-CFL_INT16 cfl_date_getYear(CFL_DATEP date) {
+CFL_INT16 cfl_date_getYear(const CFL_DATEP date) {
    return GET_YEAR(date);
 }
 
-CFL_UINT8 cfl_date_getMonth(CFL_DATEP date) {
+CFL_UINT8 cfl_date_getMonth(const CFL_DATEP date) {
    return GET_MONTH(date);
 }
 
-CFL_UINT8 cfl_date_getDay(CFL_DATEP date) {
+CFL_UINT8 cfl_date_getDay(const CFL_DATEP date) {
    return GET_DAY(date);
 }
 
-CFL_UINT8 cfl_date_getHour(CFL_DATEP date) {
+CFL_UINT8 cfl_date_getHour(const CFL_DATEP date) {
    return GET_HOUR(date);
 }
 
-CFL_UINT8 cfl_date_getMin(CFL_DATEP date) {
+CFL_UINT8 cfl_date_getMin(const CFL_DATEP date) {
    return GET_MIN(date);
 }
 
-CFL_UINT8 cfl_date_getSec(CFL_DATEP date) {
+CFL_UINT8 cfl_date_getSec(const CFL_DATEP date) {
    return GET_SEC(date);
 }
 
-CFL_UINT16 cfl_date_getMillis(CFL_DATEP date) {
+CFL_UINT16 cfl_date_getMillis(const CFL_DATEP date) {
    return GET_MILLIS(date);
 }
 
@@ -332,7 +265,7 @@ void cfl_date_setMillis(CFL_DATEP date, CFL_UINT16 millis) {
    }
 }
 
-void cfl_date_copy(CFL_DATEP fromDate, CFL_DATEP toDate) {
+void cfl_date_copy(const CFL_DATEP fromDate, CFL_DATEP toDate) {
    SET_YEAR(toDate, GET_YEAR(fromDate));
    SET_MONTH(toDate, GET_MONTH(fromDate));
    SET_DAY(toDate, GET_DAY(fromDate));

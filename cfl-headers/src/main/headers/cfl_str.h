@@ -70,13 +70,13 @@ extern CFL_STRP cfl_str_appendStr(CFL_STRP str, CFL_STRP strAppend);
 extern CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char * format, va_list varArgs);
 extern CFL_STRP cfl_str_appendFormat(CFL_STRP str, const char * format, ...);
 
-extern char *cfl_str_getPtr(CFL_STRP str);
-extern char *cfl_str_getPtrAt(CFL_STRP str, CFL_UINT32 index);
-extern CFL_UINT32 cfl_str_getLength(CFL_STRP str);
-extern CFL_UINT32 cfl_str_length(CFL_STRP str);
+extern char *cfl_str_getPtr(const CFL_STRP str);
+extern char *cfl_str_getPtrAt(const CFL_STRP str, CFL_UINT32 index);
+extern CFL_UINT32 cfl_str_getLength(const CFL_STRP str);
+extern CFL_UINT32 cfl_str_length(const CFL_STRP str);
 extern void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen);
 extern void cfl_str_clear(CFL_STRP str);
-extern CFL_STRP cfl_str_setStr(CFL_STRP str, CFL_STRP src);
+extern CFL_STRP cfl_str_setStr(CFL_STRP str, const CFL_STRP src);
 extern CFL_STRP cfl_str_setValue(CFL_STRP str, const char *buffer);
 extern CFL_STRP cfl_str_setValueLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 extern CFL_STRP cfl_str_setConst(CFL_STRP str, const char *buffer);
@@ -85,42 +85,42 @@ extern CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char * format, va_list
 extern CFL_STRP cfl_str_setFormat(CFL_STRP str, const char * format, ...);
 extern CFL_STRP cfl_str_setChar(CFL_STRP str, CFL_UINT32 index, char c);
 
-extern CFL_BOOL cfl_str_startsWith(CFL_STRP str, CFL_STRP strStart);
-extern CFL_BOOL cfl_str_startsWithIgnoreCase(CFL_STRP str, CFL_STRP strStart);
-extern CFL_BOOL cfl_str_bufferStartsWith(CFL_STRP str, const char *buffer);
-extern CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(CFL_STRP str, const char *buffer);
+extern CFL_BOOL cfl_str_startsWith(const CFL_STRP str, const CFL_STRP strStart);
+extern CFL_BOOL cfl_str_startsWithIgnoreCase(const CFL_STRP str, const CFL_STRP strStart);
+extern CFL_BOOL cfl_str_bufferStartsWith(const CFL_STRP str, const char *buffer);
+extern CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(const CFL_STRP str, const char *buffer);
 
-extern CFL_BOOL cfl_str_equals(CFL_STRP str1, CFL_STRP str2);
-extern CFL_BOOL cfl_str_equalsIgnoreCase(CFL_STRP str1, CFL_STRP str2);
-extern CFL_INT16 cfl_str_compare(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExact);
-extern CFL_INT16 cfl_str_compareIgnoreCase(CFL_STRP str1, CFL_STRP str2, CFL_BOOL bExact);
+extern CFL_BOOL cfl_str_equals(const CFL_STRP str1, const CFL_STRP str2);
+extern CFL_BOOL cfl_str_equalsIgnoreCase(const CFL_STRP str1, const CFL_STRP str2);
+extern CFL_INT16 cfl_str_compare(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact);
+extern CFL_INT16 cfl_str_compareIgnoreCase(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact);
 
-extern CFL_BOOL cfl_str_bufferEquals(CFL_STRP str1, const char *str2);
-extern CFL_BOOL cfl_str_bufferEqualsIgnoreCase(CFL_STRP str1, const char *str2);
-extern CFL_INT16 cfl_str_bufferCompare(CFL_STRP str1, const char *str2, CFL_BOOL bExact);
-extern CFL_INT16 cfl_str_bufferCompareIgnoreCase(CFL_STRP str1, const char *str2, CFL_BOOL bExact);
+extern CFL_BOOL cfl_str_bufferEquals(const CFL_STRP str1, const char *str2);
+extern CFL_BOOL cfl_str_bufferEqualsIgnoreCase(const CFL_STRP str1, const char *str2);
+extern CFL_INT16 cfl_str_bufferCompare(const CFL_STRP str1, const char *str2, CFL_BOOL bExact);
+extern CFL_INT16 cfl_str_bufferCompareIgnoreCase(const CFL_STRP str1, const char *str2, CFL_BOOL bExact);
 
 extern CFL_UINT32 cfl_str_hashCode(CFL_STRP str);
 extern CFL_STRP cfl_str_toUpper(CFL_STRP str);
 extern CFL_STRP cfl_str_toLower(CFL_STRP str);
 extern CFL_STRP cfl_str_trim(CFL_STRP str);
 
-extern CFL_BOOL cfl_str_isEmpty(CFL_STRP str);
-extern CFL_BOOL cfl_str_isBlank(CFL_STRP str);
-extern CFL_STRP cfl_str_substr(CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end);
+extern CFL_BOOL cfl_str_isEmpty(const CFL_STRP str);
+extern CFL_BOOL cfl_str_isBlank(const CFL_STRP str);
+extern CFL_STRP cfl_str_substr(const CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end);
 
-extern CFL_INT32 cfl_str_indexOf(CFL_STRP str, char search, CFL_UINT32 start);
-extern CFL_INT32 cfl_str_indexOfStr(CFL_STRP str, CFL_STRP search, CFL_UINT32 start);
-extern CFL_INT32 cfl_str_indexOfBuffer(CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOf(const CFL_STRP str, char search, CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOfStr(const CFL_STRP str, const CFL_STRP search, CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOfBuffer(const CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start);
 
-extern char cfl_str_charAt(CFL_STRP str, CFL_UINT32 index);
-extern char cfl_str_charRAt(CFL_STRP str, CFL_UINT32 index);
+extern char cfl_str_charAt(const CFL_STRP str, CFL_UINT32 index);
+extern char cfl_str_charRAt(const CFL_STRP str, CFL_UINT32 index);
 
 extern CFL_UINT32 cfl_str_replaceChar(CFL_STRP str, char oldChar, char newChar);
 
 extern CFL_STRP cfl_str_copyBufferLen(CFL_STRP dest, const char *source, CFL_UINT32 sourceLen, CFL_UINT32 start, CFL_UINT32 end);
 extern CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source, CFL_UINT32 start, CFL_UINT32 end);
-extern CFL_STRP cfl_str_copy(CFL_STRP dest, CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end);
+extern CFL_STRP cfl_str_copy(CFL_STRP dest, const CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end);
 
 extern CFL_STRP cfl_str_move(CFL_STRP dest, CFL_STRP source);
 

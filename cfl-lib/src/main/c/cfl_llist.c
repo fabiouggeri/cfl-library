@@ -147,11 +147,11 @@ void cfl_llist_addFirst(CFL_LLISTP list, void *item) {
    node->data = item;
 }
 
-void *cfl_llist_getLast(CFL_LLISTP list) {
+void *cfl_llist_getLast(const CFL_LLISTP list) {
    return list->tail;
 }
 
-void *cfl_llist_getFirst(CFL_LLISTP list) {
+void *cfl_llist_getFirst(const CFL_LLISTP list) {
    return list->head;
 
 }

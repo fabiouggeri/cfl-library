@@ -53,7 +53,7 @@ void cfl_error_clear(CFL_ERRORP pError) {
    pError->userData = NULL;
 }
 
-CFL_UINT8 cfl_error_getType(CFL_ERRORP pError) {
+CFL_UINT8 cfl_error_getType(const CFL_ERRORP pError) {
    return pError->type;
 }
 
@@ -61,7 +61,7 @@ void cfl_error_setType(CFL_ERRORP pError, CFL_UINT8 type) {
    pError->type = type;
 }
 
-CFL_UINT32 cfl_error_getCode(CFL_ERRORP pError) {
+CFL_UINT32 cfl_error_getCode(const CFL_ERRORP pError) {
    return pError->code;
 }
 
@@ -69,19 +69,19 @@ void cfl_error_setCode(CFL_ERRORP pError, CFL_UINT32 code) {
    pError->code = code;
 }
 
-CFL_STRP cfl_error_getMessage(CFL_ERRORP pError) {
+CFL_STRP cfl_error_getMessage(const CFL_ERRORP pError) {
    return pError->message;
 }
 
-const char * cfl_error_getMessageStr(CFL_ERRORP pError) {
+const char * cfl_error_getMessageStr(const CFL_ERRORP pError) {
    return cfl_str_getPtr(pError->message);
 }
 
-void cfl_error_setMessage(CFL_ERRORP pError, char *message) {
+void cfl_error_setMessage(CFL_ERRORP pError, const char *message) {
    cfl_str_setValue(pError->message, message);
 }
 
-void * cfl_error_getUserData(CFL_ERRORP pError) {
+void * cfl_error_getUserData(const CFL_ERRORP pError) {
    return pError->userData;
 }
 

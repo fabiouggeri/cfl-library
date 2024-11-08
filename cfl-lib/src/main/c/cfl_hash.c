@@ -162,7 +162,6 @@ static int hash_expand(CFL_HASHP hash) {
    /* Double the size of the table to accomodate more entries */
    CFL_HASH_ENTRY **newtable;
    CFL_HASH_ENTRYP e;
-   CFL_HASH_ENTRY **pE;
    CFL_UINT32 newsize, i, index;
    /* Check we're not hitting max capacity */
    if (hash->primeindex == (s_primeTableLen - 1)) {
@@ -196,6 +195,7 @@ static int hash_expand(CFL_HASHP hash) {
       hash->table = newtable;
       memset(newtable[hash->tablelength], 0, newsize - hash->tablelength);
       for (i = 0; i < hash->tablelength; i++) {
+         CFL_HASH_ENTRY **pE;
          for (pE = &(newtable[i]), e = *pE; e != NULL; e = *pE) {
             index = indexFor(newsize, e->hash);
             if (index == i) {
@@ -214,7 +214,7 @@ static int hash_expand(CFL_HASHP hash) {
 }
 
 /*****************************************************************************/
-CFL_UINT32 cfl_hash_count(CFL_HASHP hash) {
+CFL_UINT32 cfl_hash_count(const CFL_HASHP hash) {
    return hash->entrycount;
 }
 

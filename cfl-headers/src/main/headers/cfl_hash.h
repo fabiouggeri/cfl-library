@@ -116,7 +116,7 @@ extern void * cfl_hash_remove(CFL_HASHP h, void *k);
  * @param   h   the hashtable
  * @return      the number of items stored in the hashtable
  */
-extern CFL_UINT32 cfl_hash_count(CFL_HASHP h);
+extern CFL_UINT32 cfl_hash_count(const CFL_HASHP h);
 
 
 /*****************************************************************************

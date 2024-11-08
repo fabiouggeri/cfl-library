@@ -40,13 +40,13 @@ extern CFL_LISTP cfl_list_newLen(CFL_UINT32 len);
 extern void cfl_list_free(CFL_LISTP list);
 extern void cfl_list_add(CFL_LISTP list, void *item);
 extern void cfl_list_del(CFL_LISTP list, CFL_UINT32 ulIndex);
-extern void cfl_list_delItem(CFL_LISTP list, void *item);
-extern void *cfl_list_get(CFL_LISTP list, CFL_UINT32 ulIndex);
+extern void cfl_list_delItem(CFL_LISTP list, const void *item);
+extern void *cfl_list_get(const CFL_LISTP list, CFL_UINT32 ulIndex);
 extern void cfl_list_set(CFL_LISTP list, CFL_UINT32 ulIndex, void *item);
 extern void cfl_list_clear(CFL_LISTP list);
-extern CFL_UINT32 cfl_list_length(CFL_LISTP list);
+extern CFL_UINT32 cfl_list_length(const CFL_LISTP list);
 extern void cfl_list_setLength(CFL_LISTP list, CFL_UINT32 newLen);
-extern CFL_LISTP cfl_list_clone(CFL_LISTP other);
+extern CFL_LISTP cfl_list_clone(const CFL_LISTP other);
 extern void *cfl_list_remove(CFL_LISTP list, CFL_UINT32 ulIndex);
 extern void *cfl_list_removeLast(CFL_LISTP list);
 

@@ -125,7 +125,7 @@ void cfl_buffer_free(CFL_BUFFERP buffer) {
    }
 }
 
-CFL_UINT8 *cfl_buffer_getDataPtr(CFL_BUFFERP buffer) {
+CFL_UINT8 *cfl_buffer_getDataPtr(const CFL_BUFFERP buffer) {
    return buffer->data;
 }
 
@@ -139,7 +139,7 @@ void cfl_buffer_setBigEndian(CFL_BUFFERP buffer, CFL_BOOL bigEndian) {
    }
 }
 
-CFL_BOOL cfl_buffer_isBigEndian(CFL_BUFFERP buffer) {
+CFL_BOOL cfl_buffer_isBigEndian(const CFL_BUFFERP buffer) {
    if (buffer != NULL) {
       return buffer->endian == CFL_BIG_ENDIAN;
    }
@@ -151,7 +151,7 @@ void cfl_buffer_flip(CFL_BUFFERP buffer) {
    buffer->position = 0;
 }
 
-CFL_UINT32 cfl_buffer_length(CFL_BUFFERP buffer) {
+CFL_UINT32 cfl_buffer_length(const CFL_BUFFERP buffer) {
    return buffer->length;
 }
 
@@ -171,7 +171,7 @@ void cfl_buffer_reset(CFL_BUFFERP buffer) {
    buffer->position = 0;
 }
 
-CFL_UINT32 cfl_buffer_position(CFL_BUFFERP buffer) {
+CFL_UINT32 cfl_buffer_position(const CFL_BUFFERP buffer) {
    return buffer->position;
 }
 
@@ -210,7 +210,7 @@ void cfl_buffer_compact(CFL_BUFFERP buffer) {
    }
 }
 
-CFL_UINT32 cfl_buffer_capacity(CFL_BUFFERP buffer) {
+CFL_UINT32 cfl_buffer_capacity(const CFL_BUFFERP buffer) {
    return buffer->capacity;
 }
 
@@ -437,11 +437,9 @@ CFL_BOOL cfl_buffer_putString(CFL_BUFFERP buffer, CFL_STRP str) {
 }
 
 CFL_BOOL cfl_buffer_putStringLen(CFL_BUFFERP buffer, CFL_STRP str, CFL_UINT32 len) {
-   CFL_UINT32 strLen;
-
    PUT_BUFFER(CFL_UINT32, buffer, len);
    if (len > 0) {
-      strLen = cfl_str_length(str);
+      CFL_UINT32 strLen = cfl_str_length(str);
       if (strLen > len) {
          strLen = len;
       }
@@ -492,12 +490,11 @@ void cfl_buffer_copyCharArray(CFL_BUFFERP buffer, char *destStr) {
 }
 
 void cfl_buffer_copyCharArrayLen(CFL_BUFFERP buffer, char *destStr, CFL_UINT32 len) {
-   CFL_UINT32 maxBytes;
    CFL_UINT32 numBytes;
 
    numBytes = GET_BUFFER(CFL_UINT32, buffer);
    if (numBytes > 0) {
-      maxBytes = len * sizeof(char);
+      CFL_UINT32 maxBytes = len * sizeof(char);
       if (maxBytes > numBytes) {
          maxBytes = numBytes;
       }
@@ -622,14 +619,14 @@ CFL_BOOL cfl_buffer_putBufferSize(CFL_BUFFERP buffer, CFL_BUFFERP other, CFL_UIN
    return CFL_TRUE;
 }
 
-CFL_UINT32 cfl_buffer_remaining(CFL_BUFFERP buffer) {
+CFL_UINT32 cfl_buffer_remaining(const CFL_BUFFERP buffer) {
    if (buffer->length > buffer->position) {
       return buffer->length - buffer->position;
    }
    return 0;
 }
 
-CFL_BOOL cfl_buffer_haveEnough(CFL_BUFFERP buffer, CFL_UINT32 need) {
+CFL_BOOL cfl_buffer_haveEnough(const CFL_BUFFERP buffer, CFL_UINT32 need) {
    return buffer->length > buffer->position && need <= (buffer->length - buffer->position);
 }
 
