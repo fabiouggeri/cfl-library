@@ -66,8 +66,8 @@
       <msc-includes-path>${cc-path}\include;${cc-path}\include\um;${cc-path}\include\msclr</msc-includes-path>
       <msc-libs-path>${cc-path}\lib;${cc-path}\lib\sdk</msc-libs-path>
       <msc-libs>shell32.lib;user32.lib;kernel32.lib;advapi32.lib;winspool.lib;ole32.lib;oleaut32.lib;ws2_32.lib;libcmt.lib;gdi32.lib;comdlg32.lib;msvcrt.lib;oldnames.lib;iphlpapi.lib</msc-libs>
-      <msc-cmd>cl.exe #{?debug='true', '/DEBUG:FULL /Z7 /Oy- /Ob0 /EHsc'} /W3 /GA /c /Gs /Gd /arch:AVX /O2 /MT #{?mode='cpp', '/TP'} #{!mode, '/TC'} #{includesPaths, '/I"', '" /I"', '"'} /D_CRT_SECURE_NO_WARNINGS #{defines, '/D', ' /D', '='} /Fo"#{outputFile}" "#{inputFile}"</msc-cmd>
-      <msc-link-options>/IGNORE:4006,4078,4088 /INCREMENTAL:no /NODEFAULTLIB /SUBSYSTEM:CONSOLE /FORCE:MULTIPLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'} #{inputLibraries, '"', '" "', '"'}</msc-link-options>
+      <msc-cmd>cl.exe /c #{?debug='true', '/Z7 /Od /MT'} #{!debug, '/GA /Gs /Gd /arch:AVX /O2 /MT'} /W3 #{?mode='cpp', '/TP'} #{!mode, '/TC'} #{includesPaths, '/I"', '" /I"', '"'} /D_CRT_SECURE_NO_WARNINGS #{defines, '/D', ' /D', '='} /Fo"#{outputFile}" "#{inputFile}"</msc-cmd>
+      <msc-link-options>#{?debug='true', '/DEBUG'} /IGNORE:4006,4078,4088 /INCREMENTAL:no /NODEFAULTLIB /SUBSYSTEM:CONSOLE /FORCE:MULTIPLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'} #{inputLibraries, '"', '" "', '"'}</msc-link-options>
       <msc-link-cmd>link.exe @"${project.basedir}\target\classes\${c-classifier}\lnk_options.rsp"</msc-link-cmd>
       <msc-lib-cmd>lib.exe /SUBSYSTEM:CONSOLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'}</msc-lib-cmd>
 
@@ -79,9 +79,9 @@
       <mingw64-includes-path></mingw64-includes-path>
       <mingw64-libs-path></mingw64-libs-path>
       <mingw64-libs></mingw64-libs>
-      <mingw64-cmd>gcc #{?debug='true', '-g -O0'} -pipe -O3 -c -Wdiscarded-qualifiers #{includesPaths, '-I"', '" -I"', '"'} #{defines, '-D', ' -D', '='} -D_WIN32_WINNT=0x0601 -o"#{outputFile}" "#{inputFile}"</mingw64-cmd>
+      <mingw64-cmd>gcc #{?debug='true', '-g'} #{!debug, '-Ofast'} -pipe -c -Wdiscarded-qualifiers #{includesPaths, '-I"', '" -I"', '"'} #{defines, '-D', ' -D', '='} -D_WIN32_WINNT=0x0601 -o"#{outputFile}" "#{inputFile}"</mingw64-cmd>
       <mingw64-link-options></mingw64-link-options>
-      <mingw64-link-cmd>gcc #{inputFiles, '"', '" "', '"'} #{?debug='true', '-g -O0'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wdiscarded-qualifiers -mconsole -Wl,--error-unresolved-symbols -Wl,--major-image-version=#{version} -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lwinspool -lcomctl32 -lcomdlg32 -lshell32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lmsimg32 -lwininet #{?debug='true', '-lSegFault'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</mingw64-link-cmd>
+      <mingw64-link-cmd>gcc #{inputFiles, '"', '" "', '"'} #{?debug='true', '-g'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wdiscarded-qualifiers -mconsole -Wl,--error-unresolved-symbols -Wl,--major-image-version=#{version} -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lwinspool -lcomctl32 -lcomdlg32 -lshell32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lmsimg32 -lwininet #{?debug='true', '-lSegFault'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</mingw64-link-cmd>
       <mingw64-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</mingw64-lib-cmd>
 
       <clang-id>clang</clang-id>
@@ -92,8 +92,8 @@
       <clang-includes-path></clang-includes-path>
       <clang-libs-path></clang-libs-path>
       <clang-libs></clang-libs>
-      <clang-cmd>clang #{?debug='true', '-Og -g3 -lSegFault'} #{!debug, '-Ofast'} -Wall -ffunction-sections -fdata-sections #{includesPaths, '-I"', '" -I"', '"'} -I"${clp-includes-path}" #{defines, '-D', ' -D', '='} -o"#{outputFile}" -c "#{inputFile}"</clang-cmd>
-      <clang-link-options>#{inputFiles, '"', '" "', '"'} #{?debug='true', '-Og -g3 -lSegFault'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wl,-O -Wl,--nxcompat -Wl,--dynamicbase -Wl,--allow-multiple-definition -Wl,--gc-sections -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lshell32 -lwinspool -lmsimg32 -lcomctl32 -lcomdlg32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lwininet -lstdc++ -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</clang-link-options>
+      <clang-cmd>clang #{?debug='true', '-g -lSegFault'} #{!debug, '-Ofast'} -Wall -ffunction-sections -fdata-sections #{includesPaths, '-I"', '" -I"', '"'} -I"${clp-includes-path}" #{defines, '-D', ' -D', '='} -o"#{outputFile}" -c "#{inputFile}"</clang-cmd>
+      <clang-link-options>#{inputFiles, '"', '" "', '"'} #{?debug='true', '-g -lSegFault'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wl,-O -Wl,--nxcompat -Wl,--dynamicbase -Wl,--allow-multiple-definition -Wl,--gc-sections -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lshell32 -lwinspool -lmsimg32 -lcomctl32 -lcomdlg32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lwininet -lstdc++ -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</clang-link-options>
       <clang-link-cmd>clang @"${project.basedir}\target\classes\${prg-classifier}\lnk_options.rsp"</clang-link-cmd>
       <clang-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</clang-lib-cmd>
 
@@ -105,9 +105,9 @@
       <gcc-includes-path></gcc-includes-path>
       <gcc-libs-path></gcc-libs-path>
       <gcc-libs></gcc-libs>
-      <gcc-cmd>gcc -pipe #{?debug='true', '-Og -g3'} #{!debug, '-Ofast'} -c -Wdiscarded-qualifiers #{includesPaths, '-I', ' -I'} #{defines, '-D', ' -D', '='} -o#{outputFile} #{inputFile}</gcc-cmd>
+      <gcc-cmd>gcc -pipe #{?debug='true', '-g'} #{!debug, '-Ofast'} -c -Wdiscarded-qualifiers #{includesPaths, '-I', ' -I'} #{defines, '-D', ' -D', '='} -o#{outputFile} #{inputFile}</gcc-cmd>
       <gcc-link-options></gcc-link-options>
-      <gcc-link-cmd>gcc #{inputFiles, ' ', ' ', ' '} #{?debug='true', '-Og -g3 -lSegFault'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wdiscarded-qualifiers -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l$(name,"lib")', ' -l$(name,"lib")'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</gcc-link-cmd>
+      <gcc-link-cmd>gcc #{inputFiles, ' ', ' ', ' '} #{?debug='true', '-g -lSegFault'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wdiscarded-qualifiers -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l$(name,"lib")', ' -l$(name,"lib")'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</gcc-link-cmd>
       <gcc-lib-cmd>ar rcs #{outputFile} #{inputFiles, ' ', ' ', ' '}</gcc-lib-cmd>
 
       <c-compiler>${msc-id}</c-compiler>
