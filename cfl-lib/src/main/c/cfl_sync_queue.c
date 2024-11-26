@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "cfl_sync_queue.h"
 #include "cfl_lock.h"
@@ -128,69 +129,6 @@ static CFL_SYNC_QUEUE_ITEM getItem(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CF
    return data;
 }
 
-static CFL_UINT32 waitNotEmpty(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
-   CFL_UINT32 itemsCount;
-   cfl_lock_acquire(&queue->lock);
-   while (IS_EMPTY(queue) && ! queue->canceled) {
-      if (timeout == 0) {
-         cfl_lock_conditionWait(&queue->lock, queue->notEmpty);
-      } else {
-         switch (cfl_lock_conditionWaitTimeout(&queue->lock, queue->notEmpty, timeout)) {
-            case CFL_LOCK_TIMEOUT:
-               *timesUp = CFL_TRUE;
-            case CFL_LOCK_ERROR:
-               cfl_lock_release(&queue->lock);
-               return 0;
-         }
-      }
-   }
-   itemsCount = queue->itemCount;
-   cfl_lock_release(&queue->lock);
-   *timesUp = CFL_FALSE;
-   return itemsCount;
-}
-
-CFL_UINT32 cfl_sync_queue_waitNotEmptyTimeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
-   return waitNotEmpty(queue, timeout, timesUp);
-}
-
-CFL_UINT32 cfl_sync_queue_waitNotEmpty(CFL_SYNC_QUEUEP queue) {
-   CFL_BOOL timesUp;
-   return waitNotEmpty(queue, 0, &timesUp);
-}
-
-static CFL_UINT32 waitEmpty(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
-   CFL_UINT32 itemCount;
-   cfl_lock_acquire(&queue->lock);
-   while (! IS_EMPTY(queue) && ! queue->canceled) {
-      if (timeout == 0) {
-         cfl_lock_conditionWait(&queue->lock, queue->notEmpty);
-      } else {
-         switch (cfl_lock_conditionWaitTimeout(&queue->lock, queue->notEmpty, timeout)) {
-            case CFL_LOCK_TIMEOUT:
-               *timesUp = CFL_TRUE;
-            case CFL_LOCK_ERROR:
-               itemCount = queue->itemCount;
-               cfl_lock_release(&queue->lock);
-               return itemCount;
-         }
-      }
-   }
-   itemCount = queue->itemCount;
-   cfl_lock_release(&queue->lock);
-   *timesUp = CFL_FALSE;
-   return itemCount;
-}
-
-CFL_UINT32 cfl_sync_queue_waitEmptyTimeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
-   return waitEmpty(queue, timeout, timesUp);
-}
-
-CFL_UINT32 cfl_sync_queue_waitEmpty(CFL_SYNC_QUEUEP queue) {
-   CFL_BOOL timesUp;
-   return waitEmpty(queue, 0, &timesUp);
-}
-
 static CFL_SYNC_QUEUE_ITEM tryGetItem(CFL_SYNC_QUEUEP queue, CFL_BOOL *took) {
    CFL_SYNC_QUEUE_ITEM data = {0};
    cfl_lock_acquire(&queue->lock);
@@ -242,6 +180,88 @@ static CFL_BOOL tryPutItem(CFL_SYNC_QUEUEP queue, CFL_SYNC_QUEUE_ITEM item) {
       cfl_lock_release(&queue->lock);
       return CFL_FALSE;
    }
+}
+
+static CFL_UINT32 waitNotEmpty(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
+   CFL_UINT32 itemsCount;
+   cfl_lock_acquire(&queue->lock);
+   while (IS_EMPTY(queue) && ! queue->canceled) {
+      if (timeout == 0) {
+         cfl_lock_conditionWait(&queue->lock, queue->notEmpty);
+      } else {
+         switch (cfl_lock_conditionWaitTimeout(&queue->lock, queue->notEmpty, timeout)) {
+            case CFL_LOCK_TIMEOUT:
+               itemsCount = queue->itemCount;
+               cfl_lock_release(&queue->lock);
+               *timesUp = CFL_TRUE;
+               return itemsCount;
+            case CFL_LOCK_ERROR:
+               cfl_lock_release(&queue->lock);
+               *timesUp = CFL_FALSE;
+               return 0;
+         }
+      }
+   }
+   itemsCount = queue->itemCount;
+   cfl_lock_release(&queue->lock);
+   *timesUp = CFL_FALSE;
+   return itemsCount;
+}
+
+CFL_UINT32 cfl_sync_queue_waitNotEmptyTimeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
+   return waitNotEmpty(queue, timeout, timesUp);
+}
+
+CFL_UINT32 cfl_sync_queue_waitNotEmpty(CFL_SYNC_QUEUEP queue) {
+   CFL_BOOL timesUp;
+   return waitNotEmpty(queue, 0, &timesUp);
+}
+
+static CFL_UINT32 waitEmpty(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
+   CFL_UINT32 itemCount;
+   cfl_lock_acquire(&queue->lock);
+   while (! IS_EMPTY(queue) && ! queue->canceled) {
+      if (timeout == 0) {
+         cfl_lock_conditionWait(&queue->lock, queue->notFull);
+      } else {
+         clock_t elapsed; 
+         clock_t start = clock();
+         switch (cfl_lock_conditionWaitTimeout(&queue->lock, queue->notFull, timeout)) {
+            case CFL_LOCK_TIMEOUT:
+               itemCount = queue->itemCount;
+               cfl_lock_release(&queue->lock);
+               *timesUp = CFL_TRUE;
+               return itemCount;
+            case CFL_LOCK_ERROR:
+               itemCount = queue->itemCount;
+               cfl_lock_release(&queue->lock);
+               *timesUp = CFL_FALSE;
+               return itemCount;
+         }
+         elapsed = clock() - start;
+         if (elapsed >= (clock_t)timeout) {
+            itemCount = queue->itemCount;
+            cfl_lock_release(&queue->lock);
+            *timesUp = CFL_TRUE;
+            return itemCount;
+         } else {
+            timeout -= (CFL_UINT32)elapsed;
+         }
+      }
+   }
+   itemCount = queue->itemCount;
+   cfl_lock_release(&queue->lock);
+   *timesUp = CFL_FALSE;
+   return itemCount;
+}
+
+CFL_UINT32 cfl_sync_queue_waitEmptyTimeout(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
+   return waitEmpty(queue, timeout, timesUp);
+}
+
+CFL_UINT32 cfl_sync_queue_waitEmpty(CFL_SYNC_QUEUEP queue) {
+   CFL_BOOL timesUp;
+   return waitEmpty(queue, 0, &timesUp);
 }
 
 void * cfl_sync_queue_get(CFL_SYNC_QUEUEP queue) {
