@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # set the project name
 project(cfl-library 
-        VERSION 1.8.1.0)
+        VERSION 1.9.0.0)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -20,14 +20,16 @@ add_library(cfl-lib STATIC
             cfl-lib/src/main/c/cfl_list.c
             cfl-lib/src/main/c/cfl_llist.c
             cfl-lib/src/main/c/cfl_lock.c
+            cfl-lib/src/main/c/cfl_log.c
             cfl-lib/src/main/c/cfl_map.c
+            cfl-lib/src/main/c/cfl_map_str.c
+            cfl-lib/src/main/c/cfl_mem.c
+            cfl-lib/src/main/c/cfl_process.c
             cfl-lib/src/main/c/cfl_socket.c
             cfl-lib/src/main/c/cfl_sql.c
             cfl-lib/src/main/c/cfl_str.c
             cfl-lib/src/main/c/cfl_sync_queue.c
-            cfl-lib/src/main/c/cfl_thread.c
-            cfl-lib/src/main/c/cfl_log.c
-            cfl-lib/src/main/c/cfl_map_str.c )
+            cfl-lib/src/main/c/cfl_thread.c )
 
 include_directories(cfl-lib PUBLIC  
                     ${PROJECT_SOURCE_DIR}/cfl-headers/src/main/headers
