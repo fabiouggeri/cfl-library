@@ -23,6 +23,7 @@
 #include "cfl_socket.h"
 #include "cfl_buffer.h"
 #include "cfl_str.h"
+#include "cfl_mem.h"
 
 #if defined(CFL_OS_WINDOWS)
    #if defined(__BORLANDC__)

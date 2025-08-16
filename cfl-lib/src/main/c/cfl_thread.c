@@ -24,6 +24,7 @@
 #include "cfl_thread.h"
 #include "cfl_lock.h"
 #include "cfl_atomic.h"
+#include "cfl_mem.h"
 
 #if defined(CFL_THREAD_WINRAWAPI)
    #define THREAD_STARTFUNC(f) static DWORD WINAPI f(LPVOID param)

@@ -24,6 +24,7 @@
 
 #include "cfl_sync_queue.h"
 #include "cfl_lock.h"
+#include "cfl_mem.h"
 
 #define DEFINE_GET_PUT(datatype, typename) \
    datatype cfl_sync_queue_get##typename(CFL_SYNC_QUEUEP queue) { \

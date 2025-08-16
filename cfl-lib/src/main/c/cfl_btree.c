@@ -22,6 +22,7 @@
 
 #include "cfl_btree.h"
 #include "cfl_iterator.h"
+#include "cfl_mem.h"
 
 typedef struct _BTreeIterator {
    CFL_ITERATOR    iterator;

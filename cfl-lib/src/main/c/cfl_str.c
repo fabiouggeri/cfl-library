@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "cfl_str.h"
+#include "cfl_mem.h"
 
 #ifndef va_copy
    #define va_copy(dest, src) dest = src

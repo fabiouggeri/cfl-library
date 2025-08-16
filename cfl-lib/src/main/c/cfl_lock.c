@@ -21,6 +21,7 @@
 
 #include "cfl_lock.h"
 #include "cfl_hash.h"
+#include "cfl_mem.h"
 
 #if defined(CFL_OS_WINDOWS)
 #include <time.h>

@@ -21,6 +21,7 @@
 #include <stdlib.h>
 
 #include "cfl_map.h"
+#include "cfl_mem.h"
 
 #define GET_KEY(e)         ((void *) (e)->data)
 #define GET_VALUE(m, e)    ((void *) &((e)->data[(m)->keySize]))

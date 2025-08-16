@@ -8,6 +8,7 @@
 #include "cfl_socket.h"
 #include "cfl_atomic.h"
 #include "cfl_list.h"
+#include "cfl_mem.h"
 
 #if defined(CFL_OS_LINUX)
    #define _strnicmp(s1, s2, n) strncasecmp(s1, s2, n)

@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cfl_list.h"
+#include "cfl_mem.h"
 
 void cfl_list_init(CFL_LISTP list, CFL_UINT32 capacity) {
    list->length = 0;

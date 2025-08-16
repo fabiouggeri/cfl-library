@@ -23,6 +23,7 @@
 
 #include "cfl_buffer.h"
 #include "cfl_str.h"
+#include "cfl_mem.h"
 
 #define BUFFER_INI_SIZE 8192
 

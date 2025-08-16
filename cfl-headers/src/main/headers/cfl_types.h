@@ -23,7 +23,6 @@
 
 #include "cfl_os.h"
 #include "cfl_ints.h"
-#include "cfl_mem.h"
 
 #ifdef __cplusplus
 extern "C" {

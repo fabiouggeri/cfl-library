@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include "cfl_iterator.h"
+#include "cfl_mem.h"
 
 CFL_ITERATORP cfl_iterator_new(size_t dataSize) {
    CFL_ITERATORP it = CFL_MEM_ALLOC(sizeof(CFL_ITERATOR) + dataSize);

@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "cfl_mem.h"
 
 typedef struct {
@@ -18,6 +20,12 @@ void cfl_mem_set(CFL_MALLOC_FUNC malloc_func, CFL_REALLOC_FUNC realloc_func, CFL
 
 void * cfl_malloc(CFL_UINT64 size) {
    return mem_functions.malloc_func(size);
+}
+
+void * cfl_calloc(CFL_UINT64 numElements, CFL_UINT64 size) {
+   void *ptr = mem_functions.malloc_func(numElements * size);
+   memset(ptr, 0, numElements * size);
+   return ptr;
 }
 
 void * cfl_realloc(void *ptr, CFL_UINT64 size) {

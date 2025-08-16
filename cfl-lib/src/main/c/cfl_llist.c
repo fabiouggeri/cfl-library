@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 #include "cfl_llist.h"
+#include "cfl_mem.h"
 
 
 CFL_LLISTP cfl_llist_new(CFL_UINT32 maxNodeCache) {

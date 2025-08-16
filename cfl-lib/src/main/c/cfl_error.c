@@ -21,6 +21,7 @@
 
 #include "cfl_error.h"
 #include "cfl_str.h"
+#include "cfl_mem.h"
 
 CFL_ERRORP cfl_error_new() {
    CFL_ERRORP pError = (CFL_ERRORP) CFL_MEM_ALLOC(sizeof(CFL_ERROR));

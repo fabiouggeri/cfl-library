@@ -39,6 +39,7 @@
 
 #include "cfl_hash.h"
 #include "cfl_iterator.h"
+#include "cfl_mem.h"
 
 #define ROTL32(x,y) (x << y) | (x >> (32 - y))
 

@@ -25,16 +25,18 @@
 
 #include "cfl_types.h"
 
-typedef void* (*CFL_MALLOC_FUNC)(CFL_UINT64);
-typedef void* (*CFL_REALLOC_FUNC)(void *, CFL_UINT64);
-typedef void (*CFL_FREE_FUNC)(void *);
+typedef void* (*CFL_MALLOC_FUNC)(CFL_UINT64 size);
+typedef void* (*CFL_REALLOC_FUNC)(void *ptr, CFL_UINT64 size);
+typedef void (*CFL_FREE_FUNC)(void *ptr);
 
 #define CFL_MEM_ALLOC(s)      cfl_malloc(s)
+#define CFL_MEM_CALLOC(n, s)  cfl_calloc(n, s)
 #define CFL_MEM_REALLOC(m,s)  cfl_realloc(m,s)
 #define CFL_MEM_FREE(m)       cfl_free(m)
 
 extern void cfl_mem_set(CFL_MALLOC_FUNC malloc_func, CFL_REALLOC_FUNC realloc_func, CFL_FREE_FUNC free_func);
 extern void * cfl_malloc(CFL_UINT64 size);
+extern void * cfl_calloc(CFL_UINT64 numElements, CFL_UINT64 size);
 extern void * cfl_realloc(void *ptr, CFL_UINT64 size);
 extern void cfl_free(void *ptr);
 

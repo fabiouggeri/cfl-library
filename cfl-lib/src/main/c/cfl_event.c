@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 #include "cfl_event.h"
+#include "cfl_mem.h"
 
 #define GET_INTERNAL(e) ((CFL_EVENT_INTERNALP)e)
 

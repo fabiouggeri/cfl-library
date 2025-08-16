@@ -24,6 +24,7 @@
 #include "cfl_sql.h"
 #include "cfl_str.h"
 #include "cfl_list.h"
+#include "cfl_mem.h"
 
 #define DOUBLE_OP(fun_name, oper) static CFL_SQLP fun_name(CFL_SQLP left, CFL_SQLP right) { \
                                      CFL_SQL_DOUBLE_OPP newOp = (CFL_SQL_DOUBLE_OPP) CFL_MEM_ALLOC(sizeof(CFL_SQL_DOUBLE_OP)); \

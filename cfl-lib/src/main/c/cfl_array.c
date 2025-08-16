@@ -21,6 +21,7 @@
 #include <string.h>
 #include "cfl_array.h"
 #include "cfl_iterator.h"
+#include "cfl_mem.h"
 
 typedef struct _ARRAY_ITERATOR {
    CFL_ARRAYP array;

@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cfl_bitmap.h"
+#include "cfl_mem.h"
 
 CFL_BITMAPP cfl_bitmap_new(CFL_UINT16 uiNumBits) {
    CFL_BITMAPP bitMap = (CFL_BITMAPP) CFL_MEM_ALLOC(sizeof(CFL_BITMAP));

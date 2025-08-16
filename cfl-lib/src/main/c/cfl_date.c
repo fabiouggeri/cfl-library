@@ -21,6 +21,7 @@
 #include <time.h>
 
 #include "cfl_date.h"
+#include "cfl_mem.h"
 
 #define GREGORIAN_BASE 1582
 
