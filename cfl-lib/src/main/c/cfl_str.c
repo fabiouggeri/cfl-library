@@ -49,6 +49,19 @@ static CFL_BOOL ensureCapacityForLen(CFL_STRP str, CFL_UINT32 newLen) {
    return str->data != NULL;
 }
 
+/**
+ * Initializes a string structure with a given initial capacity.
+ * 
+ * This function initializes a CFL_STR structure, allocating memory for the string
+ * data if the initial capacity is greater than 0. If memory allocation fails or
+ * initial capacity is 0, the string will be initialized as an empty constant string.
+ *
+ * @param str Pointer to the CFL_STR structure to be initialized. If NULL, function returns without effect.
+ * @param iniCapacity Initial capacity for the string buffer. If 0, no memory is allocated.
+ *
+ * @note The actual allocated size will be iniCapacity + 1 to accommodate the null terminator.
+ * @note If memory allocation fails, the string will be initialized as an empty constant string.
+ */
 void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity) {
    if (str == NULL) {
       return;
@@ -73,6 +86,14 @@ void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity) {
    }
 }
 
+/**
+ * Initializes a CFL string structure with default values.
+ * Sets the string to an empty state with zero size, length and hash value.
+ * The data pointer is set to an empty string literal.
+ * 
+ * @param str Pointer to the CFL string structure to initialize.
+ *            If NULL, the function returns without doing anything.
+ */
 void cfl_str_init(CFL_STRP str) {
    if (str == NULL) {
       return;
@@ -85,6 +106,21 @@ void cfl_str_init(CFL_STRP str) {
    str->data = "";
 }
 
+/**
+ * @brief Initializes a CFL_STRP with a constant string buffer of specified length.
+ * 
+ * This function initializes a string structure with a provided buffer, setting it up
+ * as a constant (non-allocated) string. If the buffer is NULL or length is 0,
+ * the string is initialized as empty.
+ *
+ * @param str Pointer to the CFL_STRP structure to be initialized
+ * @param buffer Constant character buffer to be used as string data
+ * @param len Length of the buffer (not including null terminator)
+ * 
+ * @note The buffer is used directly without copying, so it must remain valid
+ *       for the lifetime of the string
+ * @note The function will do nothing if str is NULL
+ */
 void cfl_str_initConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 len) {
    if (str == NULL) {
       return;
@@ -103,10 +139,34 @@ void cfl_str_initConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 len) {
    }
 }
 
+/**
+ * @brief Initializes a CFL string with a constant buffer
+ * 
+ * This function initializes a CFL string structure with a constant character buffer.
+ * If the buffer is NULL, the string will be initialized with length 0.
+ * 
+ * @param str Pointer to the CFL string structure to be initialized
+ * @param buffer Constant character buffer to initialize the string with
+ * 
+ * @note The buffer is not copied, the string will reference the original buffer
+ */
 void cfl_str_initConst(CFL_STRP str, const char *buffer) {
    cfl_str_initConstLen(str, buffer, buffer == NULL ? 0 : (CFL_UINT32) strlen(buffer));
 }
 
+/**
+ * @brief Initializes a CFL string with a given buffer value
+ *
+ * This function initializes a CFL string structure with the contents of the provided buffer.
+ * If the buffer is NULL or empty, the string will be initialized as empty.
+ * The function allocates memory for the string data if needed.
+ *
+ * @param str Pointer to the CFL string structure to initialize
+ * @param buffer Source buffer containing the initial string value (can be NULL)
+ *
+ * @note If memory allocation fails, the string will be initialized as empty
+ * @note The string takes ownership of the allocated memory if successful
+ */
 void cfl_str_initValue(CFL_STRP str, const char *buffer) {
    size_t len;
    if (str == NULL) {
@@ -135,6 +195,22 @@ void cfl_str_initValue(CFL_STRP str, const char *buffer) {
    }
 }
 
+/**
+ * Creates a new string with the specified initial capacity.
+ * 
+ * This function allocates memory for a new string structure and its data buffer.
+ * The string is initialized as empty but with space to store the specified number
+ * of characters plus the null terminator.
+ *
+ * @param iniCapacity The initial capacity of the string buffer (number of chars that can be stored)
+ *                    If 0, creates an empty string with minimum allocation.
+ * 
+ * @return A pointer to the newly created string structure (CFL_STRP),
+ *         or NULL if memory allocation fails
+ * 
+ * @note The actual allocated size will be iniCapacity + 1 to accommodate the null terminator
+ * @note The returned string is marked as allocated and variable data
+ */
 CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
    CFL_STRP str;
    if (iniCapacity == 0) {
@@ -159,6 +235,22 @@ CFL_STRP cfl_str_new(CFL_UINT32 iniCapacity) {
    return str;
 }
 
+/**
+ * Creates a new CFL string from a buffer with specified length.
+ * 
+ * This function allocates memory for a new string structure and copies
+ * the content from the provided buffer up to the specified length.
+ * The resulting string is null-terminated.
+ *
+ * @param buffer The source buffer containing the string content to copy.
+ *               If NULL or empty, returns an empty string.
+ * @param len The number of characters to copy from the buffer.
+ *           If 0, returns an empty string.
+ *
+ * @return A pointer to the newly created CFL_STR structure, or NULL if
+ *         memory allocation fails. The returned string must be freed
+ *         using cfl_str_free() when no longer needed.
+ */
 CFL_STRP cfl_str_newBufferLen(const char *buffer, CFL_UINT32 len) {
    CFL_STRP str;
    if (buffer == NULL || len == 0) {
@@ -184,10 +276,34 @@ CFL_STRP cfl_str_newBufferLen(const char *buffer, CFL_UINT32 len) {
    return str;
 }
 
+/**
+ * Creates a new CFL string from a C-style string buffer.
+ *
+ * @param buffer The source C-style string buffer to create the CFL string from.
+ *               If NULL, an empty string will be created.
+ * @return A new CFL string pointer (CFL_STRP) containing the contents of the buffer.
+ *         The returned string must be freed using cfl_str_free when no longer needed.
+ */
 CFL_STRP cfl_str_newBuffer(const char *buffer) {
    return cfl_str_newBufferLen(buffer, buffer != NULL ? (CFL_UINT32) strlen(buffer) : 0);
 }
 
+/**
+ * Creates a new string object with a constant buffer of specified length.
+ * 
+ * This function creates a new CFL_STR structure and initializes it with the provided
+ * buffer and length. The buffer is not copied but directly referenced.
+ * 
+ * @param buffer Pointer to the constant character buffer to reference. If NULL or
+ *              length is 0, an empty string will be created.
+ * @param len Length of the buffer in characters
+ * 
+ * @return A pointer to the newly created CFL_STR structure, or NULL if memory
+ *         allocation fails
+ * 
+ * @note The buffer is not copied, the string object will reference the original buffer.
+ *       The caller must ensure the buffer remains valid for the lifetime of the string.
+ */
 CFL_STRP cfl_str_newConstLen(const char *buffer, CFL_UINT32 len) {
    CFL_STRP str = (CFL_STRP) CFL_MEM_ALLOC(sizeof(CFL_STR));
    if (str == NULL) {
@@ -208,10 +324,33 @@ CFL_STRP cfl_str_newConstLen(const char *buffer, CFL_UINT32 len) {
    return str;
 }
 
+/**
+ * Creates a new string from a constant buffer.
+ * 
+ * @param buffer The constant buffer to create the string from. If NULL, an empty string is created.
+ * @return A new string pointer (CFL_STRP) containing the buffer content.
+ */
 CFL_STRP cfl_str_newConst(const char *buffer) {
    return cfl_str_newConstLen(buffer, buffer != NULL ? (CFL_UINT32) strlen(buffer) : 0);
 }
 
+/**
+ * Creates a new string by copying an existing one
+ * 
+ * This function creates a new CFL_STR structure and initializes it with the contents
+ * of the provided string. If the source string contains variable data (isVarData is true),
+ * it allocates new memory and copies the data. Otherwise, it shares the data pointer.
+ * 
+ * @param strSet Pointer to the source string structure to copy from.
+ *               If NULL or empty, returns a new empty string.
+ * 
+ * @return Pointer to the newly created string structure (CFL_STRP),
+ *         or NULL if memory allocation fails
+ * 
+ * @note The function handles both variable and fixed data strings differently:
+ *       - For variable data: Allocates new memory and copies the content
+ *       - For fixed data: Shares the data pointer with the source string
+ */
 CFL_STRP cfl_str_newStr(CFL_STRP strSet) {
    CFL_STRP str;
    if (strSet == NULL || strSet->length == 0) {
@@ -242,6 +381,16 @@ CFL_STRP cfl_str_newStr(CFL_STRP strSet) {
    return str;
 }
 
+/**
+ * @brief Frees memory associated with a string object
+ * 
+ * This function deallocates memory used by a CFL_STRP string object.
+ * If the string has variable data allocated, it frees that memory first.
+ * If the string object itself was dynamically allocated, it frees the object as well.
+ *
+ * @param str Pointer to the string object to be freed
+ * @note If str is NULL, the function returns without doing anything
+ */
 void cfl_str_free(CFL_STRP str) {
    if (str == NULL) {
       return;
@@ -254,6 +403,18 @@ void cfl_str_free(CFL_STRP str) {
    }
 }
 
+/**
+ * Appends a character to the end of a string.
+ * If the input string is NULL, creates a new string with default capacity.
+ * 
+ * @param str The string to append to, or NULL to create a new string
+ * @param c The character to append
+ * @return The resulting string, or NULL if memory allocation fails
+ * 
+ * @note If the input string needs to grow to accommodate the new character,
+ *       it will be reallocated with increased capacity.
+ * @note The hash value of the string is invalidated (set to 0) after appending.
+ */
 CFL_STRP cfl_str_appendChar(CFL_STRP str, char c) {
    CFL_BOOL bSuccess;
    if (str == NULL) {
@@ -271,6 +432,24 @@ CFL_STRP cfl_str_appendChar(CFL_STRP str, char c) {
    return str;
 }
 
+/**
+ * Concatenates multiple strings to an existing CFL_STR object.
+ * 
+ * This function appends a variable number of string arguments to the given CFL_STR object.
+ * If the input string object is NULL, a new string object is created with default capacity.
+ * The function ensures there is enough capacity to store all appended strings.
+ * 
+ * @param str The target CFL_STR object to append to. If NULL, a new string is created.
+ * @param buffer The first string to append, followed by additional string arguments.
+ * @param ... Variable number of string arguments (must be char*), terminated by NULL.
+ * @return The resulting CFL_STR object after appending all strings.
+ * 
+ * @note The function resets the hash value of the resulting string to 0.
+ * @note All variable arguments must be of type char* and the list must be NULL-terminated.
+ * 
+ * Example usage:
+ * CFL_STRP result = cfl_str_append(str, "Hello", " ", "World", NULL);
+ */
 CFL_STRP cfl_str_append(CFL_STRP str, const char * buffer, ...) {
    va_list va;
    char * strPtr = (char *) buffer;
@@ -295,6 +474,18 @@ CFL_STRP cfl_str_append(CFL_STRP str, const char * buffer, ...) {
    return str;
 }
 
+/**
+ * @brief Appends a buffer of a given length to a string.
+ * 
+ * If the input string is NULL and the buffer is valid, creates a new string with the buffer content.
+ * If the input string is NULL and the buffer is invalid, creates a new empty string with default capacity.
+ * If the input string exists and the buffer is valid, appends the buffer content to the existing string.
+ * 
+ * @param str The string to append to, or NULL to create a new string
+ * @param buffer The buffer containing the characters to append
+ * @param bufferLen The number of characters to append from the buffer
+ * @return CFL_STRP The resulting string (either new or modified), or NULL if memory allocation fails
+ */
 CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer, CFL_UINT32 bufferLen) {
    if (buffer != NULL && bufferLen > 0) {
       if (str == NULL) {
@@ -311,6 +502,18 @@ CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer, CFL_UINT32 bufferLe
    return str;
 }
 
+/**
+ * Appends a string to another string.
+ * 
+ * @param str The destination string to append to. If NULL, a new string will be created.
+ * @param strAppend The source string to append. If NULL or empty, no append operation is performed.
+ * 
+ * @return The resulting string after append operation. If str is NULL and strAppend is NULL/empty,
+ *         returns a new empty string with default capacity.
+ * 
+ * @note If the destination string doesn't have enough capacity, it will be automatically resized.
+ *       The hash value of the destination string is reset to 0 after append.
+ */
 CFL_STRP cfl_str_appendStr(CFL_STRP str, CFL_STRP strAppend) {
    if (strAppend != NULL && strAppend->length > 0) {
       if (str == NULL) {
@@ -327,6 +530,21 @@ CFL_STRP cfl_str_appendStr(CFL_STRP str, CFL_STRP strAppend) {
    return str;
 }
 
+/**
+ * Appends a formatted string to an existing string using variable arguments.
+ * 
+ * @param str The target string to append to. If NULL, a new string will be created.
+ * @param format The format string specifying how to format the variable arguments.
+ * @param varArgs A va_list containing the variable arguments to format.
+ * 
+ * @return Returns the resulting string pointer (CFL_STRP). If input str was NULL, 
+ *         returns a newly allocated string. If an error occurs during allocation 
+ *         or formatting, returns NULL or the original string unchanged.
+ * 
+ * @note The function first calculates required length, ensures capacity, then 
+ *       performs the actual formatting. The string's hash value is reset to 0
+ *       after modification.
+ */
 CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char * format, va_list varArgs) {
    int iLen;
    va_list varArgsCopy;
@@ -352,6 +570,20 @@ CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char * format, va_list var
    return str;
 }
 
+/**
+ * @brief Appends formatted text to a string
+ * 
+ * This function appends text formatted according to the format string to the given CFL_STRP string.
+ * The format string follows the same rules as printf.
+ *
+ * @param str The string to append to
+ * @param format The format string following printf conventions
+ * @param ... Variable arguments corresponding to format specifiers
+ * 
+ * @return The modified string (CFL_STRP)
+ * 
+ * @note The function uses variable arguments internally and properly handles their cleanup
+ */
 CFL_STRP cfl_str_appendFormat(CFL_STRP str, const char * format, ...) {
    va_list varArgs;
 
@@ -361,6 +593,23 @@ CFL_STRP cfl_str_appendFormat(CFL_STRP str, const char * format, ...) {
    return str;
 }
 
+/**
+ * Sets the content of a string using a format string and variable arguments.
+ * 
+ * This function formats a string similar to sprintf but manages memory automatically.
+ * If the input string pointer is NULL, a new string will be allocated.
+ * If the formatting fails, an empty string will be returned.
+ * 
+ * @param str      Pointer to the string to be modified, or NULL to create a new string
+ * @param format   Format string following printf conventions
+ * @param varArgs  Variable argument list containing values to be formatted
+ * 
+ * @return         Pointer to the resulting string (may be newly allocated if input was NULL),
+ *                 or NULL if memory allocation fails
+ * 
+ * @note The function calculates required space first to ensure proper memory allocation
+ * @note The hashValue of the string is reset to 0 after modification
+ */
 CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char * format, va_list varArgs) {
    int iLen;
    va_list varArgsCopy;
@@ -388,6 +637,16 @@ CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char * format, va_list varArg
    return str;
 }
 
+/**
+ * @brief Sets the string content using a formatted string with variable arguments.
+ * 
+ * @param str The string object to modify
+ * @param format The format string following printf conventions
+ * @param ... Variable arguments corresponding to the format specifiers
+ * @return CFL_STRP The modified string object
+ * 
+ * @note This function internally uses cfl_str_setFormatArgs to perform the actual formatting
+ */
 CFL_STRP cfl_str_setFormat(CFL_STRP str, const char * format, ...) {
    va_list varArgs;
 
@@ -397,6 +656,16 @@ CFL_STRP cfl_str_setFormat(CFL_STRP str, const char * format, ...) {
    return str;
 }
 
+/**
+ * Sets a character at the specified index in a string.
+ * If the string is NULL, creates a new string with length index + 1.
+ * If the index is beyond the current string length, extends the string to accommodate the new index.
+ *
+ * @param str The string to modify. If NULL, a new string will be created.
+ * @param index The position where to set the character.
+ * @param c The character to set at the specified position.
+ * @return The modified string (or newly created string if input was NULL).
+ */
 CFL_STRP cfl_str_setChar(CFL_STRP str, CFL_UINT32 index, char c) {
    if (str == NULL) {
       str = cfl_str_new(index + 1);
@@ -408,10 +677,28 @@ CFL_STRP cfl_str_setChar(CFL_STRP str, CFL_UINT32 index, char c) {
    return str;
 }
 
+/**
+ * @brief Returns a pointer to the internal character array of a string.
+ *
+ * @param str The CFL_STRP (string pointer) to get the data from.
+ * @return char* Pointer to the internal character array.
+ * 
+ * @warning The returned pointer should not be modified directly as it points to 
+ *          the internal data of the string structure.
+ */
 char *cfl_str_getPtr(const CFL_STRP str) {
    return str->data;
 }
 
+/**
+ * Returns a pointer to the character at the specified index in the string.
+ * 
+ * @param str   The string to get the character from
+ * @param index The index of the character to get
+ * 
+ * @return A pointer to the character at the specified index, or NULL if the index
+ *         is out of bounds
+ */
 char *cfl_str_getPtrAt(const CFL_STRP str, CFL_UINT32 index) {
    if (index >= str->length) {
       return NULL;
@@ -424,10 +711,28 @@ CFL_UINT32 cfl_str_getLength(const CFL_STRP str) {
    return str->length;
 }
 
+/**
+ * Returns the length of the given string.
+ *
+ * @param str Pointer to a CFL string structure
+ * @return The length of the string as CFL_UINT32
+ */
 CFL_UINT32 cfl_str_length(const CFL_STRP str) {
    return str->length;
 }
 
+/**
+ * Sets the length of a string to the specified value.
+ * If the new length is greater than the current length, the additional space
+ * is filled with spaces. If the new length is smaller, the string is truncated.
+ * 
+ * @param str Pointer to the string structure to modify
+ * @param newLen The new desired length for the string
+ * 
+ * @note The function ensures the target string has enough capacity before sets.
+ * @note The hash value is reset to 0 after modification.
+ * A null terminator is always added at the end of the string.
+ */
 void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen) {
    if (ensureCapacityForLen(str, newLen)) {
       if (newLen > str->length) {
@@ -439,6 +744,17 @@ void cfl_str_setLength(CFL_STRP str, CFL_UINT32 newLen) {
    }
 }
 
+/**
+ * @brief Clears the content of a CFL string
+ *
+ * Clears the string by either:
+ * - Setting first character to null terminator if string has variable data
+ * - Setting data pointer to empty string and size to 0 if string has fixed data
+ * 
+ * Also resets the hash value and length to 0.
+ *
+ * @param str Pointer to the CFL string to be cleared
+ */
 void cfl_str_clear(CFL_STRP str) {
    if (str->isVarData) {
       str->data[0] = '\0';
@@ -450,6 +766,15 @@ void cfl_str_clear(CFL_STRP str) {
    str->length = 0;
 }
 
+/**
+ * Sets the string content of a CFL_STRP from another CFL_STRP source string.
+ * 
+ * @param str   The destination string to be modified
+ * @param src   The source string to copy from
+ * 
+ * @return      Returns the modified destination string (str)
+ *              If src is NULL or empty, sets str to empty string
+ */
 CFL_STRP cfl_str_setStr(CFL_STRP str, const CFL_STRP src) {
    if (src != NULL && src->length > 0) {
       return cfl_str_setValueLen(str, src->data, src->length);
@@ -458,6 +783,20 @@ CFL_STRP cfl_str_setStr(CFL_STRP str, const CFL_STRP src) {
    }
 }
 
+/**
+ * Sets or creates a string with the given buffer content.
+ * 
+ * @param str The target string to set. If NULL, a new string will be created.
+ * @param buffer The source buffer containing the content to be set.
+ * @param bufferLen The length of the source buffer.
+ * 
+ * @return The modified string if str was provided, or a new string if str was NULL.
+ *         Returns NULL if memory allocation fails when creating a new string.
+ * 
+ * @note If buffer is NULL or bufferLen is 0, the string will be cleared.
+ *       The function ensures the target string has enough capacity before copying.
+ *       After setting, the string's hash value is reset to 0.
+ */
 CFL_STRP cfl_str_setValueLen(CFL_STRP str, const char *buffer, CFL_UINT32 bufferLen) {
    if (str == NULL) {
       return cfl_str_newBufferLen(buffer, bufferLen);
@@ -474,10 +813,33 @@ CFL_STRP cfl_str_setValueLen(CFL_STRP str, const char *buffer, CFL_UINT32 buffer
    return str;
 }
 
+/**
+ * Sets the value of a string from a buffer.
+ *
+ * @param str The string to set the value of
+ * @param buffer The source buffer containing the string to set. If NULL, the string will be empty
+ * @return The string pointer with the new value set, or NULL if the operation fails
+ */
 CFL_STRP cfl_str_setValue(CFL_STRP str, const char *buffer) {
    return cfl_str_setValueLen(str, buffer, buffer != NULL ? (CFL_UINT32) strlen(buffer) : 0);
 }
 
+/**
+ * Sets or creates a new string with constant length data.
+ * 
+ * If the input string pointer is NULL, creates a new string.
+ * If the input string pointer exists, replaces its content.
+ * The function takes ownership of the buffer memory - it will not copy the data.
+ * 
+ * @param str       The string to be modified, or NULL to create a new one
+ * @param buffer    The buffer containing the string data
+ * @param bufferLen The length of the buffer
+ * @return         The modified or newly created string
+ * 
+ * @note If buffer is NULL or bufferLen is 0, the string will be set to empty
+ * @note The buffer must remain valid for the lifetime of the string
+ * @note Any previous variable data in the string will be freed
+ */
 CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 bufferLen) {
    if (str == NULL) {
       return cfl_str_newConstLen(buffer, bufferLen);
@@ -499,10 +861,38 @@ CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 buffer
    }
 }
 
+/**
+ * @brief Sets a string constant to an existing CFL_STRP structure
+ * 
+ * This function sets a string constant to an existing CFL_STRP structure by using
+ * the provided buffer. It internally calls cfl_str_setConstLen with the buffer's length
+ * calculated using strlen.
+ * 
+ * @param str Pointer to the CFL_STRP structure to be modified
+ * @param buffer Constant string buffer to be set. If NULL, length will be set to 0
+ * @return Pointer to the modified CFL_STRP structure
+ * 
+ * @see cfl_str_setConstLen
+ */
 CFL_STRP cfl_str_setConst(CFL_STRP str, const char *buffer) {
    return cfl_str_setConstLen(str, buffer, buffer != NULL ? (CFL_UINT32) strlen(buffer) : 0);
 }
 
+/**
+ * Compares two strings lexicographically.
+ * 
+ * @param str1 First string to compare
+ * @param str2 Second string to compare
+ * @param bExact If TRUE, performs exact comparison. If FALSE, treats strings as equal if one is a prefix of the other
+ * 
+ * @return Returns:
+ *         0  if strings are equal (or one is prefix of other when bExact is FALSE)
+ *         -1 if str1 is lexicographically less than str2
+ *         1  if str1 is lexicographically greater than str2
+ * 
+ * @note If str1 and str2 point to the same string or have the same data pointer,
+ *       they are considered equal and function returns 0 immediately
+ */
 CFL_INT16 cfl_str_compare(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact) {
    char *s1;
    char *s2;
@@ -531,6 +921,21 @@ CFL_INT16 cfl_str_compare(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bEx
    return 0;
 }
 
+/**
+ * Compares two strings ignoring case.
+ * 
+ * @param str1 Pointer to the first string to compare
+ * @param str2 Pointer to the second string to compare
+ * @param bExact If CFL_TRUE, performs exact comparison. If CFL_FALSE, treats strings as equal if one is a prefix of the other
+ * 
+ * @return Returns:
+ *         - 0 if strings are equal or if one is prefix of other (when bExact is CFL_FALSE)
+ *         - -1 if str1 is lexicographically less than str2
+ *         - 1 if str1 is lexicographically greater than str2
+ * 
+ * @note The comparison is case-insensitive (e.g., 'A' equals 'a')
+ * @note If str1 and str2 point to the same string or same data, returns 0 immediately
+ */
 CFL_INT16 cfl_str_compareIgnoreCase(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact) {
    char *s1;
    char *s2;
@@ -559,6 +964,13 @@ CFL_INT16 cfl_str_compareIgnoreCase(const CFL_STRP str1, const CFL_STRP str2, CF
    return 0;
 }
 
+/**
+ * Checks if a string starts with another string.
+ * 
+ * @param str The string to check
+ * @param strStart The string to find at the start
+ * @return CFL_TRUE if str starts with strStart, CFL_FALSE otherwise
+ */
 CFL_BOOL cfl_str_startsWith(const CFL_STRP str, const CFL_STRP strStart) {
    if (strStart->length > str->length) {
       return CFL_FALSE;

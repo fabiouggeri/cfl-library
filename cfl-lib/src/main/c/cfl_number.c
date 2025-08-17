@@ -49,7 +49,7 @@ static void numbits_ensure_bits(CFL_NUM_BITS *b, size_t bits) {
   if (needw > b->capw) {
     size_t ncap = b->capw ? b->capw : 4;
     while (ncap < needw) ncap *= 2;
-    b->w = (uint32_t *)CFL_MEM_REALLOC(b->w, ncap * sizeof(uint32_t));
+    b->w = (CFL_UINT32 *)CFL_MEM_REALLOC(b->w, ncap * sizeof(CFL_UINT32));
     // zera área nova
     for (size_t i = b->capw; i < ncap; ++i) b->w[i] = 0;
     b->capw = ncap;
@@ -64,7 +64,7 @@ static void numbits_trim(CFL_NUM_BITS *b) {
     return;
   }
   // localiza MSB do último word
-  uint32_t x = b->w[nw - 1];
+  CFL_UINT32 x = b->w[nw - 1];
   size_t msb = 31u;
   while (msb > 0 && ((x >> msb) & 1u) == 0) msb--;
   b->nbits = (nw - 1) * 32u + (msb + 1);
@@ -72,14 +72,14 @@ static void numbits_trim(CFL_NUM_BITS *b) {
 
 static int numbits_is_zero(const CFL_NUM_BITS *b) { return b->nbits == 0; }
 
-static uint32_t numbits_get_bit(const CFL_NUM_BITS *b, size_t i) {
+static CFL_UINT32 numbits_get_bit(const CFL_NUM_BITS *b, size_t i) {
   if (i >= b->nbits) return 0;
   size_t wi = i >> 5;
   unsigned sh = (unsigned)(i & 31u);
   return (b->w[wi] >> sh) & 1u;
 }
 
-static void numbits_set_bit(CFL_NUM_BITS *b, size_t i, uint32_t v) {
+static void numbits_set_bit(CFL_NUM_BITS *b, size_t i, CFL_UINT32 v) {
   if (v) {
     numbits_ensure_bits(b, i + 1);
     size_t wi = i >> 5;
@@ -100,20 +100,20 @@ static CFL_NUM_BITS numbits_clone(const CFL_NUM_BITS *a) {
   numbits_init(&r);
   size_t nw = numbits_words(a);
   if (nw) {
-    r.w = (uint32_t *)CFL_MEM_ALLOC(nw * sizeof(uint32_t));
-    memcpy(r.w, a->w, nw * sizeof(uint32_t));
+    r.w = (CFL_UINT32 *)CFL_MEM_ALLOC(nw * sizeof(CFL_UINT32));
+    memcpy(r.w, a->w, nw * sizeof(CFL_UINT32));
   }
   r.capw = nw;
   r.nbits = a->nbits;
   return r;
 }
 
-static void numbits_from_uint64(CFL_NUM_BITS *b, uint64_t v) {
+static void numbits_from_uint64(CFL_NUM_BITS *b, CFL_UINT64 v) {
   numbits_init(b);
   if (v == 0) return;
   numbits_ensure_bits(b, 64);
-  b->w[0] = (uint32_t)(v & 0xFFFFFFFFu);
-  b->w[1] = (uint32_t)(v >> 32);
+  b->w[0] = (CFL_UINT32)(v & 0xFFFFFFFFu);
+  b->w[1] = (CFL_UINT32)(v >> 32);
   b->nbits = (v >> 32) ? 64 : 32;
   numbits_trim(b);
 }
@@ -133,17 +133,17 @@ static CFL_NUM_BITS numbits_add(const CFL_NUM_BITS *a, const CFL_NUM_BITS *b) {
   size_t wa = numbits_words(a), wb = numbits_words(b);
   size_t wn = (wa > wb ? wa : wb) + 1;
   if (wn == 0) return r;
-  r.w = (uint32_t *)CFL_MEM_CALLOC(wn, sizeof(uint32_t));
+  r.w = (CFL_UINT32 *)CFL_MEM_CALLOC(wn, sizeof(CFL_UINT32));
   r.capw = wn;
-  uint64_t carry = 0;
+  CFL_UINT64 carry = 0;
   for (size_t i = 0; i < wn - 1; ++i) {
-    uint64_t av = (i < wa) ? a->w[i] : 0u;
-    uint64_t bv = (i < wb) ? b->w[i] : 0u;
-    uint64_t s = av + bv + carry;
-    r.w[i] = (uint32_t)s;
+    CFL_UINT64 av = (i < wa) ? a->w[i] : 0u;
+    CFL_UINT64 bv = (i < wb) ? b->w[i] : 0u;
+    CFL_UINT64 s = av + bv + carry;
+    r.w[i] = (CFL_UINT32)s;
     carry = s >> 32;
   }
-  r.w[wn - 1] = (uint32_t)carry;
+  r.w[wn - 1] = (CFL_UINT32)carry;
   r.nbits = wn * 32u;
   numbits_trim(&r);
   return r;
@@ -155,19 +155,19 @@ static CFL_NUM_BITS numbits_sub(const CFL_NUM_BITS *a, const CFL_NUM_BITS *b) {
   numbits_init(&r);
   size_t wa = numbits_words(a), wb = numbits_words(b);
   size_t wn = wa ? wa : 1;
-  r.w = (uint32_t *)CFL_MEM_CALLOC(wn, sizeof(uint32_t));
+  r.w = (CFL_UINT32 *)CFL_MEM_CALLOC(wn, sizeof(CFL_UINT32));
   r.capw = wn;
-  int64_t borrow = 0;
+  CFL_INT64 borrow = 0;
   for (size_t i = 0; i < wn; ++i) {
-    int64_t av = (i < wa) ? (int64_t)(uint64_t)a->w[i] : 0;
-    int64_t bv = (i < wb) ? (int64_t)(uint64_t)b->w[i] : 0;
-    int64_t s = av - bv - borrow;
+    CFL_INT64 av = (i < wa) ? (CFL_INT64)(CFL_UINT64)a->w[i] : 0;
+    CFL_INT64 bv = (i < wb) ? (CFL_INT64)(CFL_UINT64)b->w[i] : 0;
+    CFL_INT64 s = av - bv - borrow;
     if (s < 0) {
-      s += ((int64_t)1 << 32);
+      s += ((CFL_INT64)1 << 32);
       borrow = 1;
     } else
       borrow = 0;
-    r.w[i] = (uint32_t)s;
+    r.w[i] = (CFL_UINT32)s;
   }
   r.nbits = wn * 32u;
   numbits_trim(&r);
@@ -183,7 +183,7 @@ static void numbits_shl_inplace(CFL_NUM_BITS *a, size_t k) {
   numbits_ensure_bits(a, (wa * 32u) + k + 1);
   // move de cima para baixo
   for (size_t i = wa; i-- > 0;) {
-    uint32_t cur = a->w[i];
+    CFL_UINT32 cur = a->w[i];
     size_t dst = i + word_shift;
     a->w[dst] |= (bit_shift ? (cur << bit_shift) : cur);
     if (bit_shift && dst + 1 < a->capw) {
@@ -201,27 +201,27 @@ static CFL_NUM_BITS numbits_shl(const CFL_NUM_BITS *a, size_t k) {
   return r;
 }
 
-static CFL_NUM_BITS numbits_mul_small(const CFL_NUM_BITS *a, uint32_t m) {
+static CFL_NUM_BITS numbits_mul_small(const CFL_NUM_BITS *a, CFL_UINT32 m) {
   CFL_NUM_BITS r;
   numbits_init(&r);
   if (m == 0 || numbits_is_zero(a)) return r;
   if (m == 1) return numbits_clone(a);
   size_t wa = numbits_words(a);
   r.capw = wa + 2;
-  r.w = (uint32_t *)CFL_MEM_CALLOC(r.capw, sizeof(uint32_t));
-  uint64_t carry = 0;
+  r.w = (CFL_UINT32 *)CFL_MEM_CALLOC(r.capw, sizeof(CFL_UINT32));
+  CFL_UINT64 carry = 0;
   for (size_t i = 0; i < wa; ++i) {
-    uint64_t p = (uint64_t)a->w[i] * m + carry;
-    r.w[i] = (uint32_t)p;
+    CFL_UINT64 p = (CFL_UINT64)a->w[i] * m + carry;
+    r.w[i] = (CFL_UINT32)p;
     carry = p >> 32;
   }
-  r.w[wa] = (uint32_t)carry;
+  r.w[wa] = (CFL_UINT32)carry;
   r.nbits = (wa + 1) * 32u;
   numbits_trim(&r);
   return r;
 }
 
-static void numbits_mul_small_inplace(CFL_NUM_BITS *a, uint32_t m) {
+static void numbits_mul_small_inplace(CFL_NUM_BITS *a, CFL_UINT32 m) {
   if (m == 0 || numbits_is_zero(a)) {
     numbits_free(a);
     numbits_init(a);
@@ -230,33 +230,33 @@ static void numbits_mul_small_inplace(CFL_NUM_BITS *a, uint32_t m) {
   if (m == 1) return;
   size_t wa = numbits_words(a);
   numbits_ensure_bits(a, (wa + 1) * 32u);
-  uint64_t carry = 0;
+  CFL_UINT64 carry = 0;
   for (size_t i = 0; i < wa; ++i) {
-    uint64_t p = (uint64_t)a->w[i] * m + carry;
-    a->w[i] = (uint32_t)p;
+    CFL_UINT64 p = (CFL_UINT64)a->w[i] * m + carry;
+    a->w[i] = (CFL_UINT32)p;
     carry = p >> 32;
   }
-  a->w[wa] = (uint32_t)carry;
+  a->w[wa] = (CFL_UINT32)carry;
   a->nbits = (wa + 1) * 32u;
   numbits_trim(a);
 }
 
-static void numbits_add_small_inplace(CFL_NUM_BITS *a, uint32_t s) {
+static void numbits_add_small_inplace(CFL_NUM_BITS *a, CFL_UINT32 s) {
   size_t wa = numbits_words(a);
   if (wa == 0) {
     numbits_from_uint64(a, s);
     return;
   }
-  uint64_t carry = s;
+  CFL_UINT64 carry = s;
   for (size_t i = 0; i < wa; ++i) {
-    uint64_t v = (uint64_t)a->w[i] + carry;
-    a->w[i] = (uint32_t)v;
+    CFL_UINT64 v = (CFL_UINT64)a->w[i] + carry;
+    a->w[i] = (CFL_UINT32)v;
     carry = v >> 32;
     if (!carry) break;
   }
   if (carry) {
     numbits_ensure_bits(a, (wa + 1) * 32u);
-    a->w[wa] = (uint32_t)carry;
+    a->w[wa] = (CFL_UINT32)carry;
   }
   a->nbits = (wa + (carry ? 1 : 0)) * 32u;
   numbits_trim(a);
@@ -268,16 +268,16 @@ static CFL_NUM_BITS numbits_mul(const CFL_NUM_BITS *a, const CFL_NUM_BITS *b) {
   if (numbits_is_zero(a) || numbits_is_zero(b)) return r;
   size_t wa = numbits_words(a), wb = numbits_words(b);
   size_t wn = wa + wb + 1;
-  r.w = (uint32_t *)CFL_MEM_CALLOC(wn, sizeof(uint32_t));
+  r.w = (CFL_UINT32 *)CFL_MEM_CALLOC(wn, sizeof(CFL_UINT32));
   r.capw = wn;
   for (size_t i = 0; i < wa; ++i) {
-    uint64_t carry = 0;
+    CFL_UINT64 carry = 0;
     for (size_t j = 0; j < wb; ++j) {
-      uint64_t cur = (uint64_t)a->w[i] * b->w[j] + r.w[i + j] + carry;
-      r.w[i + j] = (uint32_t)cur;
+      CFL_UINT64 cur = (CFL_UINT64)a->w[i] * b->w[j] + r.w[i + j] + carry;
+      r.w[i + j] = (CFL_UINT32)cur;
       carry = cur >> 32;
     }
-    r.w[i + wb] += (uint32_t)carry;
+    r.w[i + wb] += (CFL_UINT32)carry;
   }
   r.nbits = wn * 32u;
   numbits_trim(&r);
@@ -291,17 +291,17 @@ static CFL_NUM_BITS numbits_sub_inplace_clone(CFL_NUM_BITS *A,
   CFL_NUM_BITS r;
   numbits_init(&r);
   size_t wa = numbits_words(A), wb = numbits_words(B);
-  int64_t borrow = 0;
+  CFL_INT64 borrow = 0;
   for (size_t i = 0; i < wa; ++i) {
-    int64_t av = (int64_t)(uint64_t)A->w[i];
-    int64_t bv = (i < wb) ? (int64_t)(uint64_t)B->w[i] : 0;
-    int64_t s = av - bv - borrow;
+    CFL_INT64 av = (CFL_INT64)(CFL_UINT64)A->w[i];
+    CFL_INT64 bv = (i < wb) ? (CFL_INT64)(CFL_UINT64)B->w[i] : 0;
+    CFL_INT64 s = av - bv - borrow;
     if (s < 0) {
-      s += ((int64_t)1 << 32);
+      s += ((CFL_INT64)1 << 32);
       borrow = 1;
     } else
       borrow = 0;
-    A->w[i] = (uint32_t)s;
+    A->w[i] = (CFL_UINT32)s;
   }
   A->nbits = wa * 32u;
   numbits_trim(A);
@@ -352,8 +352,8 @@ static CFL_NUM_BITS numbits_divmod(const CFL_NUM_BITS *A, const CFL_NUM_BITS *B,
   return dummy;
 }
 
-static void numbits_div_small(const CFL_NUM_BITS *A, uint32_t d,
-                              CFL_NUM_BITS *Q, uint32_t *R) {
+static void numbits_div_small(const CFL_NUM_BITS *A, CFL_UINT32 d,
+                              CFL_NUM_BITS *Q, CFL_UINT32 *R) {
   // d != 0, divide por pequeno inteiro
   size_t wa = numbits_words(A);
   if (wa == 0) {
@@ -364,18 +364,18 @@ static void numbits_div_small(const CFL_NUM_BITS *A, uint32_t d,
   CFL_NUM_BITS q;
   numbits_init(&q);
   q.capw = wa;
-  q.w = (uint32_t *)CFL_MEM_CALLOC(wa, sizeof(uint32_t));
-  uint64_t rem = 0;
+  q.w = (CFL_UINT32 *)CFL_MEM_CALLOC(wa, sizeof(CFL_UINT32));
+  CFL_UINT64 rem = 0;
   for (size_t i = wa; i-- > 0;) {
-    uint64_t cur = (rem << 32) | A->w[i];
-    uint32_t qw = (uint32_t)(cur / d);
+    CFL_UINT64 cur = (rem << 32) | A->w[i];
+    CFL_UINT32 qw = (CFL_UINT32)(cur / d);
     rem = cur % d;
     q.w[i] = qw;
   }
   q.nbits = wa * 32u;
   numbits_trim(&q);
   *Q = q;
-  *R = (uint32_t)rem;
+  *R = (CFL_UINT32)rem;
 }
 
 void cfl_number_init(CFL_NUMBER *x) {
@@ -402,7 +402,7 @@ static void cfl_number_trim_trailing_zeros(CFL_NUMBER *x) {
   // divide por 10 enquanto possível e houver escala
   while (x->scale > 0 && !numbits_is_zero(&x->mag)) {
     CFL_NUM_BITS q;
-    uint32_t r;
+    CFL_UINT32 r;
     numbits_div_small(&x->mag, 10u, &q, &r);
     if (r != 0) {
       numbits_free(&q);
@@ -421,11 +421,11 @@ static CFL_NUMBER cfl_number_from_int64(long long v) {
   if (v == 0) return x;
   if (v < 0) {
     x.sign = -1;
-    uint64_t uv = (uint64_t)(-v);
+    CFL_UINT64 uv = (CFL_UINT64)(-v);
     numbits_from_uint64(&x.mag, uv);
   } else {
     x.sign = +1;
-    numbits_from_uint64(&x.mag, (uint64_t)v);
+    numbits_from_uint64(&x.mag, (CFL_UINT64)v);
   }
   x.scale = 0;
   return x;
@@ -451,7 +451,7 @@ CFL_NUMBER cfl_number_from_string(const char *s) {
   for (const char *p = s; *p; ++p) {
     if (isdigit((unsigned char)*p)) {
       saw_digit = 1;
-      uint32_t d = (uint32_t)(*p - '0');
+      CFL_UINT32 d = (CFL_UINT32)(*p - '0');
       numbits_mul_small_inplace(&mag, 10u);
       if (d) numbits_add_small_inplace(&mag, d);
       if (saw_dot) frac++;
@@ -493,7 +493,7 @@ static char *numbits_to_number_string(const CFL_NUM_BITS *m, size_t scale,
 
   while (!numbits_is_zero(&tmp)) {
     CFL_NUM_BITS q;
-    uint32_t r;
+    CFL_UINT32 r;
     numbits_div_small(&tmp, 10u, &q, &r);
     if (len + 1 > cap) {
       size_t nc = cap ? cap * 2 : 32;

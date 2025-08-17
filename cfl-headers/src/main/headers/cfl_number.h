@@ -27,17 +27,19 @@
 extern "C" {
 #endif
 
+// #define CLF_NUM(name, size) uint32_t name[sizeof(int)+sizeof(size_t)+sizeof(size_t)+sizeof(size_t)+size]
+
 typedef struct _CFL_NUM_BITS {
-    uint32_t *w;     // palavras de 32 bits, LSB-first
     size_t   nbits;    // número de bits válidos
     size_t   capw;     // capacidade em palavras
+    CFL_UINT32 *w;     // palavras de 32 bits, LSB-first
 } CFL_NUM_BITS, *CFL_NUM_BITSP;
 
 
 typedef struct _CFL_NUMBER {
-    int          sign;       // -1, 0, +1
+    int          sign;    // -1, 0, +1
     size_t       scale;   // casas decimais
-    CFL_NUM_BITS mag;    // magnitude não-negativa (bits)
+    CFL_NUM_BITS mag;     // magnitude não-negativa (bits)
 } CFL_NUMBER, *CFL_NUMBERP;
 
 extern void cfl_number_init(CFL_NUMBER *x);
