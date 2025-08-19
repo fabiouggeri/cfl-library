@@ -30,23 +30,24 @@ extern "C" {
 // #define CLF_NUM(name, size) uint32_t name[sizeof(int)+sizeof(size_t)+sizeof(size_t)+sizeof(size_t)+size]
 
 typedef struct _CFL_NUM_BITS {
-    size_t   nbits;    // número de bits válidos
-    size_t   capw;     // capacidade em palavras
-    CFL_UINT32 *w;     // palavras de 32 bits, LSB-first
+    CFL_UINT16  numBits;      // number of valid bits
+    CFL_UINT16  wordCapacity; // capaity in words
+    CFL_UINT32 *words;        // 32 bits words, LSB-first
 } CFL_NUM_BITS, *CFL_NUM_BITSP;
 
 
 typedef struct _CFL_NUMBER {
-    int          sign;    // -1, 0, +1
-    size_t       scale;   // casas decimais
-    CFL_NUM_BITS mag;     // magnitude não-negativa (bits)
+    int          sign;       // -1, 0, +1
+    CFL_UINT16   scale;      // decimal digits after the decimal point
+    CFL_NUM_BITS magnitude;  // non-negative magnitude (bits)
 } CFL_NUMBER, *CFL_NUMBERP;
 
 extern void cfl_number_init(CFL_NUMBER *x);
 extern void cfl_number_free(CFL_NUMBER *x);
 extern char *cfl_number_to_string(const CFL_NUMBER *x);
 extern CFL_NUMBER cfl_number_from_string(const char *s);
-extern int cfl_number_div(const CFL_NUMBER *A, const CFL_NUMBER *B, size_t out_scale, CFL_NUMBER *Out);
+extern CFL_NUMBER cfl_number_from_int64(CFL_INT64 v);
+extern int cfl_number_div(const CFL_NUMBER *A, const CFL_NUMBER *B, CFL_UINT16 out_scale, CFL_NUMBER *Out);
 extern CFL_NUMBER cfl_number_mul(const CFL_NUMBER *A, const CFL_NUMBER *B);
 extern CFL_NUMBER cfl_number_sub(const CFL_NUMBER *A, const CFL_NUMBER *B);
 extern CFL_NUMBER cfl_number_add(const CFL_NUMBER *A, const CFL_NUMBER *B);
