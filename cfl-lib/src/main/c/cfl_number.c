@@ -310,45 +310,136 @@ static CFL_NUM_BITS numbits_sub_inplace_clone(CFL_NUM_BITS *A,
   return numbits_clone(A);
 }
 
+// Cria um CFL_NUM_BITS a partir de um uint64 (retorna por valor).
+// Não usa builtins; calcula msb com loops para portabilidade.
+static CFL_NUM_BITS numbits_from_uint64_simple(CFL_UINT64 val) {
+  CFL_NUM_BITS r;
+  numbits_init(&r);
+
+  if (val == 0) return r;
+
+  // precisamos no máximo de 64 bits
+  numbits_ensure_bits(&r, 64);
+
+  r.words[0] = (CFL_UINT32)(val & 0xFFFFFFFFu);
+  r.words[1] = (CFL_UINT32)(val >> 32);
+
+  // calcular numBits real
+  if (r.words[1] != 0u) {
+    // encontre MSB em words[1]
+    CFL_UINT32 hi = r.words[1];
+    CFL_UINT16 hb = 32u;
+    while (hb > 0u && ((hi >> (hb - 1u)) & 1u) == 0u) hb--;
+    r.numBits = (CFL_UINT16)(32u + hb);
+  } else {
+    // words[1] == 0, olhar words[0]
+    CFL_UINT32 lo = r.words[0];
+    CFL_UINT16 lb = 32u;
+    while (lb > 0u && ((lo >> (lb - 1u)) & 1u) == 0u) lb--;
+    r.numBits = lb;
+  }
+
+  numbits_trim(&r); // garante consistência (trima zeros, ajusta capacity se quiser)
+  return r;
+}
+
+// Shift lógico para a direita: retorna novo CFL_NUM_BITS = X >> shift
+static CFL_NUM_BITS numbits_shr(const CFL_NUM_BITS *X, CFL_UINT16 shift) {
+  CFL_NUM_BITS R;
+  numbits_init(&R);
+
+  if (numbits_is_zero(X) || shift == 0) {
+    return numbits_clone(X);
+  }
+
+  CFL_UINT16 wa = numbits_words(X);
+  CFL_UINT16 word_shift = (CFL_UINT16)(shift / 32u);
+  unsigned bit_shift = (unsigned)(shift % 32u);
+
+  if (word_shift >= wa) {
+    // deslocamento maior que o número de words => resulta em zero
+    return R;
+  }
+
+  CFL_UINT16 new_words = (CFL_UINT16)(wa - word_shift);
+  // assegurar espaço para new_words * 32 bits
+  numbits_ensure_bits(&R, (CFL_UINT16)(new_words * 32u));
+  // limpar área (numbits_ensure_bits já inicializa novas words com 0)
+  for (CFL_UINT16 i = 0; i < new_words; ++i) R.words[i] = 0u;
+
+  for (CFL_UINT16 i = 0; i < new_words; ++i) {
+    CFL_UINT32 cur = X->words[i + word_shift];
+    if (bit_shift == 0) {
+      R.words[i] = cur;
+    } else {
+      // baixa parte >> bit_shift
+      CFL_UINT32 lowpart = cur >> bit_shift;
+      // puxar os bits que "vêm da próxima word" se houver
+      CFL_UINT32 highpart = 0u;
+      if ((i + word_shift + 1) < wa) highpart = X->words[i + word_shift + 1];
+      CFL_UINT32 pulled = highpart << (32u - bit_shift);
+      R.words[i] = (lowpart | pulled);
+    }
+  }
+
+  // Estabelece numBits provisório e trima
+  R.numBits = (CFL_UINT16)(new_words * 32u);
+  numbits_trim(&R);
+  return R;
+}
+
+// Divisão inteira A / B => Q e R
+// Garante: A = Q*B + R , 0 <= R < B
 static CFL_NUM_BITS numbits_divmod(const CFL_NUM_BITS *A, const CFL_NUM_BITS *B,
                                    CFL_NUM_BITS *Q, CFL_NUM_BITS *R) {
-  // Retorna Q e R tais que A = Q*B + R, B != 0
-  if (numbits_is_zero(B)) {  // não deve acontecer; proteção
-    numbits_init(Q);
-    numbits_init(R);
+  numbits_init(Q);
+  numbits_init(R);
+
+  if (numbits_is_zero(B)) {
+    // proteção contra divisão por zero
     return *Q;
   }
-  CFL_NUM_BITS Rloc = numbits_clone(A);
-  CFL_NUM_BITS Qloc;
-  numbits_init(&Qloc);
+
   if (numbits_cmp(A, B) < 0) {
-    // Q=0, R=A
-    *Q = Qloc;
-    *R = Rloc;
-    CFL_NUM_BITS dummy;
-    numbits_init(&dummy);
+    // quociente = 0, resto = A
+    *Q = numbits_from_uint64_simple(0);
+    *R = numbits_clone(A);
+    CFL_NUM_BITS dummy; numbits_init(&dummy);
     return dummy;
   }
-  CFL_UINT16 msbA = A->numBits - 1;
-  CFL_UINT16 msbB = B->numBits - 1;
-  CFL_UINT16 shift = msbA - msbB;
 
-  numbits_ensure_bits(&Qloc, shift + 1);
+  // Clonar dividend
+  CFL_NUM_BITS dividend = numbits_clone(A);
+  CFL_NUM_BITS divisor  = numbits_clone(B);
 
-  for (CFL_UINT16 k = shift + 1; k-- > 0;) {
-    CFL_NUM_BITS T = numbits_shl(B, k);
-    if (numbits_cmp(&Rloc, &T) >= 0) {
-      CFL_NUM_BITS tmp = numbits_sub_inplace_clone(&Rloc, &T);
+  // Normaliza divisor para alinhar bit mais significativo
+  CFL_UINT16 shift = dividend.numBits - divisor.numBits;
+  CFL_NUM_BITS divisorShifted = numbits_shl(&divisor, shift);
+
+  numbits_ensure_bits(Q, shift + 1);
+
+  for (int k = shift; k >= 0; k--) {
+    if (numbits_cmp(&dividend, &divisorShifted) >= 0) {
+      CFL_NUM_BITS tmp = numbits_sub_inplace_clone(&dividend, &divisorShifted);
       numbits_free(&tmp);
-      numbits_set_bit(&Qloc, k, 1);
+      numbits_set_bit(Q, k, 1);
     }
-    numbits_free(&T);
-    if (k == 0) break;
+    if (k > 0) {
+      // desloca divisorShifted para direita de 1
+      CFL_NUM_BITS tmp = numbits_shr(&divisorShifted, 1);
+      numbits_free(&divisorShifted);
+      divisorShifted = tmp;
+    }
   }
-  numbits_trim(&Qloc);
-  numbits_trim(&Rloc);
-  *Q = Qloc;
-  *R = Rloc;
+
+  numbits_trim(Q);
+  numbits_trim(&dividend);
+
+  *R = dividend;
+
+  numbits_free(&divisor);
+  numbits_free(&divisorShifted);
+
   CFL_NUM_BITS dummy;
   numbits_init(&dummy);
   return dummy;
@@ -650,24 +741,50 @@ CFL_NUMBER cfl_number_mul(const CFL_NUMBER *A, const CFL_NUMBER *B) {
 
 // Divisão com escala de destino e arredondamento half-up.
 // Retorna 0 em sucesso, !=0 em erro (ex.: divisor zero).
+// Substitua por esta versão
 int cfl_number_div(const CFL_NUMBER *A, const CFL_NUMBER *B, CFL_UINT16 out_scale, CFL_NUMBER *Out) {
   if (B->sign == 0 || numbits_is_zero(&B->magnitude)) return -1;
 
   CFL_NUMBER r;
   cfl_number_init(&r);
-  if (A->sign == 0) {
+  if (A->sign == 0 || numbits_is_zero(&A->magnitude)) {
     *Out = r;
     return 0;
   }
 
-  // num = magA * 10^(B.scale + out_scale)
-  // den = magB * 10^(A.scale)
-  CFL_NUM_BITS num = numbits_clone(&A->magnitude);
-  for (CFL_UINT16 i = 0; i < B->scale + out_scale; ++i)
-    numbits_mul_small_inplace(&num, 10u);
-  CFL_NUM_BITS den = numbits_clone(&B->magnitude);
-  for (CFL_UINT16 i = 0; i < A->scale; ++i) numbits_mul_small_inplace(&den, 10u);
+  // k = (B.scale + out_scale) - A.scale
+  // Queremos q = floor( (mA * 10^k) / mB ) quando k >= 0,
+  // ou     q = floor( mA / (mB * 10^{-k}) ) quando k < 0.
+  int k = (int)B->scale + (int)out_scale - (int)A->scale;
 
+  CFL_NUM_BITS num = numbits_clone(&A->magnitude);
+  CFL_NUM_BITS den = numbits_clone(&B->magnitude);
+
+  // Multiplica apenas um dos lados (em blocos de 1e9 para eficiência)
+  const CFL_UINT32 BLOCK = 1000000000u;
+  if (k >= 0) {
+    int kk = k;
+    while (kk >= 9) {
+      numbits_mul_small_inplace(&num, BLOCK);
+      kk -= 9;
+    }
+    while (kk > 0) {
+      numbits_mul_small_inplace(&num, 10u);
+      kk--;
+    }
+  } else {
+    int kk = -k;
+    while (kk >= 9) {
+      numbits_mul_small_inplace(&den, BLOCK);
+      kk -= 9;
+    }
+    while (kk > 0) {
+      numbits_mul_small_inplace(&den, 10u);
+      kk--;
+    }
+  }
+
+  // divisão inteira
   CFL_NUM_BITS q, rem;
   numbits_init(&q);
   numbits_init(&rem);
@@ -675,12 +792,12 @@ int cfl_number_div(const CFL_NUMBER *A, const CFL_NUMBER *B, CFL_UINT16 out_scal
 
   // arredondamento half-up: se 2*rem >= den => q++
   if (!numbits_is_zero(&rem)) {
-    CFL_NUM_BITS twice = numbits_shl(&rem, 1);
+    CFL_NUM_BITS twice = numbits_mul_small(&rem, 2u);
     int cmp = numbits_cmp(&twice, &den);
     numbits_free(&twice);
     if (cmp >= 0) {
       CFL_NUM_BITS one;
-      numbits_from_uint64(&one, 1);
+      numbits_from_uint64(&one, 1u);
       CFL_NUM_BITS q1 = numbits_add(&q, &one);
       numbits_free(&one);
       numbits_free(&q);
@@ -691,13 +808,56 @@ int cfl_number_div(const CFL_NUMBER *A, const CFL_NUMBER *B, CFL_UINT16 out_scal
   r.magnitude = q;
   r.scale = out_scale;
   r.sign = (A->sign == B->sign) ? +1 : -1;
-
-  // Não removemos zeros para preservar out_scale (faça manualmente se desejar).
   cfl_number_normalize_zero(&r);
 
   numbits_free(&num);
   numbits_free(&den);
   numbits_free(&rem);
+
   *Out = r;
   return 0;
+}
+
+#include <math.h>
+
+// Converte double para CFL_NUMBER (com até 'scale' casas decimais)
+CFL_NUMBER cfl_number_from_double(double val, CFL_UINT16 scale) {
+    CFL_NUMBER r;
+    cfl_number_init(&r);
+
+    if (val < 0) {
+        r.sign = -1;
+        val = -val;
+    }
+
+    // multiplicar pelo fator de escala para preservar as casas decimais
+    double scaled = val * pow(10.0, scale);
+
+    // arredondar para inteiro mais próximo
+    unsigned long long intpart = (unsigned long long)(scaled + 0.5);
+
+    r.magnitude = numbits_from_uint64_simple(intpart);
+    r.scale = scale;
+
+    return r;
+}
+
+// Converte CFL_NUMBER para double
+double cfl_number_to_double(const CFL_NUMBER *n) {
+    if (numbits_is_zero(&n->magnitude)) return 0.0;
+
+    // converter numbits -> unsigned long long (cuidado se > 64 bits!)
+    unsigned long long acc = 0ULL;
+    unsigned long long factor = 1ULL;
+
+    CFL_UINT16 words = numbits_words(&n->magnitude);
+    for (CFL_UINT16 i = 0; i < words; ++i) {
+        acc += (unsigned long long)n->magnitude.words[i] * factor;
+        factor <<= 32; // cada word = 32 bits
+    }
+
+    double val = (double)acc;
+    val /= pow(10.0, n->scale);
+
+    return (n->sign < 0) ? -val : val;
 }

@@ -51,6 +51,8 @@ extern int cfl_number_div(const CFL_NUMBER *A, const CFL_NUMBER *B, CFL_UINT16 o
 extern CFL_NUMBER cfl_number_mul(const CFL_NUMBER *A, const CFL_NUMBER *B);
 extern CFL_NUMBER cfl_number_sub(const CFL_NUMBER *A, const CFL_NUMBER *B);
 extern CFL_NUMBER cfl_number_add(const CFL_NUMBER *A, const CFL_NUMBER *B);
+extern CFL_NUMBER cfl_number_from_double(double val, CFL_UINT16 scale);
+extern double cfl_number_to_double(const CFL_NUMBER *n);
 
 #ifdef __cplusplus
 }
