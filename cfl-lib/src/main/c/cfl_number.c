@@ -826,8 +826,13 @@ CFL_NUMBER cfl_number_from_double(double val, CFL_UINT16 scale) {
     cfl_number_init(&r);
 
     if (val < 0) {
-        r.sign = -1;
-        val = -val;
+      r.sign = -1;
+      val = -val;
+    } else if (val > 0) {
+      r.sign = 1;
+    } else {
+      // zero
+      return r;
     }
 
     // multiplicar pelo fator de escala para preservar as casas decimais
@@ -835,7 +840,6 @@ CFL_NUMBER cfl_number_from_double(double val, CFL_UINT16 scale) {
 
     // arredondar para inteiro mais próximo
     unsigned long long intpart = (unsigned long long)(scaled + 0.5);
-
     r.magnitude = numbits_from_uint64_simple(intpart);
     r.scale = scale;
 
