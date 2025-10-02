@@ -57,7 +57,10 @@ CFL_LISTP cfl_list_newLen(CFL_UINT32 len) {
 
 void cfl_list_free(CFL_LISTP list) {
    if (list != NULL) {
-      CFL_MEM_FREE(list->items);
+      if (list->items) {
+         CFL_MEM_FREE(list->items);
+         list->items = NULL;
+      }
       if (list->allocated) {
          CFL_MEM_FREE(list);
       }

@@ -65,8 +65,8 @@
          </activation>
          <properties>
             <cc>mingw64</cc>
-            <cc-version>11.0.0.2</cc-version>
-            <cc-major-version>11.x</cc-major-version>
+            <cc-version>12.0.0.0</cc-version>
+            <cc-major-version>12.x</cc-major-version>
             <cc-target>gcc</cc-target>
             <os>win</os>
             <arch>64</arch>
