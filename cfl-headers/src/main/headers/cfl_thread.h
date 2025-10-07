@@ -26,10 +26,10 @@
 
 #if defined(CFL_OS_WINDOWS)
    #include <windows.h>
-   
+
    typedef HANDLE      CFL_THREAD_HANDLE;
    typedef DWORD       CFL_THREAD_ID;
-   
+
    #if defined( _MSC_VER ) && ( _MSC_VER <= 1500 )
       #define CFL_THREAD_WINRAWAPI
    #endif
@@ -65,11 +65,9 @@ extern "C" {
    extern CFL_BOOL cfl_thread_varSet##typename(CFL_THREAD_VARIABLEP threadVar, datatype data);
 
 #if defined(CFL_OS_WINDOWS)
-   #define CFL_THREAD_VAR_EMPTY { 0, TLS_OUT_OF_INDEXES, sizeof(VAR_DATA), NULL, NULL }
    #define CFL_THREAD_VAR_INIT(datatype, varname, initFunc, freeFunc) CFL_THREAD_VARIABLE varname = { 0, TLS_OUT_OF_INDEXES, sizeof(datatype), initFunc, freeFunc }
    #define CFL_THREAD_VAR(datatype, varname) CFL_THREAD_VARIABLE varname = { 0, TLS_OUT_OF_INDEXES, sizeof(datatype), NULL, NULL }
 #else
-   #define CFL_THREAD_VAR_EMPTY { 0, 0, sizeof(VAR_DATA), NULL, NULL}
    #define CFL_THREAD_VAR_INIT(datatype, varname, initFunc, freeFunc) CFL_THREAD_VARIABLE varname = { 0, 0, sizeof(datatype), initFunc, freeFunc }
    #define CFL_THREAD_VAR(datatype, varname) CFL_THREAD_VARIABLE varname = { 0, 0, sizeof(datatype), NULL, NULL }
 #endif
@@ -108,7 +106,7 @@ typedef struct _CFL_THREAD_VARIABLE {
 typedef struct _CFL_THREAD_VAR_DATA {
    CFL_THREAD_VARIABLEP var;
    CFL_UINT8            data[1];
-} CFL_THREAD_VAR_DATA;
+} CFL_THREAD_VAR_DATA, *CFL_THREAD_VAR_DATAP;
 
 typedef struct _CFL_THREAD {
    CFL_THREAD_FUNC   func;
