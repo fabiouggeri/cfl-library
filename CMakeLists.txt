@@ -42,6 +42,7 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/cfl-headers/src/main/headers/"
 )
 
 install(TARGETS cfl-lib
+    LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
 )
 
