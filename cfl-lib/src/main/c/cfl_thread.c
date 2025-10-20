@@ -182,9 +182,9 @@ static void initializeThreadStorage(void) {
    if (s_threadStoreInitialized == STORE_INITIALIZED) {
       return;
    } else {
-      LONG previousValue = __sync_val_compare_and_swap(&s_threadStoreInitialized, STORAGE_UNINITIALIZED, STORE_INITIALIZING);
+      int previousValue = __sync_val_compare_and_swap(&s_threadStoreInitialized, STORAGE_UNINITIALIZED, STORE_INITIALIZING);
       if (previousValue == STORAGE_UNINITIALIZED) {
-         if (pthread_key_create(&s_threadStorageKey, freeVarData) == 0 {
+         if (pthread_key_create(&s_threadStorageKey, freeVarData) == 0) {
             __sync_lock_test_and_set(&s_threadStorageKey, STORE_INITIALIZED);
          } else {
             __sync_lock_test_and_set(&s_threadStorageKey, STORAGE_INIT_ERROR);
@@ -434,9 +434,9 @@ static void initializeVarStorage(CFL_THREAD_VARIABLEP var) {
    if (var->initialized == STORE_INITIALIZED) {
       return;
    } else {
-      LONG previousValue = __sync_val_compare_and_swap(&var->initialized, STORAGE_UNINITIALIZED, STORE_INITIALIZING);
+      int previousValue = __sync_val_compare_and_swap(&var->initialized, STORAGE_UNINITIALIZED, STORE_INITIALIZING);
       if (previousValue == STORAGE_UNINITIALIZED) {
-         if (pthread_key_create(&var->storageKey, freeVarData) == 0 {
+         if (pthread_key_create(&var->storageKey, freeVarData) == 0) {
             __sync_lock_test_and_set(&var->storageKey, STORE_INITIALIZED);
          } else {
             __sync_lock_test_and_set(&var->storageKey, STORAGE_INIT_ERROR);
