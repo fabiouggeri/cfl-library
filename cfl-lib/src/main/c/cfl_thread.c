@@ -163,7 +163,7 @@ static void setDescription(CFL_THREADP thread) {
    #endif
 }
 
-static void initializeThreadStorage() {
+static void initializeThreadStorage(void) {
 #if defined(CFL_OS_WINDOWS)
    if (s_threadStoreInitialized == STORE_INITIALIZED) {
       return;
