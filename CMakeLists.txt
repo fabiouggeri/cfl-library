@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 # set the project name
-project(cfl-library 
-        VERSION 1.9.0.0)
+project(cfl-library
+        VERSION 1.9.0)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -32,7 +32,7 @@ add_library(cfl-lib STATIC
             cfl-lib/src/main/c/cfl_thread.c
             cfl-lib/src/main/c/cfl_number.c )
 
-include_directories(cfl-lib PUBLIC  
+include_directories(cfl-lib PUBLIC
                     ${PROJECT_SOURCE_DIR}/cfl-headers/src/main/headers
 )
 

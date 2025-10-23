@@ -4,7 +4,7 @@
 
    <groupId>org.cfl</groupId>
    <artifactId>cfl-super-pom</artifactId>
-   <version>1.9.0.0</version>
+   <version>1.9.0.1</version>
    <packaging>pom</packaging>
 
    <name>CFL - Common Functions Library ${project.version}</name>
@@ -76,11 +76,11 @@
       <mingw64-major-version>12.x</mingw64-major-version>
       <mingw64-group-id>org.mingw64</mingw64-group-id>
       <mingw64-artifact-id>mingw64-app</mingw64-artifact-id>
-      <mingw64-includes-path/>
-      <mingw64-libs-path/>
+      <mingw64-includes-path></mingw64-includes-path>
+      <mingw64-libs-path></mingw64-libs-path>
       <mingw64-libs></mingw64-libs>
       <mingw64-cmd>gcc #{?debug='true', '-g'} #{!debug, '-Ofast'} #{?sanitize='true', '-fsanitize=undefined -fsanitize=leak -fsanitize=thread -fsanitize=address -fsanitize=alignment'} -pipe -c -Wdiscarded-qualifiers #{includesPaths, '-I"', '" -I"', '"'} #{defines, '-D', ' -D', '='} -D_WIN32_WINNT=0x0601 -o"#{outputFile}" "#{inputFile}"</mingw64-cmd>
-      <mingw64-link-options/>
+      <mingw64-link-options></mingw64-link-options>
       <mingw64-link-cmd>gcc #{inputFiles, '"', '" "', '"'} #{?debug='true', '-g'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wdiscarded-qualifiers -mconsole -Wl,--error-unresolved-symbols -Wl,--major-image-version=#{version} -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lwinspool -lcomctl32 -lcomdlg32 -lshell32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lmsimg32 -lwininet #{?debug='true', '-lSegFault'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</mingw64-link-cmd>
       <mingw64-lib-cmd>ar rcs "#{outputFile}" #{inputFiles, '"', '" "', '"'}</mingw64-lib-cmd>
 
@@ -89,9 +89,9 @@
       <clang-major-version>16.x</clang-major-version>
       <clang-group-id>org.llvm</clang-group-id>
       <clang-artifact-id>clang-app</clang-artifact-id>
-      <clang-includes-path/>
-      <clang-libs-path/>
-      <clang-libs/>
+      <clang-includes-path></clang-includes-path>
+      <clang-libs-path></clang-libs-path>
+      <clang-libs></clang-libs>
       <clang-cmd>clang #{?debug='true', '-g -lSegFault'} #{!debug, '-Ofast'} -Wall -ffunction-sections -fdata-sections #{includesPaths, '-I"', '" -I"', '"'} -I"${clp-includes-path}" #{defines, '-D', ' -D', '='} -o"#{outputFile}" -c "#{inputFile}"</clang-cmd>
       <clang-link-options>#{inputFiles, '"', '" "', '"'} #{?debug='true', '-g -lSegFault'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wl,-O -Wl,--nxcompat -Wl,--dynamicbase -Wl,--allow-multiple-definition -Wl,--gc-sections -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l"$(name,"lib")"', ' -l"$(name,"lib")"'} -lkernel32 -luser32 -lgdi32 -ladvapi32 -lws2_32 -liphlpapi -lshell32 -lwinspool -lmsimg32 -lcomctl32 -lcomdlg32 -luuid -lole32 -loleaut32 -lmpr -lwinmm -lmapi32 -limm32 -lwininet -lstdc++ -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</clang-link-options>
       <clang-link-cmd>clang @"${project.basedir}\target\classes\${prg-classifier}\lnk_options.rsp"</clang-link-cmd>

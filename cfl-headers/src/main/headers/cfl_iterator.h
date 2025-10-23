@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+#if defined(__BORLANDC__) && __BORLANDC__ < 0x0600
+#include <cstddef.h>
+#endif
 #include "cfl_types.h"
 
 struct _CFL_ITERATOR;
