@@ -23,6 +23,9 @@
 #include "cfl_mem.h"
 
 void cfl_list_init(CFL_LISTP list, CFL_UINT32 capacity) {
+   if (list == NULL) {
+      return;
+   }
    list->length = 0;
    list->capacity = capacity;
    list->allocated = CFL_FALSE;
@@ -68,6 +71,9 @@ void cfl_list_free(CFL_LISTP list) {
 }
 
 void cfl_list_add(CFL_LISTP list, void *item) {
+   if (list == NULL) {
+      return;
+   }
    if (list->length >= list->capacity) {
       if ( list->capacity > 0 ) {
          list->capacity = ( list->capacity >> 1 ) + 1 + list->length;
@@ -78,22 +84,26 @@ void cfl_list_add(CFL_LISTP list, void *item) {
       }
    }
    list->items[list->length] = item;
-   ++(list->length);
+   list->length++;
 }
 
 void cfl_list_del(CFL_LISTP list, CFL_UINT32 ulIndex) {
+   if (list == NULL) {
+      return;
+   }
    if (ulIndex < list->length) {
-      CFL_UINT32 i;
-      --(list->length);
-      for (i = ulIndex; i < list->length; i++) {
-         list->items[i] = list->items[i + 1];
-      }
+      list->length--;
+      memmove(&list->items[ulIndex], &list->items[ulIndex + 1],
+              (list->length - ulIndex) * sizeof(void *));
       list->items[list->length] = NULL;
    }
 }
 
 void cfl_list_delItem(CFL_LISTP list, const void *item) {
    CFL_UINT32 i;
+   if (list == NULL) {
+      return;
+   }
    for (i = 0; i < list->length; i++) {
       if (list->items[i] == item) {
          list->length--;
@@ -105,13 +115,14 @@ void cfl_list_delItem(CFL_LISTP list, const void *item) {
 }
 
 void *cfl_list_remove(CFL_LISTP list, CFL_UINT32 ulIndex) {
+   if (list == NULL) {
+      return NULL;
+   }
    if (ulIndex < list->length) {
       CFL_UINT32 i;
       void *removed = list->items[ulIndex];
-      --(list->length);
-      for (i = ulIndex; i < list->length; i++) {
-         list->items[i] = list->items[i + 1];
-      }
+      list->length--;
+      memmove(&list->items[ulIndex], &list->items[ulIndex + 1], (list->length - ulIndex) * sizeof(void *));
       list->items[list->length] = NULL;
       return removed;
    }
@@ -123,7 +134,7 @@ void *cfl_list_removeLast(CFL_LISTP list) {
 }
 
 void *cfl_list_get(const CFL_LISTP list, CFL_UINT32 ulIndex) {
-   if (ulIndex < list->length) {
+   if (list != NULL && ulIndex < list->length) {
       return list->items[ ulIndex ];
    }
    return NULL;
@@ -149,6 +160,9 @@ CFL_UINT32 cfl_list_length(const CFL_LISTP list) {
 }
 
 void cfl_list_setLength(CFL_LISTP list, CFL_UINT32 newLen) {
+   if (list == NULL) {
+      return;
+   }
    if (newLen < list->length) {
       list->length = newLen;
    } else if (newLen > list->length) {
@@ -163,6 +177,8 @@ void cfl_list_setLength(CFL_LISTP list, CFL_UINT32 newLen) {
 
 CFL_LISTP cfl_list_clone(const CFL_LISTP other) {
    CFL_LISTP clone = cfl_list_newLen(other->length);
-   memcpy(clone->items, other->items, other->length * sizeof(void *));
+   if (clone != NULL) {
+      memcpy(clone->items, other->items, other->length * sizeof(void *));
+   }
    return clone;
 }

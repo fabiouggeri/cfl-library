@@ -4,7 +4,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 
 class cfl_libraryRecipe(ConanFile):
     name = "cfl-library"
-    version = "1.9.0"
+    version = "1.10.0"
     package_type = "library"
 
     # Optional metadata

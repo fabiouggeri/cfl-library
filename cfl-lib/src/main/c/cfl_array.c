@@ -112,7 +112,7 @@ void *cfl_array_add(CFL_ARRAYP array) {
       }
    }
    item = (void *) &array->items[array->ulLength * array->ulItemSize];
-   ++(array->ulLength);
+   array->ulLength++;
    return item;
 }
 
@@ -131,7 +131,7 @@ void *cfl_array_insert(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
       memmove(&array->items[(ulIndex + 1) * array->ulItemSize],
               &array->items[ulIndex * array->ulItemSize],
               (array->ulLength - ulIndex) * array->ulItemSize);
-      ++(array->ulLength);
+      array->ulLength++;
    } else {
       array->ulLength = ulIndex + 1;
    }
@@ -140,11 +140,11 @@ void *cfl_array_insert(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
 
 void cfl_array_del(CFL_ARRAYP array, CFL_UINT32 ulIndex) {
    if (ulIndex < array->ulLength) {
-      --(array->ulLength);
+      array->ulLength--;
       if (array->ulLength > 0 && ulIndex < array->ulLength) {
          memmove(&array->items[ulIndex * array->ulItemSize],
                  &array->items[(ulIndex + 1) * array->ulItemSize],
-                 (array->ulLength - ulIndex - 1) * array->ulItemSize);
+                 (array->ulLength - ulIndex) * array->ulItemSize);
       }
    }
 }
@@ -206,7 +206,9 @@ void cfl_array_setLength(CFL_ARRAYP array, CFL_UINT32 newLen) {
 
 CFL_ARRAYP cfl_array_clone(const CFL_ARRAYP other) {
    CFL_ARRAYP clone = cfl_array_newLen(other->ulLength, other->ulItemSize);
-   memcpy(clone->items, other->items, other->ulLength * other->ulItemSize);
+   if (clone != NULL) {
+      memcpy(clone->items, other->items, other->ulLength * other->ulItemSize);
+   }
    return clone;
 }
 

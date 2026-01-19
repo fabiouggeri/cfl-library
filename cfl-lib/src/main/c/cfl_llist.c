@@ -25,6 +25,9 @@
 
 CFL_LLISTP cfl_llist_new(CFL_UINT32 maxNodeCache) {
    CFL_LLISTP list = (CFL_LLISTP) CFL_MEM_ALLOC(sizeof(CFL_LLIST));
+   if (list == NULL) {
+      return NULL;
+   }
    list->maxNodeCache = maxNodeCache;
    list->nodeCount = 0;
    list->first = NULL;
@@ -149,12 +152,17 @@ void cfl_llist_addFirst(CFL_LLISTP list, void *item) {
 }
 
 void *cfl_llist_getLast(const CFL_LLISTP list) {
-   return list->tail;
+   if (list->tail == NULL) {
+      return NULL;
+   }
+   return list->tail->data;
 }
 
 void *cfl_llist_getFirst(const CFL_LLISTP list) {
-   return list->head;
-
+   if (list->head == NULL) {
+      return NULL;
+   }
+   return list->head->data;
 }
 
 static void checkCacheOverflow(CFL_LLISTP list) {

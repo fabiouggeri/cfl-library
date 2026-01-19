@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # set the project name
 project(cfl-library
-        VERSION 1.9.0)
+        VERSION 1.10.0)
 
 set(CMAKE_C_STANDARD 99)
 

@@ -24,7 +24,9 @@ void * cfl_malloc(size_t size) {
 
 void * cfl_calloc(size_t numElements, size_t size) {
    void *ptr = mem_functions.malloc_func(numElements * size);
-   memset(ptr, 0, numElements * size);
+   if (ptr != NULL) {
+      memset(ptr, 0, numElements * size);
+   }
    return ptr;
 }
 

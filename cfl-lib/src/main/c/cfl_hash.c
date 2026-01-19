@@ -423,6 +423,9 @@ static void iteratorFirst(CFL_ITERATORP it) {
 
 CFL_ITERATORP cfl_hash_iterator(CFL_HASHP hash) {
    HASH_ITERATORP pIt = (HASH_ITERATORP) CFL_MEM_ALLOC(sizeof(HASH_ITERATOR));
+   if (pIt == NULL) {
+      return NULL;
+   }
    pIt->iterator.itClass = (CFL_ITERATOR_CLASS *) &s_hashIteratorClass;
    pIt->hash = hash;
    pIt->lastIndex = 0;

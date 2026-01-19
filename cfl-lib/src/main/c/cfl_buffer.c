@@ -108,6 +108,10 @@ CFL_BUFFERP cfl_buffer_clone(CFL_BUFFERP other) {
       buffer->position = other->position;
       buffer->endian = other->endian;
       buffer->data = (CFL_UINT8 *) CFL_MEM_ALLOC(buffer->capacity * sizeof(CFL_UINT8));
+      if (buffer->data == NULL) {
+         CFL_MEM_FREE(buffer);
+         return NULL;
+      }
       if (other->length > 0) {
          memcpy(buffer->data, other->data, other->length);
       }
@@ -186,6 +190,10 @@ void cfl_buffer_setPosition(CFL_BUFFERP buffer, CFL_UINT32 newPos) {
 }
 
 void cfl_buffer_skip(CFL_BUFFERP buffer, CFL_UINT32 skip) {
+   // check overflow
+   if (buffer->position > UINT32_MAX - skip) {
+      return;
+   }
    buffer->position += skip;
    if (buffer->position > buffer->length) {
       buffer->length = buffer->position;

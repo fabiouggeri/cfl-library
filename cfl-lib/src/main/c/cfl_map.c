@@ -33,8 +33,12 @@ typedef struct _CFL_MAP_ENTRY {
 } CFL_MAP_ENTRY, *CFL_MAP_ENTRYP;
 
 static void freeMapEntries(CFL_MAPP map) {
-   CFL_UINT32 len = cfl_array_length(&map->entries);
+   CFL_UINT32 len;
    CFL_UINT32 i;
+   if (map == NULL || map->freeEntryFunc == NULL) {
+      return;
+   }
+   len = cfl_array_length(&map->entries);
    for (i = 0; i < len; i++) {
       CFL_MAP_ENTRYP entry = (CFL_MAP_ENTRYP) cfl_array_get(&map->entries, i);
       map->freeEntryFunc(GET_KEY(entry), GET_VALUE(map, entry));
@@ -56,7 +60,7 @@ void cfl_map_free(CFL_MAPP map) {
 }
 
 /**
- * 
+ *
  */
 void cfl_map_init(CFL_MAPP map, CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_COMP_FUNC keyCompFunc, MAP_KEY_VALUE_FUNC freeEntryFunc) {
    if (map == NULL) {
@@ -71,7 +75,7 @@ void cfl_map_init(CFL_MAPP map, CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_CO
 }
 
 /**
- * 
+ *
  */
 CFL_MAPP cfl_map_new(CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_COMP_FUNC keyCompFunc, MAP_KEY_VALUE_FUNC freeEntryFunc) {
    CFL_MAPP map = CFL_MEM_ALLOC(sizeof(CFL_MAP));
@@ -83,7 +87,7 @@ CFL_MAPP cfl_map_new(CFL_UINT32 keySize, CFL_UINT32 valueSize, MAP_COMP_FUNC key
 }
 
 /**
- * 
+ *
  */
 const void * cfl_map_get(CFL_MAPP map, const void *key) {
    CFL_UINT32 len = cfl_array_length(&map->entries);
@@ -106,7 +110,7 @@ const void *cfl_map_getIndex(CFL_MAPP map, CFL_UINT32 index) {
 }
 
 /**
- * 
+ *
  */
 CFL_BOOL cfl_map_del(CFL_MAPP map, const void *key) {
    CFL_UINT32 len = cfl_array_length(&map->entries);
@@ -124,7 +128,7 @@ CFL_BOOL cfl_map_del(CFL_MAPP map, const void *key) {
 }
 
 /**
- * 
+ *
  */
 void cfl_map_set(CFL_MAPP map, const void *newKey, const void *newValue) {
    CFL_MAP_ENTRYP entry;
@@ -136,7 +140,7 @@ void cfl_map_set(CFL_MAPP map, const void *newKey, const void *newValue) {
       entry = (CFL_MAP_ENTRYP) cfl_array_get(&map->entries, i);
       key = GET_KEY(entry);
       value = GET_VALUE(map, entry);
-      if (map->keyCompFunc(key, value) == 0) {
+      if (map->keyCompFunc(key, newKey) == 0) {
          SET_VALUE(map, entry, newValue);
          return;
       }
@@ -147,7 +151,7 @@ void cfl_map_set(CFL_MAPP map, const void *newKey, const void *newValue) {
 }
 
 /**
- * 
+ *
  */
 void cfl_map_copy(CFL_MAPP toMap, CFL_MAPP fromMap) {
    CFL_UINT32 len = cfl_array_length(&fromMap->entries);
@@ -166,7 +170,7 @@ void cfl_map_copy(CFL_MAPP toMap, CFL_MAPP fromMap) {
 }
 
 /**
- * 
+ *
  */
 CFL_UINT32 cfl_map_length(CFL_MAPP map) {
    return cfl_array_length(&map->entries);

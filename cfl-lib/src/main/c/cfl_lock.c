@@ -55,7 +55,7 @@
       #define RELEASE_LOCK_HANDLE(l)              // do nothing
       #define ACQUIRE_LOCK(l)                     AcquireSRWLockExclusive(&((l)->handle))
       #define RELEASE_LOCK(l)                     ReleaseSRWLockExclusive(&((l)->handle))
-      
+
       #define INITIALIZE_CONDITION_HANDLE(v)      InitializeConditionVariable(&((v)->handle))
       #define WAIT_CONDITION(l, v, t)             SleepConditionVariableSRW(&((v)->handle), &((l)->handle), t, 0)
       #define RELEASE_CONDITION_HANDLE(v)         // do nothing
@@ -156,6 +156,9 @@ static int waitCondition(CFL_LOCKP pLock, CFL_CONDITION_VARIABLEP pVar, CFL_UINT
 
 CFL_LOCKP cfl_lock_new(void) {
    CFL_LOCKP pLock = (CFL_LOCKP) CFL_MEM_ALLOC(sizeof(CFL_LOCK));
+   if (pLock == NULL) {
+      return NULL;
+   }
    pLock->isAllocated = CFL_TRUE;
    INITIALIZE_LOCK_HANDLE(pLock);
    return pLock;

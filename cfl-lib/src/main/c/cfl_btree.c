@@ -54,7 +54,14 @@ static CFL_ITERATOR_CLASS cfl_btree_iterator_class = {
 };
 
 static CFL_BTREE_NODEP cfl_btree_node_new(CFL_BTREEP pTree) {
-   CFL_BTREE_NODEP pNode = (CFL_BTREE_NODEP) CFL_MEM_ALLOC(sizeof(CFL_BTREE_NODE) + (sizeof(void *) * pTree->lKeys * 2));
+   CFL_BTREE_NODEP pNode;
+   if (pTree == NULL) {
+      return NULL;
+   }
+   pNode = (CFL_BTREE_NODEP) CFL_MEM_ALLOC(sizeof(CFL_BTREE_NODE) + (sizeof(void *) * pTree->lKeys * 2));
+   if (pNode == NULL) {
+      return NULL;
+   }
    pNode->pTree = pTree;
    pNode->lNumKeys = 0;
    pNode->bIsLeafNode = CFL_TRUE;

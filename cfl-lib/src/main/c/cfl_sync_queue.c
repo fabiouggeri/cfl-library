@@ -93,11 +93,19 @@ void cfl_sync_queue_free(CFL_SYNC_QUEUEP queue) {
 }
 
 CFL_BOOL cfl_sync_queue_isEmpty(CFL_SYNC_QUEUEP queue) {
-   return IS_EMPTY(queue);
+   CFL_BOOL result;
+   cfl_lock_acquire(&queue->lock);
+   result = IS_EMPTY(queue);
+   cfl_lock_release(&queue->lock);
+   return result;
 }
 
 CFL_BOOL cfl_sync_queue_isFull(CFL_SYNC_QUEUEP queue) {
-   return IS_FULL(queue);
+   CFL_BOOL result;
+   cfl_lock_acquire(&queue->lock);
+   result = IS_FULL(queue);
+   cfl_lock_release(&queue->lock);
+   return result;
 }
 
 static CFL_SYNC_QUEUE_ITEM getItem(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
@@ -140,11 +148,15 @@ static CFL_SYNC_QUEUE_ITEM tryGetItem(CFL_SYNC_QUEUEP queue, CFL_BOOL *took) {
       if (queue->index >= queue->size) {
          queue->index = 0;
       }
-      *took = CFL_TRUE;
+      if (took != NULL) {
+         *took = CFL_TRUE;
+      }
       cfl_lock_conditionWakeAll(queue->notFull);
       cfl_lock_release(&queue->lock);
    } else {
-      *took = CFL_FALSE;
+      if (took != NULL) {
+         *took = CFL_FALSE;
+      }
       cfl_lock_release(&queue->lock);
    }
    return data;
@@ -220,13 +232,14 @@ CFL_UINT32 cfl_sync_queue_waitNotEmpty(CFL_SYNC_QUEUEP queue) {
 
 static CFL_UINT32 waitEmpty(CFL_SYNC_QUEUEP queue, CFL_UINT32 timeout, CFL_BOOL *timesUp) {
    CFL_UINT32 itemCount;
+   clock_t elapsed;
+   clock_t start;
    cfl_lock_acquire(&queue->lock);
    while (! IS_EMPTY(queue) && ! queue->canceled) {
       if (timeout == 0) {
          cfl_lock_conditionWait(&queue->lock, queue->notFull);
       } else {
-         clock_t elapsed; 
-         clock_t start = clock();
+         start = clock();
          switch (cfl_lock_conditionWaitTimeout(&queue->lock, queue->notFull, timeout)) {
             case CFL_LOCK_TIMEOUT:
                itemCount = queue->itemCount;
@@ -287,11 +300,13 @@ CFL_BOOL cfl_sync_queue_tryPut(CFL_SYNC_QUEUEP queue, void *data) {
 }
 
 void cfl_sync_queue_cancel(CFL_SYNC_QUEUEP queue) {
+   cfl_lock_acquire(&queue->lock);
    if (! queue->canceled) {
       queue->canceled = CFL_TRUE;
       cfl_lock_conditionWakeAll(queue->notEmpty);
       cfl_lock_conditionWakeAll(queue->notFull);
    }
+   cfl_lock_release(&queue->lock);
 }
 
 static CFL_SYNC_QUEUE_ITEM queue_drain(CFL_SYNC_QUEUEP queue, CFL_BOOL *empty) {

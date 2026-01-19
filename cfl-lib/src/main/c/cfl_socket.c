@@ -144,7 +144,7 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    addrCriteria.ai_protocol = IPPROTO_TCP;
 
    // Get address(es)
-   sprintf(serverPort, "%u", port);
+   snprintf(serverPort, sizeof(serverPort), "%u", port);
    if (getaddrinfo(address, serverPort, &addrCriteria, &serverAddr) != 0) {
       return CFL_INVALID_SOCKET;
    }
@@ -155,7 +155,7 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
       if (socketHandle == OS_INVALID_SOCKET) {
          continue;
       }
-   
+
       // Establish the connection to server
       if (bind(socketHandle, addr->ai_addr, (int) addr->ai_addrlen) == 0 && listen(socketHandle, (int)backlog) == 0) {
          break;
@@ -185,7 +185,7 @@ CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 bac
    memset(&addr, 0, sizeof(addr));
    addr.sin_family = AF_INET;
    addr.sin_port = htons(port);
-   
+
    if (STR_EMPTY(address)) {
       addr.sin_addr.s_addr = INADDR_ANY;
    } else {
@@ -360,7 +360,7 @@ CFL_SOCKET cfl_socket_open(const char *serverAddress, CFL_UINT16 port) {
    addrCriteria.ai_protocol = IPPROTO_TCP;
 
    // Get address(es)
-   sprintf(serverPort, "%u", port);
+   snprintf(serverPort, sizeof(serverPort), "%u", port);
    if (getaddrinfo(serverAddress, serverPort, &addrCriteria, &serverAddr) != 0) {
       return CFL_INVALID_SOCKET;
    }
@@ -739,8 +739,8 @@ CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write) {
       how = SHUTDOWN_WRITE;
    } else {
       how = 0;
-   } 
-   if (shutdown(GET_OS_SOCKET(socket), how) == 0) { 
+   }
+   if (shutdown(GET_OS_SOCKET(socket), how) == 0) {
       return CFL_TRUE;
    }
    return CFL_FALSE;
