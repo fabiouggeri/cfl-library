@@ -1,20 +1,9 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+/**
+ * @file cfl_number.h
+ * @brief Arbitrary precision number handling.
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * This module provides structures and functions for handling numbers with
+ * arbitrary precision and scale (Big Decimal/Big Integer style).
  */
 
 #ifndef CFL_NUMBER_H_
@@ -29,29 +18,105 @@ extern "C" {
 
 // #define CLF_NUM(name, size) uint32_t name[sizeof(int)+sizeof(size_t)+sizeof(size_t)+sizeof(size_t)+size]
 
+/**
+ * @brief Structure representing the magnitude of the number (bits).
+ */
 typedef struct _CFL_NUM_BITS {
-    CFL_UINT16  numBits;      // number of valid bits
-    CFL_UINT16  wordCapacity; // capaity in words
-    CFL_UINT32 *words;        // 32 bits words, LSB-first
+    CFL_UINT16  numBits;      /**< Number of valid bits used */
+    CFL_UINT16  wordCapacity; /**< Capacity of the words array */
+    CFL_UINT32 *words;        /**< Array of 32-bit words (LSB-first) */
 } CFL_NUM_BITS, *CFL_NUM_BITSP;
 
 
+/**
+ * @brief Arbitrary precision number structure.
+ */
 typedef struct _CFL_NUMBER {
-    int          sign;       // -1, 0, +1
-    CFL_UINT16   scale;      // decimal digits after the decimal point
-    CFL_NUM_BITS magnitude;  // non-negative magnitude (bits)
+    int          sign;       /**< Sign: -1, 0, +1 */
+    CFL_UINT16   scale;      /**< Decimal digits after the decimal point */
+    CFL_NUM_BITS magnitude;  /**< Non-negative magnitude value */
 } CFL_NUMBER, *CFL_NUMBERP;
 
+/**
+ * @brief Initializes a number structure.
+ * @param x Pointer to the number.
+ */
 extern void cfl_number_init(CFL_NUMBER *x);
+
+/**
+ * @brief Frees a number structure.
+ * @param x Pointer to the number.
+ */
 extern void cfl_number_free(CFL_NUMBER *x);
+
+/**
+ * @brief Converts number to a string.
+ * @param x Pointer to the number.
+ * @return C-string representation (must be freed by caller).
+ */
 extern char *cfl_number_to_string(const CFL_NUMBER *x);
+
+/**
+ * @brief Creates a number from a string.
+ * @param s String representation of number.
+ * @return The parsed number valid by value.
+ */
 extern CFL_NUMBER cfl_number_from_string(const char *s);
+
+/**
+ * @brief Creates a number from a 64-bit integer.
+ * @param v Integer value.
+ * @return The number by value.
+ */
 extern CFL_NUMBER cfl_number_from_int64(CFL_INT64 v);
+
+/**
+ * @brief Divides two numbers.
+ * @param A Dividend.
+ * @param B Divisor.
+ * @param out_scale Desired scale for the result.
+ * @param Out Pointer to store result.
+ * @return non-zero on success.
+ */
 extern int cfl_number_div(const CFL_NUMBER *A, const CFL_NUMBER *B, CFL_UINT16 out_scale, CFL_NUMBER *Out);
+
+/**
+ * @brief Multiplies two numbers.
+ * @param A First operand.
+ * @param B Second operand.
+ * @return Result A * B.
+ */
 extern CFL_NUMBER cfl_number_mul(const CFL_NUMBER *A, const CFL_NUMBER *B);
+
+/**
+ * @brief Subtracts two numbers.
+ * @param A First operand.
+ * @param B Second operand.
+ * @return Result A - B.
+ */
 extern CFL_NUMBER cfl_number_sub(const CFL_NUMBER *A, const CFL_NUMBER *B);
+
+/**
+ * @brief Adds two numbers.
+ * @param A First operand.
+ * @param B Second operand.
+ * @return Result A + B.
+ */
 extern CFL_NUMBER cfl_number_add(const CFL_NUMBER *A, const CFL_NUMBER *B);
+
+/**
+ * @brief Creates a number from a double.
+ * @param val Double value.
+ * @param scale Precision scale.
+ * @return The number by value.
+ */
 extern CFL_NUMBER cfl_number_from_double(double val, CFL_UINT16 scale);
+
+/**
+ * @brief Converts number to double.
+ * @param n Pointer to number.
+ * @return double approximation.
+ */
 extern double cfl_number_to_double(const CFL_NUMBER *n);
 
 #ifdef __cplusplus

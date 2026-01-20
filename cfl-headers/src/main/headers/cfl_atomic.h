@@ -1,20 +1,10 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+/**
+ * @file cfl_atomic.h
+ * @brief Atomic operations for thread-safe data access.
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * This module provides atomic operations for various data types, ensuring
+ * thread-safe read-modify-write operations without explicit locking.
+ * Supports atomic set, compare-and-swap, and arithmetic/bitwise operations.
  */
 
 #ifndef CFL_ATOMIC_H_
@@ -27,44 +17,85 @@
 extern "C" {
 #endif
 
-#if defined(CFL_OS_WINDOWS) && ! defined(__GNUC__)
-   #define VOLATILE_PARAM volatile
+#if defined(CFL_OS_WINDOWS) && !defined(__GNUC__)
+#define VOLATILE_PARAM volatile
 #else
-   #define VOLATILE_PARAM
+#define VOLATILE_PARAM
 #endif
 
-#define DECLARE_OPERATIONS_SET(datatype, typename) \
-   extern datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype *var, datatype value);\
-   extern datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype *var, datatype oldValue, datatype newValue);
+/**
+ * @brief Declares atomic set and compare-and-swap functions for a data type.
+ * @param datatype The C data type.
+ * @param typename The type name suffix for function names.
+ *
+ * Generated functions:
+ * - cfl_atomic_set##typename: Atomically sets a variable to a new value.
+ * - cfl_atomic_compareAndSet##typename: Atomically sets a value if it matches
+ * the expected old value.
+ */
+#define DECLARE_OPERATIONS_SET(datatype, typename)                             \
+  extern datatype cfl_atomic_set##                                             \
+      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
+  extern datatype cfl_atomic_compareAndSet##typename(                          \
+      VOLATILE_PARAM datatype * var, datatype oldValue, datatype newValue);
 
-#define DECLARE_OPERATIONS_OP(datatype, typename) \
-   extern datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype *var, datatype value);\
-   extern datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype *var, datatype value);\
-   extern datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype *var, datatype value);\
-   extern datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype *var, datatype value);\
-   extern datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype *var, datatype value)
+/**
+ * @brief Declares atomic arithmetic and bitwise operation functions for a data
+ * type.
+ * @param datatype The C data type.
+ * @param typename The type name suffix for function names.
+ *
+ * Generated functions:
+ * - cfl_atomic_add##typename: Atomically adds a value and returns the previous
+ * value.
+ * - cfl_atomic_sub##typename: Atomically subtracts a value and returns the
+ * previous value.
+ * - cfl_atomic_and##typename: Atomically performs bitwise AND and returns the
+ * previous value.
+ * - cfl_atomic_or##typename: Atomically performs bitwise OR and returns the
+ * previous value.
+ * - cfl_atomic_xor##typename: Atomically performs bitwise XOR and returns the
+ * previous value.
+ */
+#define DECLARE_OPERATIONS_OP(datatype, typename)                              \
+  extern datatype cfl_atomic_add##                                             \
+      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
+  extern datatype cfl_atomic_sub##                                             \
+      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
+  extern datatype cfl_atomic_and##                                             \
+      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
+  extern datatype cfl_atomic_or##                                              \
+      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
+  extern datatype cfl_atomic_xor##                                             \
+      typename(VOLATILE_PARAM datatype * var, datatype value)
 
-DECLARE_OPERATIONS_SET(CFL_BOOL , Boolean);
+/* Boolean atomic operations (set and compare-and-swap only) */
+DECLARE_OPERATIONS_SET(CFL_BOOL, Boolean);
 
-DECLARE_OPERATIONS_SET(CFL_INT8 , Int8);
-DECLARE_OPERATIONS_OP(CFL_INT8 , Int8);
+/* 8-bit integer atomic operations */
+DECLARE_OPERATIONS_SET(CFL_INT8, Int8);
+DECLARE_OPERATIONS_OP(CFL_INT8, Int8);
 
+/* 16-bit integer atomic operations */
 DECLARE_OPERATIONS_SET(CFL_INT16, Int16);
 DECLARE_OPERATIONS_OP(CFL_INT16, Int16);
 
+/* 32-bit integer atomic operations */
 DECLARE_OPERATIONS_SET(CFL_INT32, Int32);
 DECLARE_OPERATIONS_OP(CFL_INT32, Int32);
 
+/* 64-bit integer atomic operations (platform-dependent availability) */
 #if defined(CFL_OS_WINDOWS)
-   #if defined(CFL_ARCH_64)
-      DECLARE_OPERATIONS_SET(CFL_INT64, Int64);
-      DECLARE_OPERATIONS_OP(CFL_INT64, Int64);
-   #endif
+#if defined(CFL_ARCH_64)
+DECLARE_OPERATIONS_SET(CFL_INT64, Int64);
+DECLARE_OPERATIONS_OP(CFL_INT64, Int64);
+#endif
 #else
-   DECLARE_OPERATIONS_SET(CFL_INT64, Int64);
-   DECLARE_OPERATIONS_OP(CFL_INT64, Int64);
+DECLARE_OPERATIONS_SET(CFL_INT64, Int64);
+DECLARE_OPERATIONS_OP(CFL_INT64, Int64);
 #endif
 
+/* Pointer atomic operations (set and compare-and-swap only) */
 DECLARE_OPERATIONS_SET(void *, Pointer);
 
 #ifdef __cplusplus

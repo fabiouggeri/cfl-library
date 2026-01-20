@@ -31,7 +31,7 @@
 
 #define SLEEP_TIMEOUT  10
 
-#define IS_EXCLUSIVE_LOCK(l)       ((l)->lockOwner != NULL_THREAD)
+#define IS_EXCLUSIVE_LOCK(l)       ((l)->owner != NULL_THREAD)
 
 #if defined(CFL_OS_LINUX) || ! defined(_CFL_CONDITION_VAR)
    #define WAIT_RESULT int
@@ -43,8 +43,9 @@
 
 #if defined(CFL_OS_WINDOWS)
 
-   #define GET_CURRENT_THREAD_ID      GetCurrentThreadId()
-   #define IS_LOCKED_BY_ME(l)         ((l)->lockOwner == GET_CURRENT_THREAD_ID)
+   #define GET_CURRENT_THREAD_ID()    GetCurrentThreadId()
+   #define THREAD_EQUAL(a, b)         ((a) == (b))
+   #define IS_LOCKED_BY_ME(l)         THREAD_EQUAL((l)->owner, GET_CURRENT_THREAD_ID())
    #define ERROR_WAITING_CONDITION(t) (t == 0)
    #define TIMEOUT_WAITING(t)         (t == 0 && GetLastError() == ERROR_TIMEOUT)
    #define NULL_THREAD                0
@@ -55,6 +56,7 @@
       #define RELEASE_LOCK_HANDLE(l)              // do nothing
       #define ACQUIRE_LOCK(l)                     AcquireSRWLockExclusive(&((l)->handle))
       #define RELEASE_LOCK(l)                     ReleaseSRWLockExclusive(&((l)->handle))
+      #define TRY_ACQUIRE_LOCK(l)                 TryAcquireSRWLockExclusive(&(l)->handle)
 
       #define INITIALIZE_CONDITION_HANDLE(v)      InitializeConditionVariable(&((v)->handle))
       #define WAIT_CONDITION(l, v, t)             SleepConditionVariableSRW(&((v)->handle), &((l)->handle), t, 0)
@@ -68,6 +70,7 @@
       #define RELEASE_LOCK_HANDLE(l)              DeleteCriticalSection(&((l)->handle))
       #define ACQUIRE_LOCK(l)                     EnterCriticalSection(&((l)->handle))
       #define RELEASE_LOCK(l)                     LeaveCriticalSection(&((l)->handle))
+      #define TRY_ACQUIRE_LOCK(l)                 TryEnterCriticalSection(&(l)->handle)
 
       #ifdef _CFL_CONDITION_VAR
 
@@ -92,8 +95,9 @@
 
 #elif defined(CFL_OS_LINUX)
 
-   #define GET_CURRENT_THREAD_ID      pthread_self()
-   #define IS_LOCKED_BY_ME(l)         pthread_equal((l)->lockOwner, GET_CURRENT_THREAD_ID)
+   #define GET_CURRENT_THREAD_ID()    pthread_self()
+   #define THREAD_EQUAL(a, b)         pthread_equal((a), (b))
+   #define IS_LOCKED_BY_ME(l)         THREAD_EQUAL((l)->owner, GET_CURRENT_THREAD_ID())
    #define ERROR_WAITING_CONDITION(t) (t != 0)
    #define TIMEOUT_WAITING(t)         (t == ETIMEDOUT)
    #define NULL_THREAD                ((pthread_t)0)
@@ -102,6 +106,7 @@
    #define RELEASE_LOCK_HANDLE(l)                 pthread_mutex_destroy(&((l)->handle))
    #define ACQUIRE_LOCK(l)                        pthread_mutex_lock(&((l)->handle))
    #define RELEASE_LOCK(l)                        pthread_mutex_unlock(&((l)->handle))
+   #define TRY_ACQUIRE_LOCK(l)                    (pthread_mutex_trylock(&(l)->handle) == 0)
    #define INITIALIZE_CONDITION_HANDLE(v)         pthread_cond_init(&((v)->handle), 0)
    #define WAIT_CONDITION(l, v, t)                waitCondition(l, v, t)
    #define RELEASE_CONDITION_HANDLE(v)            pthread_cond_destroy(&((v)->handle))
@@ -176,6 +181,13 @@ void cfl_lock_free(CFL_LOCKP pLock) {
          CFL_MEM_FREE(pLock);
       }
    }
+}
+
+CFL_BOOL cfl_lock_tryAcquire(CFL_LOCKP pLock) {
+   if (pLock && TRY_ACQUIRE_LOCK(pLock)) {
+      return CFL_TRUE;
+   }
+   return CFL_FALSE;
 }
 
 void cfl_lock_acquire(CFL_LOCKP pLock) {
@@ -258,4 +270,117 @@ CFL_INT32 cfl_lock_lastErrorCode(void) {
 #else
    return GetLastError();
 #endif
+}
+
+/* ============================================================================
+ * Reentrant Lock Implementation
+ * ============================================================================ */
+CFL_RLOCKP cfl_rlock_new(void) {
+   CFL_RLOCKP pLock = (CFL_RLOCKP) CFL_MEM_ALLOC(sizeof(CFL_RLOCK));
+   if (pLock == NULL) {
+      return NULL;
+   }
+   cfl_rlock_init(pLock);
+   pLock->isAllocated = CFL_TRUE;
+   return pLock;
+}
+
+void cfl_rlock_init(CFL_RLOCKP pLock) {
+   if (pLock == NULL) {
+      return;
+   }
+   INITIALIZE_LOCK_HANDLE(pLock);
+   pLock->owner = NULL_THREAD;
+   pLock->count = 0;
+   pLock->isAllocated = CFL_FALSE;
+}
+
+void cfl_rlock_free(CFL_RLOCKP pLock) {
+   if (pLock == NULL) {
+      return;
+   }
+   RELEASE_LOCK_HANDLE(pLock);
+   if (pLock->isAllocated) {
+      CFL_MEM_FREE(pLock);
+   }
+}
+
+void cfl_rlock_acquire(CFL_RLOCKP pLock) {
+   CFL_THREAD_ID currentThread;
+   if (pLock == NULL) {
+      return;
+   }
+   currentThread = GET_CURRENT_THREAD_ID();
+
+   /* Check if the current thread already owns the lock */
+   if (THREAD_EQUAL(pLock->owner, currentThread)) {
+      /* Same thread, just increment the count */
+      pLock->count++;
+      return;
+   }
+
+   /* Acquire the underlying lock (this will block if another thread holds it) */
+   ACQUIRE_LOCK(pLock);
+
+   /* Now we own the lock */
+   pLock->owner = currentThread;
+   pLock->count = 1;
+}
+
+CFL_BOOL cfl_rlock_tryAcquire(CFL_RLOCKP pLock) {
+   CFL_THREAD_ID currentThread;
+   if (pLock == NULL) {
+      return CFL_FALSE;
+   }
+   currentThread = GET_CURRENT_THREAD_ID();
+
+   /* Check if the current thread already owns the lock */
+   if (THREAD_EQUAL(pLock->owner, currentThread)) {
+      /* Same thread, just increment the count */
+      pLock->count++;
+      return CFL_TRUE;
+   }
+
+   /* Try to acquire the underlying lock */
+   if (!TRY_ACQUIRE_LOCK(pLock)) {
+      return CFL_FALSE;
+   }
+   /* Now we own the lock */
+   pLock->owner = currentThread;
+   pLock->count = 1;
+   return CFL_TRUE;
+}
+
+void cfl_rlock_release(CFL_RLOCKP pLock) {
+   if (pLock == NULL) {
+      return;
+   }
+
+   /* Only the owner can release the lock */
+   if (!THREAD_EQUAL(pLock->owner, GET_CURRENT_THREAD_ID())) {
+      return;
+   }
+
+   /* Decrement the recursion count */
+   pLock->count--;
+
+   /* Only fully release when count reaches zero */
+   if (pLock->count == 0) {
+      pLock->owner = NULL_THREAD;
+      RELEASE_LOCK(pLock);
+   }
+}
+
+CFL_UINT32 cfl_rlock_getCount(CFL_RLOCKP pLock) {
+   if (pLock == NULL) {
+      return 0;
+   }
+   return pLock->count;
+}
+
+CFL_BOOL cfl_rlock_isHeldByCurrentThread(CFL_RLOCKP pLock) {
+   if (pLock == NULL) {
+      return CFL_FALSE;
+   }
+   return THREAD_EQUAL(pLock->owner, GET_CURRENT_THREAD_ID());
 }
