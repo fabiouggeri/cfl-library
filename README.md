@@ -5,8 +5,6 @@
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)
 
----
-
 ## Features
 
 | Module | Description |
@@ -31,12 +29,6 @@
 mkdir build && cd build
 cmake ..
 cmake --build .
-```
-
-### Building with Maven (for integration with Java projects)
-
-```bash
-mvn clean install
 ```
 
 ---
