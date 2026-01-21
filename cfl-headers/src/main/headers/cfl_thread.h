@@ -14,7 +14,6 @@
 #include "cfl_str.h"
 #include "cfl_types.h"
 
-
 #if defined(CFL_OS_WINDOWS)
 #include <windows.h>
 
@@ -118,7 +117,7 @@ typedef struct _CFL_THREAD_VARIABLE {
   volatile LONG initialized; /**< Initialization state flag */
   DWORD storageKey;          /**< Thread-local storage key */
 #else
-  int initialized;          /**< Initialization state flag */
+  volatile int initialized; /**< Initialization state flag */
   pthread_key_t storageKey; /**< Thread-local storage key */
 #endif
   size_t dataSize;              /**< Size of the stored data */

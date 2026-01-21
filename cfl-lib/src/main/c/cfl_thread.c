@@ -114,7 +114,7 @@ static TSetThreadDescription getSetThreadDescriptionPtr(void) {
  *********/
 #else
 
-static int s_threadStoreInitialized = 0;
+static volatile int s_threadStoreInitialized = 0;
 static pthread_key_t s_threadStorageKey;
 
 #define GET_CURRENT_THREAD_ID pthread_self()
@@ -184,10 +184,10 @@ static void initializeThreadStorage(void) {
    } else {
       int previousValue = __sync_val_compare_and_swap(&s_threadStoreInitialized, STORAGE_UNINITIALIZED, STORE_INITIALIZING);
       if (previousValue == STORAGE_UNINITIALIZED) {
-         if (pthread_key_create(&s_threadStorageKey, freeVarData) == 0) {
-            __sync_lock_test_and_set(&s_threadStorageKey, STORE_INITIALIZED);
+         if (pthread_key_create(&s_threadStorageKey, freeOwnData) == 0) {
+            __sync_lock_test_and_set(&s_threadStoreInitialized, STORE_INITIALIZED);
          } else {
-            __sync_lock_test_and_set(&s_threadStorageKey, STORAGE_INIT_ERROR);
+            __sync_lock_test_and_set(&s_threadStoreInitialized, STORAGE_INIT_ERROR);
          }
       } else {
          while (s_threadStoreInitialized != STORE_INITIALIZED && s_threadStoreInitialized != STORAGE_INIT_ERROR) {
@@ -368,6 +368,10 @@ CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout) {
    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
       ts.tv_sec += (int) (timeout / 1000);
       ts.tv_nsec += (long) ((timeout % 1000) * 1000000);
+      if (ts.tv_nsec >= 1000000000) {
+         ts.tv_sec += 1;
+         ts.tv_nsec -= 1000000000;
+      }
       if (pthread_timedjoin_np(thread->handle, NULL, &ts) == 0) {
          thread->joined = CFL_TRUE;
          return CFL_TRUE;
@@ -375,6 +379,7 @@ CFL_BOOL cfl_thread_waitTimeout(CFL_THREADP thread, CFL_INT32 timeout) {
          return CFL_FALSE;
       }
    }
+   return CFL_FALSE;
 #endif
 }
 
@@ -437,9 +442,9 @@ static void initializeVarStorage(CFL_THREAD_VARIABLEP var) {
       int previousValue = __sync_val_compare_and_swap(&var->initialized, STORAGE_UNINITIALIZED, STORE_INITIALIZING);
       if (previousValue == STORAGE_UNINITIALIZED) {
          if (pthread_key_create(&var->storageKey, freeVarData) == 0) {
-            __sync_lock_test_and_set(&var->storageKey, STORE_INITIALIZED);
+            __sync_lock_test_and_set(&var->initialized, STORE_INITIALIZED);
          } else {
-            __sync_lock_test_and_set(&var->storageKey, STORAGE_INIT_ERROR);
+            __sync_lock_test_and_set(&var->initialized, STORAGE_INIT_ERROR);
          }
       } else {
          while (var->initialized != STORE_INITIALIZED && var->initialized != STORAGE_INIT_ERROR) {

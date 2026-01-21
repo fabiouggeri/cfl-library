@@ -36,6 +36,10 @@ target_include_directories(cfl-lib PUBLIC
                     ${PROJECT_SOURCE_DIR}/cfl-headers/src/main/headers
 )
 
+if(UNIX AND NOT APPLE)
+    target_link_libraries(cfl-lib PUBLIC m)
+endif()
+
 enable_testing()
 
 # Add tests directory
