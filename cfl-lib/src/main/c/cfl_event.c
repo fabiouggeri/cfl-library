@@ -184,7 +184,7 @@ CFL_BOOL cfl_event_waitTimeout(CFL_EVENTP e, CFL_INT32 timeout) {
 #if defined(CFL_OS_WINDOWS)
    DWORD res;
    res = WaitForSingleObject(event->handle, timeout);
-   return res == WAIT_OBJECT_0 || res == WAIT_TIMEOUT ? CFL_TRUE : CFL_FALSE;
+   return res == WAIT_OBJECT_0 ? CFL_TRUE : CFL_FALSE;
 #elif defined(CFL_OS_LINUX)
    int result;
    if (timeout == 0) {
