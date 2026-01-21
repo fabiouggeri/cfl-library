@@ -18,11 +18,15 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "cfl_iterator.h"
 #include "cfl_mem.h"
 
 CFL_ITERATORP cfl_iterator_new(size_t dataSize) {
    CFL_ITERATORP it = CFL_MEM_ALLOC(sizeof(CFL_ITERATOR) + dataSize);
+   if (it) {
+      memset(it, 0, sizeof(CFL_ITERATOR) + dataSize);
+   }
    return it;
 }
 
@@ -31,10 +35,10 @@ void * cfl_iterator_data(CFL_ITERATORP it) {
 }
 
 void cfl_iterator_free(CFL_ITERATORP it) {
-   if (it->itClass->free == NULL) {
-      CFL_MEM_FREE(it);
-   } else {
+   if (it->itClass != NULL && it->itClass->free != NULL) {
       it->itClass->free(it);
+   } else {
+      CFL_MEM_FREE(it);
    }
 }
 

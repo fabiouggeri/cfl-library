@@ -47,9 +47,9 @@
 #define DAY_TO_HOUR(days)  ((days) * CFL_HOUR_PER_DAY)
 
 static CFL_BOOL isLeapYear(CFL_INT16 year) {
-   if (year > GREGORIAN_BASE) { 
+   if (year > GREGORIAN_BASE) {
       return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? CFL_TRUE : CFL_FALSE;
-   } else if (year >= 8) { 
+   } else if (year >= 8) {
       return year % 4 == 0 ? CFL_TRUE : CFL_FALSE;
    }
    switch(year) {
@@ -118,8 +118,8 @@ CFL_DATEP cfl_date_getCurrent(CFL_DATEP date) {
 
    time(&curTime);
    tm = localtime(&curTime);
-   SET_YEAR(date, (CFL_UINT16) tm->tm_year);
-   SET_MONTH(date, (CFL_UINT8) tm->tm_mon);
+   SET_YEAR(date, (CFL_UINT16) tm->tm_year + 1900);
+   SET_MONTH(date, (CFL_UINT8) tm->tm_mon + 1);
    SET_DAY(date, (CFL_UINT8) tm->tm_mday);
    SET_HOUR(date, (CFL_UINT8) tm->tm_hour);
    SET_MIN(date, (CFL_UINT8) tm->tm_min);
@@ -286,7 +286,7 @@ CFL_UINT64 cfl_date_toMillis(CFL_DATEP date) {
             SEC_TO_MILLIS(MIN_TO_SEC(GET_MIN(date))) +
             SEC_TO_MILLIS(MIN_TO_SEC(HOUR_TO_MIN(GET_HOUR(date)))) +
             SEC_TO_MILLIS(MIN_TO_SEC(HOUR_TO_MIN(DAY_TO_HOUR(GET_DAY(date)))));
-   
+
    return millis;
 }
 

@@ -282,7 +282,9 @@ void * cfl_hash_remove(CFL_HASHP hash, void *key) {
          *pE = e->next;
          hash->entrycount--;
          v = e->value;
-         hash->freefn(e->key, NULL);
+         if (hash->freefn) {
+             hash->freefn(e->key, NULL);
+         }
          CFL_MEM_FREE(e);
          return v;
       }
@@ -306,7 +308,9 @@ void cfl_hash_free(CFL_HASHP hash, CFL_BOOL freeValues) {
          while (NULL != e) {
             f = e;
             e = e->next;
-            hash->freefn(f->key, f->value);
+            if (hash->freefn) {
+                hash->freefn(f->key, f->value);
+            }
             CFL_MEM_FREE(f);
          }
       }
@@ -316,6 +320,9 @@ void cfl_hash_free(CFL_HASHP hash, CFL_BOOL freeValues) {
          while (NULL != e) {
             f = e;
             e = e->next;
+            if (hash->freefn) {
+                hash->freefn(f->key, NULL);
+            }
             CFL_MEM_FREE(f);
          }
       }
@@ -339,7 +346,9 @@ void cfl_hash_clear(CFL_HASHP hash, CFL_BOOL freeValues) {
          while (NULL != e) {
             f = e;
             e = e->next;
-            hash->freefn(f->key, f->value);
+            if (hash->freefn) {
+                hash->freefn(f->key, f->value);
+            }
             CFL_MEM_FREE(f);
          }
       }
@@ -350,6 +359,9 @@ void cfl_hash_clear(CFL_HASHP hash, CFL_BOOL freeValues) {
          while (NULL != e) {
             f = e;
             e = e->next;
+            if (hash->freefn) {
+                hash->freefn(f->key, NULL);
+            }
             CFL_MEM_FREE(f);
          }
       }
@@ -398,7 +410,9 @@ static void iteratorRemove(CFL_ITERATORP it) {
       } else {
          itHash->hash->table[itHash->currIndex] = itHash->currEntry->next;
       }
-      itHash->hash->freefn(itHash->currEntry->key, NULL);
+      if (itHash->hash->freefn) {
+          itHash->hash->freefn(itHash->currEntry->key, NULL);
+      }
       --itHash->hash->entrycount;
       CFL_MEM_FREE(itHash->currEntry);
       itHash->currEntry = NULL;

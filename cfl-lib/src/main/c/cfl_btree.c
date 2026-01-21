@@ -58,14 +58,15 @@ static CFL_BTREE_NODEP cfl_btree_node_new(CFL_BTREEP pTree) {
    if (pTree == NULL) {
       return NULL;
    }
-   pNode = (CFL_BTREE_NODEP) CFL_MEM_ALLOC(sizeof(CFL_BTREE_NODE) + (sizeof(void *) * pTree->lKeys * 2));
+   pNode = (CFL_BTREE_NODEP) CFL_MEM_ALLOC(sizeof(CFL_BTREE_NODE) + (sizeof(void *) * (pTree->lKeys * 4)));
    if (pNode == NULL) {
       return NULL;
    }
    pNode->pTree = pTree;
    pNode->lNumKeys = 0;
    pNode->bIsLeafNode = CFL_TRUE;
-   memset(pNode->pPointers, 0, sizeof(void *) * ((pTree->lKeys * 2) + 1));
+   memset(pNode->pPointers, 0, sizeof(void *) * (pTree->lKeys * 4));
+
    return pNode;
 }
 
@@ -75,6 +76,7 @@ static void cfl_btree_node_free(CFL_BTREE_NODEP pNode) {
 
 static CFL_INT16 cfl_btree_compareValues(CFL_BTREEP pTree, void * pValue1, void * pValue2, CFL_BOOL bExact) {
    CFL_INT16 iValue = -1;
+
    if (pTree->pCompareValues != NULL) {
       iValue = pTree->pCompareValues(pValue1, pValue2, bExact);
    }
@@ -152,15 +154,19 @@ static void * cfl_btree_node_remove(CFL_BTREE_NODEP pNode, CFL_INT32 lIndex, CFL
    if (lIndex >= 0) {
       CFL_INT32 i;
       void * pKeyDeleted;
+
+      pKeyDeleted = GET_KEY(pNode, lIndex);
+
       for (i = lIndex; i < pNode->lNumKeys - 1; i++) {
-         SET_KEY(pNode, i, GET_KEY(pNode, i + 1));
+         void * src = GET_KEY(pNode, i + 1);
+         SET_KEY(pNode, i, src);
          if (!pNode->bIsLeafNode) {
             if (i >= lIndex + lLeftOrRightChild) {
                SET_CHILD(pNode, i, GET_CHILD(pNode, i + 1));
             }
          }
       }
-      pKeyDeleted = GET_KEY(pNode, i);
+      // i is now pNode->lNumKeys - 1
       SET_KEY(pNode, i, NULL);
       if (!pNode->bIsLeafNode) {
          if (i >= lIndex + lLeftOrRightChild) {
@@ -302,6 +308,9 @@ static void cfl_btree_insertIntoNonFullNode(CFL_BTREE_NODEP pNode, void * pKey) 
 
 static CFL_BOOL cfl_btree_existsKey(CFL_BTREE_NODEP pNode, void * pKey) {
    while (pNode != NULL) {
+      if (pNode->lNumKeys == 0) {
+         return CFL_FALSE;
+      }
       CFL_INT32 i = cfl_btree_node_keyAscPosition(pNode, pKey);
       if (cfl_btree_compareValues(pNode->pTree, pKey, GET_KEY(pNode, i), CFL_TRUE) == 0) {
          return CFL_TRUE;
@@ -520,10 +529,14 @@ void * cfl_btree_delete(CFL_BTREEP pTree, void * pKey) {
 
 static void * cfl_btree_searchFromNode(CFL_BTREE_NODEP pNode, void * pKey) {
    while (pNode != NULL) {
+      if (pNode->lNumKeys == 0) {
+         return NULL;
+      }
       CFL_INT32 i = cfl_btree_node_keyAscPosition(pNode, pKey);
-      if (cfl_btree_compareValues(pNode->pTree, pKey, GET_KEY(pNode, i), CFL_TRUE) == 0) {
+      CFL_INT16 iCmp = cfl_btree_compareValues(pNode->pTree, pKey, GET_KEY(pNode, i), CFL_TRUE);
+      if (iCmp == 0) {
          return GET_KEY(pNode, i);
-      } else {
+      } else if (iCmp > 0) {
          ++i;
       }
       if (pNode->bIsLeafNode) {
@@ -536,6 +549,7 @@ static void * cfl_btree_searchFromNode(CFL_BTREE_NODEP pNode, void * pKey) {
 }
 
 void * cfl_btree_search(CFL_BTREEP pTree, void * pKey) {
+
    return cfl_btree_searchFromNode(pTree->pRoot, pKey);
 }
 

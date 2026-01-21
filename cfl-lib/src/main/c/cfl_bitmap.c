@@ -60,7 +60,7 @@ CFL_UINT8 cfl_bitmap_get(const CFL_BITMAPP bitMap, CFL_UINT16 uiPos) {
       const CFL_UINT8 *pWord = bitMap->map + uiWordPos;
       value = *pWord & (0x01 << (uiPos % 8) );
    }
-   return value;
+   return (value != 0) ? 1 : 0;
 }
 
 void cfl_bitmap_clear(CFL_BITMAPP bitMap) {

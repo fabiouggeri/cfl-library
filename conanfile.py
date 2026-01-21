@@ -23,7 +23,7 @@ class cfl_libraryRecipe(ConanFile):
     default_options = {"shared": False, "fPIC": True}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "cfl-headers/**", "cfl-lib/**"
+    exports_sources = "CMakeLists.txt", "cfl-headers/**", "cfl-lib/**", "tests/**"
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -46,6 +46,8 @@ class cfl_libraryRecipe(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+        if not self.conf.get("tools.build:skip_test", default=False):
+            cmake.test()
 
     def package(self):
         cmake = CMake(self)

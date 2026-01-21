@@ -14,7 +14,6 @@
 #include "cfl_iterator.h"
 #include "cfl_types.h"
 
-
 #define LEFT_CHILD_NODE 0
 #define RIGHT_CHILD_NODE 1
 
@@ -22,10 +21,10 @@
 extern "C" {
 #endif
 
-#define GET_KEY(t, i) (t->pPointers[(i * 2) + 1])
-#define GET_CHILD(t, i) ((CFL_BTREE_NODEP)t->pPointers[i * 2])
-#define SET_KEY(t, i, p) (t->pPointers[(i * 2) + 1] = (void *)p)
-#define SET_CHILD(t, i, p) (t->pPointers[i * 2] = (void *)p)
+#define GET_KEY(t, i) (t->pPointers[((i) * 2) + 1])
+#define GET_CHILD(t, i) ((CFL_BTREE_NODEP)t->pPointers[(i) * 2])
+#define SET_KEY(t, i, p) (t->pPointers[((i) * 2) + 1] = (void *)p)
+#define SET_CHILD(t, i, p) (t->pPointers[(i) * 2] = (void *)p)
 
 struct _CFL_BTREE;
 typedef struct _CFL_BTREE CFL_BTREE;
@@ -50,7 +49,7 @@ struct _CFL_BTREE_NODE {
   CFL_BTREEP pTree;     /**< Pointer to the tree this node belongs to */
   CFL_INT32 lNumKeys;   /**< Number of keys in this node */
   CFL_BOOL bIsLeafNode; /**< Whether this node is a leaf */
-  void *pPointers[1];   /**< Flexible array for keys and children */
+  void *pPointers[];    /**< Flexible array for keys and children */
 };
 
 /**

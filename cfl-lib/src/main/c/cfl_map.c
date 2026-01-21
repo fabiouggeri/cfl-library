@@ -119,7 +119,9 @@ CFL_BOOL cfl_map_del(CFL_MAPP map, const void *key) {
       CFL_MAP_ENTRYP entry = (CFL_MAP_ENTRYP) cfl_array_get(&map->entries, i);
       void *entryKey = GET_KEY(entry);
       if (map->keyCompFunc(entryKey, key) == 0) {
-         map->freeEntryFunc(entryKey, key);
+         if (map->freeEntryFunc != NULL) {
+            map->freeEntryFunc(entryKey, key);
+         }
          cfl_array_del(&map->entries, i);
          return CFL_TRUE;
       }

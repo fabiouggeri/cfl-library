@@ -31,8 +31,8 @@
       #include <io.h>
    #elif defined(_MSC_VER)
       #include <winsock2.h>
-      #include <um\ws2ipdef.h>
-      #include <um\ws2tcpip.h>
+      #include <ws2ipdef.h>
+      #include <ws2tcpip.h>
       #include <mstcpip.h>
    #elif defined(__MINGW64__) || defined(__MINGW32__)
       #include <winsock2.h>
