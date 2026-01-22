@@ -46,8 +46,8 @@ class cfl_libraryRecipe(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
-        if not self.conf.get("tools.build:skip_test", default=False):
-            cmake.test()
+      #   if not self.conf.get("tools.build:skip_test", default=False):
+      #       cmake.test()
 
     def package(self):
         cmake = CMake(self)

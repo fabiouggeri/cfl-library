@@ -1,0 +1,11 @@
+[settings]
+os=Linux
+compiler=clang
+compiler.cppstd=14
+compiler.runtime=dynamic
+compiler.version=18
+arch=x86_64
+build_type=Release
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Unix Makefiles

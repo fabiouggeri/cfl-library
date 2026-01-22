@@ -48,8 +48,13 @@ add_cfl_test(test_cfl_number test_cfl_number.c)
 add_cfl_test(test_cfl_sql test_cfl_sql.c)
 
 # Create a target that is built by default and runs all tests
+set(CTEST_CONFIG_ARG "")
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CTEST_CONFIG_ARG -C $<CONFIG>)
+endif()
+
 add_custom_target(auto_test ALL
-    COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIG> --output-on-failure
+    COMMAND ${CMAKE_CTEST_COMMAND} ${CTEST_CONFIG_ARG} --output-on-failure
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Running unit tests..."
 )
