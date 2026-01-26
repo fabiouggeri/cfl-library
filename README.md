@@ -7,8 +7,8 @@
 
 ## Features
 
-| Module | Description |
-|--------|-------------|
+| Feature | Description |
+|---------|-------------|
 | **String** | Dynamic string implementation with utility functions |
 | **Buffer** | Dynamic byte buffer with serialization support |
 | **Synchronized Queue** | Thread-safe blocking queue for producer/consumer patterns |
@@ -29,6 +29,26 @@
 mkdir build && cd build
 cmake ..
 cmake --build .
+```
+
+#### Building in Linux
+```bash
+./build_linux.sh  gcc
+./build_linux.sh  clang
+```
+
+#### Building in Windows
+```bash
+./build_windows.bat  mingw
+./build_windows.bat  msvc
+```
+#### Building with ZIG
+```bash
+zig build
+
+or
+
+zig build zip
 ```
 
 ---

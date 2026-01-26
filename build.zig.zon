@@ -1,0 +1,14 @@
+.{
+    .name = .cfl_library,
+    .version = "0.1.0",
+    .fingerprint = 0x74f5e1fa1438078a, // Corrected fingerprint
+    .minimum_zig_version = "0.14.0",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "cfl-lib",
+        "cfl-headers",
+        "tests",
+        "README.md",
+    },
+}
