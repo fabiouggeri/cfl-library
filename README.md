@@ -39,8 +39,8 @@ cmake --build .
 
 #### Building in Windows
 ```bash
-./build_windows.bat  mingw
-./build_windows.bat  msvc
+build_windows.bat  mingw
+build_windows.bat  msvc
 ```
 #### Building with ZIG
 ```bash
