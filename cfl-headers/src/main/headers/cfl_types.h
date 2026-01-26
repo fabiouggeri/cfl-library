@@ -53,6 +53,15 @@ typedef unsigned char CFL_BOOL;
 
 #define CFL_MAX_INT_DOUBLE 9007199254740992
 
+#define CFL_INT8_MAX         0x7f
+#define CFL_INT16_MAX        0x7fff
+#define CFL_INT32_MAX        0x7fffffff
+#define CFL_INT64_MAX        0x7fffffffffffffff
+#define CFL_UINT8_MAX        0xffu
+#define CFL_UINT16_MAX       0xffffu
+#define CFL_UINT32_MAX       0xffffffffu
+#define CFL_UINT64_MAX       0xffffffffffffffffu
+
 #define CFL_UNUSED(x) (void)(x)
 
 #if __STDC_VERSION__ >= 199901L
@@ -65,6 +74,11 @@ typedef unsigned char CFL_BOOL;
 #define CFL_NO_ERROR_CODE 0
 
 #define CFL_WAIT_FOREVER 0xFFFFFFFF
+
+#if (defined(_MSC_VER) && _MSC_VER < 1900)
+   #define snprintf _snprintf
+#endif
+
 
 #ifdef __cplusplus
 }

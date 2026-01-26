@@ -138,10 +138,8 @@ void cfl_map_set(CFL_MAPP map, const void *newKey, const void *newValue) {
    CFL_UINT32 i;
    for (i = 0; i < len; i++) {
       void *key;
-      void *value;
       entry = (CFL_MAP_ENTRYP) cfl_array_get(&map->entries, i);
       key = GET_KEY(entry);
-      value = GET_VALUE(map, entry);
       if (map->keyCompFunc(key, newKey) == 0) {
          SET_VALUE(map, entry, newValue);
          return;

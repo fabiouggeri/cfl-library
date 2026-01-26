@@ -307,11 +307,12 @@ static void cfl_btree_insertIntoNonFullNode(CFL_BTREE_NODEP pNode, void * pKey) 
 }
 
 static CFL_BOOL cfl_btree_existsKey(CFL_BTREE_NODEP pNode, void * pKey) {
+   CFL_INT32 i;
    while (pNode != NULL) {
       if (pNode->lNumKeys == 0) {
          return CFL_FALSE;
       }
-      CFL_INT32 i = cfl_btree_node_keyAscPosition(pNode, pKey);
+      i = cfl_btree_node_keyAscPosition(pNode, pKey);
       if (cfl_btree_compareValues(pNode->pTree, pKey, GET_KEY(pNode, i), CFL_TRUE) == 0) {
          return CFL_TRUE;
       } else {
@@ -528,12 +529,14 @@ void * cfl_btree_delete(CFL_BTREEP pTree, void * pKey) {
 // Iterative search method.
 
 static void * cfl_btree_searchFromNode(CFL_BTREE_NODEP pNode, void * pKey) {
+   CFL_INT32 i;
+   CFL_INT16 iCmp;
    while (pNode != NULL) {
       if (pNode->lNumKeys == 0) {
          return NULL;
       }
-      CFL_INT32 i = cfl_btree_node_keyAscPosition(pNode, pKey);
-      CFL_INT16 iCmp = cfl_btree_compareValues(pNode->pTree, pKey, GET_KEY(pNode, i), CFL_TRUE);
+      i = cfl_btree_node_keyAscPosition(pNode, pKey);
+      iCmp = cfl_btree_compareValues(pNode->pTree, pKey, GET_KEY(pNode, i), CFL_TRUE);
       if (iCmp == 0) {
          return GET_KEY(pNode, i);
       } else if (iCmp > 0) {

@@ -191,7 +191,7 @@ void cfl_buffer_setPosition(CFL_BUFFERP buffer, CFL_UINT32 newPos) {
 
 void cfl_buffer_skip(CFL_BUFFERP buffer, CFL_UINT32 skip) {
    // check overflow
-   if (buffer->position > UINT32_MAX - skip) {
+   if (buffer->position > CFL_UINT32_MAX - skip) {
       return;
    }
    buffer->position += skip;

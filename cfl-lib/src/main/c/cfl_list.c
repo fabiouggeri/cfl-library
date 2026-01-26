@@ -119,7 +119,6 @@ void *cfl_list_remove(CFL_LISTP list, CFL_UINT32 ulIndex) {
       return NULL;
    }
    if (ulIndex < list->length) {
-      CFL_UINT32 i;
       void *removed = list->items[ulIndex];
       list->length--;
       memmove(&list->items[ulIndex], &list->items[ulIndex + 1], (list->length - ulIndex) * sizeof(void *));
