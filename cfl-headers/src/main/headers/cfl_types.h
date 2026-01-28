@@ -75,9 +75,18 @@ typedef unsigned char CFL_BOOL;
 
 #define CFL_WAIT_FOREVER 0xFFFFFFFF
 
-#if (defined(_MSC_VER) && _MSC_VER < 1900)
-   #define snprintf _snprintf
+#if defined(_MSC_VER)
+
+   #if _MSC_VER < 1900
+      #define snprintf _snprintf
+   #endif
+
+   #if _MSC_VER < 1800
+      #define va_copy(dest, src) ((dest) = (src))
+   #endif
+
 #endif
+
 
 
 #ifdef __cplusplus
