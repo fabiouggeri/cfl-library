@@ -17,6 +17,7 @@
  * under the License.
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +45,7 @@ static void swap_bytes(void *p, size_t n) {
 static CFL_BOOL ensureCapacity(CFL_BUFFERP buffer, CFL_UINT32 minCapacity) {
    if (minCapacity > buffer->capacity) {
       CFL_UINT32 newCapacity;
+      CFL_UINT8 *newData;
 
       // Check for overflow
       // newCapacity = (capacity / 2) + 1 + minCapacity
@@ -52,7 +54,7 @@ static CFL_BOOL ensureCapacity(CFL_BUFFERP buffer, CFL_UINT32 minCapacity) {
       }
 
       newCapacity = (buffer->capacity >> 1) + 1 + minCapacity;
-      CFL_UINT8 *newData = (CFL_UINT8 *)CFL_MEM_REALLOC(buffer->data, newCapacity * sizeof(CFL_UINT8));
+      newData = (CFL_UINT8 *)CFL_MEM_REALLOC(buffer->data, newCapacity * sizeof(CFL_UINT8));
       if (newData != NULL) {
          buffer->data = newData;
          buffer->capacity = newCapacity;
@@ -757,8 +759,12 @@ CFL_BOOL cfl_buffer_haveEnough(const CFL_BUFFERP buffer, CFL_UINT32 need) {
 
 CFL_BOOL cfl_buffer_putFormatArgs(CFL_BUFFERP buffer, const char *format, va_list varArgs) {
    int iLen;
+   va_list args_copy;
 
-   iLen = vsnprintf(NULL, 0, format, varArgs);
+   va_copy(args_copy, varArgs);
+   iLen = vsnprintf(NULL, 0, format, args_copy);
+   va_end(args_copy);
+
    if (iLen > 0) {
       CFL_UINT32 strLen = (CFL_UINT32)iLen;
       char previousNullTerminator;
