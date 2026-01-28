@@ -72,8 +72,8 @@
       <msc-lib-cmd>lib.exe /SUBSYSTEM:CONSOLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'}</msc-lib-cmd>
 
       <mingw64-id>mingw64</mingw64-id>
-      <mingw64-version>12.0.0.0</mingw64-version>
-      <mingw64-major-version>12.x</mingw64-major-version>
+      <mingw64-version>11.0.0.2</mingw64-version>
+      <mingw64-major-version>11.x</mingw64-major-version>
       <mingw64-group-id>org.mingw64</mingw64-group-id>
       <mingw64-artifact-id>mingw64-app</mingw64-artifact-id>
       <mingw64-includes-path></mingw64-includes-path>
