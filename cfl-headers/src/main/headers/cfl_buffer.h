@@ -141,7 +141,7 @@ extern void cfl_buffer_setPosition(CFL_BUFFERP buffer, CFL_UINT32 newPos);
  * @param buffer Pointer to the buffer.
  * @param skip Number of bytes to skip.
  */
-extern void cfl_buffer_skip(CFL_BUFFERP buffer, CFL_UINT32 skip);
+extern void cfl_buffer_skip(CFL_BUFFERP buffer, CFL_INT32 skip);
 
 /**
  * @brief Rewinds the buffer (sets position to 0).

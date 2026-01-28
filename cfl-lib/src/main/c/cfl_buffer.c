@@ -243,9 +243,14 @@ void cfl_buffer_setPosition(CFL_BUFFERP buffer, CFL_UINT32 newPos) {
    }
 }
 
-void cfl_buffer_skip(CFL_BUFFERP buffer, CFL_UINT32 skip) {
-   // check overflow
-   if (buffer->position > CFL_UINT32_MAX - skip) {
+void cfl_buffer_skip(CFL_BUFFERP buffer, CFL_INT32 skip) {
+   if (skip < 0) {
+      CFL_UINT32 uiSkip = (CFL_UINT32)(-((CFL_INT64)skip));
+      if (uiSkip > buffer->position) {
+         buffer->position = 0;
+      } else {
+         buffer->position -= uiSkip;
+      }
       return;
    }
    buffer->position += skip;
