@@ -2,7 +2,6 @@
 #include "cfl_str.h"
 #include "cfl_test.h"
 
-
 TEST_CASE(test_cfl_buffer_lifecycle) {
    CFL_BUFFERP buf = cfl_buffer_new();
    TEST_ASSERT(buf != NULL);
@@ -55,6 +54,9 @@ TEST_CASE(test_cfl_buffer_putFormatArgs) {
    cfl_buffer_setPosition(buf, 2);
 
    cfl_buffer_putFormat(buf, "Hello %c", 'A');
+   cfl_buffer_setPosition(buf, 12);
+   TEST_ASSERT(cfl_buffer_getUInt8(buf) == 'A');
+
    cfl_buffer_setPosition(buf, 13);
    TEST_ASSERT(cfl_buffer_getUInt8(buf) == 13);
 }
