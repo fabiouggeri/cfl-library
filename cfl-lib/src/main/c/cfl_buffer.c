@@ -25,22 +25,38 @@
 #include "cfl_buffer.h"
 #include "cfl_mem.h"
 #include "cfl_str.h"
+#include "cfl_types.h"
 
 #define BUFFER_INI_SIZE 8192
 
-static const int _endian_check = 1;
-#define IS_LITTLE_ENDIAN (*(char *)&_endian_check == 1)
-#define HOST_ENDIAN (IS_LITTLE_ENDIAN ? CFL_LITTLE_ENDIAN : CFL_BIG_ENDIAN)
+#define PUT_BUFFER(t, b, v)                                                                                                        \
+   if (ensureCapacity(b, b->length + sizeof(t))) {                                                                                 \
+      *((t *)&b->data[b->position]) = v;                                                                                           \
+      b->position += sizeof(t);                                                                                                    \
+      if (b->position > b->length) {                                                                                               \
+         b->length = b->position;                                                                                                  \
+      }                                                                                                                            \
+   } else                                                                                                                          \
+      return CFL_FALSE
 
-static void swap_bytes(void *p, size_t n) {
-   unsigned char *lo = (unsigned char *)p;
-   unsigned char *hi = (unsigned char *)p + n - 1;
-   while (lo < hi) {
-      unsigned char tmp = *lo;
-      *lo++ = *hi;
-      *hi-- = tmp;
-   }
-}
+#define GET_BUFFER(v, t, b, d)                                                                                                     \
+   if (b->position + sizeof(t) <= b->length) {                                                                                     \
+      v = *((t *)&b->data[b->position]);                                                                                           \
+      b->position += sizeof(t);                                                                                                    \
+   } else {                                                                                                                        \
+      b->position = b->length;                                                                                                     \
+   }                                                                                                                               \
+   v = d
+
+#define RETURN_BUFFER(t, b, d)                                                                                                     \
+   if (b->position + sizeof(t) > b->length) {                                                                                      \
+      b->position = b->length;                                                                                                     \
+      return d;                                                                                                                    \
+   }                                                                                                                               \
+   b->position += sizeof(t);                                                                                                       \
+   return *((t *)&b->data[b->position - sizeof(t)])
+
+#define PEEK_RETURN_BUFFER(t, b, d) return b->position + sizeof(t) <= b->length ? *((t *)&b->data[b->position]) : d
 
 static CFL_BOOL ensureCapacity(CFL_BUFFERP buffer, CFL_UINT32 minCapacity) {
    if (minCapacity > buffer->capacity) {
@@ -70,65 +86,7 @@ static void bufferInit(CFL_BUFFERP buffer, CFL_UINT32 initialCapacity) {
    buffer->capacity = initialCapacity > 0 ? initialCapacity : BUFFER_INI_SIZE;
    buffer->length = 0;
    buffer->position = 0;
-   buffer->endian = HOST_ENDIAN;
    buffer->data = (CFL_UINT8 *)CFL_MEM_ALLOC(buffer->capacity * sizeof(CFL_UINT8));
-}
-
-static CFL_BOOL buffer_put_val(CFL_BUFFERP buffer, const void *val, size_t size) {
-   if (!ensureCapacity(buffer, buffer->position + (CFL_UINT32)size)) {
-      return CFL_FALSE;
-   }
-   if (buffer->endian != HOST_ENDIAN && size > 1) {
-      CFL_UINT8 tmp[8];
-      if (size <= 8) {
-         memcpy(tmp, val, size);
-         swap_bytes(tmp, size);
-         memcpy(&buffer->data[buffer->position], tmp, size);
-      } else {
-         return CFL_FALSE;
-      }
-   } else {
-      memcpy(&buffer->data[buffer->position], val, size);
-   }
-   buffer->position += (CFL_UINT32)size;
-   if (buffer->position > buffer->length) {
-      buffer->length = buffer->position;
-   }
-   return CFL_TRUE;
-}
-
-static void buffer_read_val(CFL_BUFFERP buffer, void *val, size_t size) {
-   if (buffer->endian != HOST_ENDIAN && size > 1) {
-      CFL_UINT8 tmp[8];
-      if (size <= 8) {
-         memcpy(tmp, &buffer->data[buffer->position], size);
-         swap_bytes(tmp, size);
-         memcpy(val, tmp, size);
-      }
-   } else {
-      memcpy(val, &buffer->data[buffer->position], size);
-   }
-   buffer->position += (CFL_UINT32)size;
-}
-
-static void buffer_consume_val(CFL_BUFFERP buffer, void *val, size_t size) {
-   buffer_read_val(buffer, val, size);
-   if (buffer->position > buffer->length) {
-      buffer->length = buffer->position;
-   }
-}
-
-static void buffer_peek_val(CFL_BUFFERP buffer, void *val, size_t size) {
-   if (buffer->endian != HOST_ENDIAN && size > 1) {
-      CFL_UINT8 tmp[8];
-      if (size <= 8) {
-         memcpy(tmp, &buffer->data[buffer->position], size);
-         swap_bytes(tmp, size);
-         memcpy(val, tmp, size);
-      }
-   } else {
-      memcpy(val, &buffer->data[buffer->position], size);
-   }
 }
 
 void cfl_buffer_init(CFL_BUFFERP buffer) {
@@ -160,7 +118,6 @@ CFL_BUFFERP cfl_buffer_clone(CFL_BUFFERP other) {
       buffer->capacity = other->length > 0 ? other->length : other->capacity;
       buffer->length = other->length;
       buffer->position = other->position;
-      buffer->endian = other->endian;
       buffer->data = (CFL_UINT8 *)CFL_MEM_ALLOC(buffer->capacity * sizeof(CFL_UINT8));
       if (buffer->data == NULL) {
          CFL_MEM_FREE(buffer);
@@ -190,19 +147,6 @@ CFL_UINT8 *cfl_buffer_getDataPtr(const CFL_BUFFERP buffer) {
 
 CFL_UINT8 *cfl_buffer_positionPtr(CFL_BUFFERP buffer) {
    return &buffer->data[buffer->position];
-}
-
-void cfl_buffer_setBigEndian(CFL_BUFFERP buffer, CFL_BOOL bigEndian) {
-   if (buffer != NULL) {
-      buffer->endian = bigEndian ? CFL_BIG_ENDIAN : CFL_LITTLE_ENDIAN;
-   }
-}
-
-CFL_BOOL cfl_buffer_isBigEndian(const CFL_BUFFERP buffer) {
-   if (buffer != NULL) {
-      return buffer->endian == CFL_BIG_ENDIAN;
-   }
-   return CFL_FALSE;
 }
 
 void cfl_buffer_flip(CFL_BUFFERP buffer) {
@@ -304,189 +248,164 @@ CFL_BOOL cfl_buffer_setCapacity(CFL_BUFFERP buffer, CFL_UINT32 newCapacity) {
 }
 
 CFL_BOOL cfl_buffer_putBoolean(CFL_BUFFERP buffer, CFL_BOOL value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_BOOL, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_BOOL cfl_buffer_getBoolean(CFL_BUFFERP buffer) {
-   CFL_BOOL value = CFL_FALSE;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_BOOL, buffer, CFL_FALSE);
 }
 
 CFL_BOOL cfl_buffer_peekBoolean(CFL_BUFFERP buffer) {
-   CFL_BOOL value = CFL_FALSE;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_BOOL, buffer, CFL_FALSE);
 }
 
 CFL_BOOL cfl_buffer_putInt8(CFL_BUFFERP buffer, CFL_INT8 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_INT8, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_INT8 cfl_buffer_getInt8(CFL_BUFFERP buffer) {
-   CFL_INT8 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_INT8, buffer, 0);
 }
 
 CFL_INT8 cfl_buffer_peekInt8(CFL_BUFFERP buffer) {
-   CFL_INT8 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_INT8, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putInt16(CFL_BUFFERP buffer, CFL_INT16 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_INT16, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_INT16 cfl_buffer_getInt16(CFL_BUFFERP buffer) {
-   CFL_INT16 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_INT16, buffer, 0);
 }
 
 CFL_INT16 cfl_buffer_peekInt16(CFL_BUFFERP buffer) {
-   CFL_INT16 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_INT16, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putInt32(CFL_BUFFERP buffer, CFL_INT32 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_INT32, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_INT32 cfl_buffer_getInt32(CFL_BUFFERP buffer) {
-   CFL_INT32 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_INT32, buffer, 0);
 }
 
 CFL_INT32 cfl_buffer_peekInt32(CFL_BUFFERP buffer) {
-   CFL_INT32 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_INT32, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putInt64(CFL_BUFFERP buffer, CFL_INT64 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_INT64, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_INT64 cfl_buffer_getInt64(CFL_BUFFERP buffer) {
-   CFL_INT64 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_INT64, buffer, 0);
 }
 
 CFL_INT64 cfl_buffer_peekInt64(CFL_BUFFERP buffer) {
-   CFL_INT64 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_INT64, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putUInt8(CFL_BUFFERP buffer, CFL_UINT8 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_UINT8, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_UINT8 cfl_buffer_getUInt8(CFL_BUFFERP buffer) {
-   CFL_UINT8 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_UINT8, buffer, 0);
 }
 
 CFL_UINT8 cfl_buffer_peekUInt8(CFL_BUFFERP buffer) {
-   CFL_UINT8 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_UINT8, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putUInt16(CFL_BUFFERP buffer, CFL_UINT16 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_UINT16, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_UINT16 cfl_buffer_getUInt16(CFL_BUFFERP buffer) {
-   CFL_UINT16 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_UINT16, buffer, 0);
 }
 
 CFL_UINT16 cfl_buffer_peekUInt16(CFL_BUFFERP buffer) {
-   CFL_UINT16 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_UINT16, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putUInt32(CFL_BUFFERP buffer, CFL_UINT32 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_UINT32, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_UINT32 cfl_buffer_getUInt32(CFL_BUFFERP buffer) {
-   CFL_UINT32 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_UINT32, buffer, 0);
 }
 
 CFL_UINT32 cfl_buffer_peekUInt32(CFL_BUFFERP buffer) {
-   CFL_UINT32 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_UINT32, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putUInt64(CFL_BUFFERP buffer, CFL_UINT64 value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(CFL_UINT64, buffer, value);
+   return CFL_TRUE;
 }
 
 CFL_UINT64 cfl_buffer_getUInt64(CFL_BUFFERP buffer) {
-   CFL_UINT64 value = 0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(CFL_UINT64, buffer, 0);
 }
 
 CFL_UINT64 cfl_buffer_peekUInt64(CFL_BUFFERP buffer) {
-   CFL_UINT64 value = 0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(CFL_UINT64, buffer, 0);
 }
 
 CFL_BOOL cfl_buffer_putFloat(CFL_BUFFERP buffer, float value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(float, buffer, value);
+   return CFL_TRUE;
 }
 
 float cfl_buffer_getFloat(CFL_BUFFERP buffer) {
-   float value = 0.0f;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(float, buffer, 0.0f);
 }
 
 float cfl_buffer_peekFloat(CFL_BUFFERP buffer) {
-   float value = 0.0f;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(float, buffer, 0.0f);
 }
 
 CFL_BOOL cfl_buffer_putDouble(CFL_BUFFERP buffer, double value) {
-   return buffer_put_val(buffer, &value, sizeof(value));
+   PUT_BUFFER(double, buffer, value);
+   return CFL_TRUE;
 }
 
 double cfl_buffer_getDouble(CFL_BUFFERP buffer) {
-   double value = 0.0;
-   buffer_consume_val(buffer, &value, sizeof(value));
-   return value;
+   RETURN_BUFFER(double, buffer, 0.0);
 }
 
 double cfl_buffer_peekDouble(CFL_BUFFERP buffer) {
-   double value = 0.0;
-   buffer_peek_val(buffer, &value, sizeof(value));
-   return value;
+   PEEK_RETURN_BUFFER(double, buffer, 0.0);
 }
 
 CFL_STRP cfl_buffer_getString(CFL_BUFFERP buffer) {
    CFL_STRP str;
    CFL_UINT32 len;
 
-   buffer_read_val(buffer, &len, sizeof(len));
+   GET_BUFFER(len, CFL_UINT32, buffer, 0);
    if (len > 0) {
-      str = cfl_str_newBufferLen((const char *)&buffer->data[buffer->position], len);
-      buffer->position += len;
+      if (buffer->position >= buffer->length) {
+         str = cfl_str_new(16);
+         buffer->position = buffer->length;
+      } else if (buffer->length - buffer->position < len) {
+         str = cfl_str_newBufferLen((const char *)&buffer->data[buffer->position], buffer->length - buffer->position);
+         buffer->position = buffer->length;
+      } else {
+         str = cfl_str_newBufferLen((const char *)&buffer->data[buffer->position], len);
+         buffer->position += len;
+      }
    } else {
       str = cfl_str_new(16);
    }
@@ -495,16 +414,22 @@ CFL_STRP cfl_buffer_getString(CFL_BUFFERP buffer) {
 
 CFL_UINT32 cfl_buffer_getStringLength(CFL_BUFFERP buffer) {
    // Use peek to get length without advancing
-   CFL_UINT32 len;
-   buffer_peek_val(buffer, &len, sizeof(len));
-   return len;
+   PEEK_RETURN_BUFFER(CFL_UINT32, buffer, 0);
 }
 
 void cfl_buffer_copyString(CFL_BUFFERP buffer, CFL_STRP destStr) {
    CFL_UINT32 len;
 
-   buffer_read_val(buffer, &len, sizeof(len));
-   if (len > 0) {
+   if (buffer->position >= buffer->length) {
+      cfl_str_clear(destStr);
+      buffer->position = buffer->length;
+      return;
+   }
+   GET_BUFFER(len, CFL_UINT32, buffer, 0);
+   if (buffer->length - buffer->position < len) {
+      cfl_str_setValueLen(destStr, (const char *)&buffer->data[buffer->position], buffer->length - buffer->position);
+      buffer->position = buffer->length;
+   } else {
       cfl_str_setValueLen(destStr, (const char *)&buffer->data[buffer->position], len);
       buffer->position += len;
    }
@@ -513,11 +438,18 @@ void cfl_buffer_copyString(CFL_BUFFERP buffer, CFL_STRP destStr) {
 void cfl_buffer_copyStringLen(CFL_BUFFERP buffer, CFL_STRP destStr, CFL_UINT32 len) {
    CFL_UINT32 strLen;
 
-   buffer_read_val(buffer, &strLen, sizeof(strLen));
+   if (buffer->position >= buffer->length) {
+      cfl_str_clear(destStr);
+      buffer->position = buffer->length;
+   }
+   GET_BUFFER(strLen, CFL_UINT32, buffer, 0);
    if (len > strLen) {
       len = strLen;
    }
-   if (len > 0) {
+   if (buffer->length - buffer->position < len) {
+      cfl_str_setValueLen(destStr, (const char *)&buffer->data[buffer->position], buffer->length - buffer->position);
+      buffer->position = buffer->length;
+   } else {
       cfl_str_setValueLen(destStr, (const char *)&buffer->data[buffer->position], len);
       buffer->position += len;
    }
@@ -526,9 +458,7 @@ void cfl_buffer_copyStringLen(CFL_BUFFERP buffer, CFL_STRP destStr, CFL_UINT32 l
 CFL_BOOL cfl_buffer_putString(CFL_BUFFERP buffer, CFL_STRP str) {
    CFL_UINT32 len = cfl_str_length(str);
 
-   if (!buffer_put_val(buffer, &len, sizeof(len))) {
-      return CFL_FALSE;
-   }
+   PUT_BUFFER(CFL_UINT32, buffer, len);
    if (len > 0) {
       if (!ensureCapacity(buffer, buffer->position + len)) {
          return CFL_FALSE;
@@ -543,9 +473,7 @@ CFL_BOOL cfl_buffer_putString(CFL_BUFFERP buffer, CFL_STRP str) {
 }
 
 CFL_BOOL cfl_buffer_putStringLen(CFL_BUFFERP buffer, CFL_STRP str, CFL_UINT32 len) {
-   if (!buffer_put_val(buffer, &len, sizeof(len))) {
-      return CFL_FALSE;
-   }
+   PUT_BUFFER(CFL_UINT32, buffer, len);
    if (len > 0) {
       CFL_UINT32 strLen = cfl_str_length(str);
       if (strLen > len) {
@@ -571,12 +499,19 @@ char *cfl_buffer_getCharArray(CFL_BUFFERP buffer) {
    char *str;
    CFL_UINT32 len;
 
-   buffer_read_val(buffer, &len, sizeof(len));
+   GET_BUFFER(len, CFL_UINT32, buffer, 0);
    str = (char *)CFL_MEM_ALLOC((len + 1) * sizeof(char));
    if (str == NULL) {
       return NULL;
    }
-   if (len > 0) {
+   if (buffer->position >= buffer->length) {
+      len = 0;
+      buffer->position = buffer->length;
+   } else if (buffer->length - buffer->position < len) {
+      len = buffer->length - buffer->position;
+      memcpy((void *)str, (void *)&buffer->data[buffer->position], len * sizeof(char));
+      buffer->position = buffer->length;
+   } else {
       memcpy((void *)str, (void *)&buffer->data[buffer->position], len * sizeof(char));
       buffer->position += len;
    }
@@ -585,16 +520,24 @@ char *cfl_buffer_getCharArray(CFL_BUFFERP buffer) {
 }
 
 CFL_UINT32 cfl_buffer_getCharArrayLength(CFL_BUFFERP buffer) {
-   CFL_UINT32 len;
-   buffer_peek_val(buffer, &len, sizeof(len));
-   return len;
+   PEEK_RETURN_BUFFER(CFL_UINT32, buffer, 0);
 }
 
 void cfl_buffer_copyCharArray(CFL_BUFFERP buffer, char *destStr) {
    CFL_UINT32 len;
 
-   buffer_read_val(buffer, &len, sizeof(len));
-   if (len > 0) {
+   if (buffer->position >= buffer->length) {
+      destStr[0] = 0;
+      buffer->position = buffer->length;
+      return;
+   }
+
+   GET_BUFFER(len, CFL_UINT32, buffer, 0);
+   if (buffer->length - buffer->position < len) {
+      len = buffer->length - buffer->position;
+      memcpy((void *)destStr, (void *)&buffer->data[buffer->position], len * sizeof(char));
+      buffer->position = buffer->length;
+   } else {
       memcpy((void *)destStr, (void *)&buffer->data[buffer->position], len * sizeof(char));
       buffer->position += len;
    }
@@ -602,25 +545,30 @@ void cfl_buffer_copyCharArray(CFL_BUFFERP buffer, char *destStr) {
 }
 
 void cfl_buffer_copyCharArrayLen(CFL_BUFFERP buffer, char *destStr, CFL_UINT32 len) {
-   CFL_UINT32 numBytes;
+   CFL_UINT32 strLen;
 
-   buffer_read_val(buffer, &numBytes, sizeof(numBytes));
-   if (numBytes > 0) {
-      CFL_UINT32 maxBytes = len * sizeof(char);
-      if (maxBytes > numBytes) {
-         maxBytes = numBytes;
-      }
-      memcpy((void *)destStr, (void *)&buffer->data[buffer->position], maxBytes);
-      buffer->position += maxBytes;
+   if (buffer->position >= buffer->length) {
+      destStr[0] = 0;
+      buffer->position = buffer->length;
+      return;
    }
+
+   GET_BUFFER(strLen, CFL_UINT32, buffer, 0);
+   if (buffer->length - buffer->position < strLen) {
+      strLen = buffer->length - buffer->position;
+   }
+   if (len > strLen) {
+      len = strLen;
+   }
+   memcpy((void *)destStr, (void *)&buffer->data[buffer->position], len * sizeof(char));
+   buffer->position += len;
+   destStr[len] = 0;
 }
 
 CFL_BOOL cfl_buffer_putCharArray(CFL_BUFFERP buffer, const char *value) {
    CFL_UINT32 len = (CFL_UINT32)strlen(value) * sizeof(char);
 
-   if (!buffer_put_val(buffer, &len, sizeof(len))) {
-      return CFL_FALSE;
-   }
+   PUT_BUFFER(CFL_UINT32, buffer, len);
    if (len > 0) {
       if (!ensureCapacity(buffer, buffer->position + len)) {
          return CFL_FALSE;
@@ -635,9 +583,7 @@ CFL_BOOL cfl_buffer_putCharArray(CFL_BUFFERP buffer, const char *value) {
 }
 
 CFL_BOOL cfl_buffer_putCharArrayLen(CFL_BUFFERP buffer, const char *value, CFL_UINT32 len) {
-   if (!buffer_put_val(buffer, &len, sizeof(len))) {
-      return CFL_FALSE;
-   }
+   PUT_BUFFER(CFL_UINT32, buffer, len);
    if (len > 0) {
       if (!ensureCapacity(buffer, buffer->position + len)) {
          return CFL_FALSE;
@@ -655,9 +601,9 @@ void cfl_buffer_getDate(CFL_BUFFERP buffer, CFL_DATEP date) {
    CFL_UINT16 year;
    CFL_UINT8 month;
    CFL_UINT8 day;
-   buffer_read_val(buffer, &year, sizeof(year));
-   buffer_read_val(buffer, &month, sizeof(month));
-   buffer_read_val(buffer, &day, sizeof(day));
+   GET_BUFFER(year, CFL_UINT16, buffer, 0);
+   GET_BUFFER(month, CFL_UINT8, buffer, 0);
+   GET_BUFFER(day, CFL_UINT8, buffer, 0);
    cfl_date_setDate(date, year, month, day);
 }
 
@@ -666,12 +612,9 @@ CFL_BOOL cfl_buffer_putDate(CFL_BUFFERP buffer, CFL_DATE value) {
    CFL_UINT8 month = cfl_date_getMonth(&value);
    CFL_UINT8 day = cfl_date_getDay(&value);
 
-   if (!buffer_put_val(buffer, &year, sizeof(year)))
-      return CFL_FALSE;
-   if (!buffer_put_val(buffer, &month, sizeof(month)))
-      return CFL_FALSE;
-   if (!buffer_put_val(buffer, &day, sizeof(day)))
-      return CFL_FALSE;
+   PUT_BUFFER(CFL_UINT16, buffer, year);
+   PUT_BUFFER(CFL_UINT8, buffer, month);
+   PUT_BUFFER(CFL_UINT8, buffer, day);
    return CFL_TRUE;
 }
 
@@ -680,12 +623,9 @@ CFL_BOOL cfl_buffer_putDatePtr(CFL_BUFFERP buffer, CFL_DATEP value) {
    CFL_UINT8 month = cfl_date_getMonth(value);
    CFL_UINT8 day = cfl_date_getDay(value);
 
-   if (!buffer_put_val(buffer, &year, sizeof(year)))
-      return CFL_FALSE;
-   if (!buffer_put_val(buffer, &month, sizeof(month)))
-      return CFL_FALSE;
-   if (!buffer_put_val(buffer, &day, sizeof(day)))
-      return CFL_FALSE;
+   PUT_BUFFER(CFL_UINT16, buffer, year);
+   PUT_BUFFER(CFL_UINT8, buffer, month);
+   PUT_BUFFER(CFL_UINT8, buffer, day);
    return CFL_TRUE;
 }
 
@@ -773,9 +713,7 @@ CFL_BOOL cfl_buffer_putFormatArgs(CFL_BUFFERP buffer, const char *format, va_lis
    if (iLen > 0) {
       CFL_UINT32 strLen = (CFL_UINT32)iLen;
       char previousNullTerminator;
-      if (!buffer_put_val(buffer, &strLen, sizeof(strLen))) {
-         return CFL_FALSE;
-      }
+      PUT_BUFFER(CFL_UINT32, buffer, strLen);
       // +1 for guaranteed buffer->position + strLen is a valid buffer position
       if (!ensureCapacity(buffer, buffer->position + strLen + 1)) {
          return CFL_FALSE;
@@ -815,7 +753,6 @@ CFL_BOOL cfl_buffer_moveTo(CFL_BUFFERP fromBuffer, CFL_BUFFERP toBuffer) {
    toBuffer->length = fromBuffer->length;
    toBuffer->position = fromBuffer->position;
    toBuffer->capacity = fromBuffer->capacity;
-   toBuffer->endian = fromBuffer->endian;
    fromBuffer->data = NULL;
    fromBuffer->length = 0;
    fromBuffer->position = 0;

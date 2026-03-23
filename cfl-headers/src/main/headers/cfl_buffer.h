@@ -3,7 +3,7 @@
  * @brief Dynamic byte buffer implementation with serialization support.
  *
  * This module provides a dynamic buffer for reading and writing binary data
- * with support for multiple data types and endianness control.
+ * with support for multiple data types.
  */
 
 #ifndef _CFL_BUFFER_H_
@@ -18,21 +18,15 @@
 extern "C" {
 #endif
 
-/** @brief Big endian byte order */
-#define CFL_BIG_ENDIAN 0x00
-/** @brief Little endian byte order */
-#define CFL_LITTLE_ENDIAN 0x01
-
 /**
  * @brief Dynamic buffer structure for binary data.
  */
 typedef struct _CFL_BUFFER {
-  CFL_UINT8 *data;     /**< Pointer to buffer data */
-  CFL_UINT32 length;   /**< Current data length in bytes */
-  CFL_UINT32 position; /**< Current read/write position */
-  CFL_UINT32 capacity; /**< Allocated capacity in bytes */
-  CFL_BOOL allocated;  /**< Whether structure was dynamically allocated */
-  CFL_UINT8 endian;    /**< Byte order for multi-byte values */
+      CFL_UINT8 *data;     /**< Pointer to buffer data */
+      CFL_UINT32 length;   /**< Current data length in bytes */
+      CFL_UINT32 position; /**< Current read/write position */
+      CFL_UINT32 capacity; /**< Allocated capacity in bytes */
+      CFL_BOOL allocated;  /**< Whether structure was dynamically allocated */
 } CFL_BUFFER, *CFL_BUFFERP;
 
 /**
@@ -80,20 +74,6 @@ extern CFL_UINT8 *cfl_buffer_getDataPtr(const CFL_BUFFERP buffer);
  * @return Pointer to the current position in the data.
  */
 extern CFL_UINT8 *cfl_buffer_positionPtr(CFL_BUFFERP buffer);
-
-/**
- * @brief Sets the byte order for multi-byte operations.
- * @param buffer Pointer to the buffer.
- * @param bigEndian CFL_TRUE for big endian, CFL_FALSE for little endian.
- */
-extern void cfl_buffer_setBigEndian(CFL_BUFFERP buffer, CFL_BOOL bigEndian);
-
-/**
- * @brief Checks if buffer uses big endian byte order.
- * @param buffer Pointer to the buffer.
- * @return CFL_TRUE if big endian, CFL_FALSE if little endian.
- */
-extern CFL_BOOL cfl_buffer_isBigEndian(const CFL_BUFFERP buffer);
 
 /**
  * @brief Returns the current data length.
@@ -168,8 +148,7 @@ extern CFL_UINT32 cfl_buffer_capacity(const CFL_BUFFERP buffer);
  * @param newCapacity New capacity in bytes.
  * @return CFL_TRUE on success, CFL_FALSE on failure.
  */
-extern CFL_BOOL cfl_buffer_setCapacity(CFL_BUFFERP buffer,
-                                       CFL_UINT32 newCapacity);
+extern CFL_BOOL cfl_buffer_setCapacity(CFL_BUFFERP buffer, CFL_UINT32 newCapacity);
 
 /** @brief Writes a boolean value. */
 extern CFL_BOOL cfl_buffer_putBoolean(CFL_BUFFERP buffer, CFL_BOOL value);
@@ -255,11 +234,9 @@ extern CFL_UINT32 cfl_buffer_getStringLength(CFL_BUFFERP buffer);
 /** @brief Copies a string from buffer to destination. */
 extern void cfl_buffer_copyString(CFL_BUFFERP buffer, CFL_STRP destStr);
 /** @brief Copies a string of specific length. */
-extern void cfl_buffer_copyStringLen(CFL_BUFFERP buffer, CFL_STRP destStr,
-                                     CFL_UINT32 len);
+extern void cfl_buffer_copyStringLen(CFL_BUFFERP buffer, CFL_STRP destStr, CFL_UINT32 len);
 /** @brief Writes a string with specific length. */
-extern CFL_BOOL cfl_buffer_putStringLen(CFL_BUFFERP buffer, CFL_STRP value,
-                                        CFL_UINT32 len);
+extern CFL_BOOL cfl_buffer_putStringLen(CFL_BUFFERP buffer, CFL_STRP value, CFL_UINT32 len);
 /** @brief Writes a string. */
 extern CFL_BOOL cfl_buffer_putString(CFL_BUFFERP buffer, CFL_STRP value);
 
@@ -270,11 +247,9 @@ extern char *cfl_buffer_getCharArray(CFL_BUFFERP buffer);
 /** @brief Copies a char array to destination. */
 extern void cfl_buffer_copyCharArray(CFL_BUFFERP buffer, char *destStr);
 /** @brief Copies a char array with specific length. */
-extern void cfl_buffer_copyCharArrayLen(CFL_BUFFERP buffer, char *destStr,
-                                        CFL_UINT32 len);
+extern void cfl_buffer_copyCharArrayLen(CFL_BUFFERP buffer, char *destStr, CFL_UINT32 len);
 /** @brief Writes a char array with specific length. */
-extern CFL_BOOL cfl_buffer_putCharArrayLen(CFL_BUFFERP buffer,
-                                           const char *value, CFL_UINT32 len);
+extern CFL_BOOL cfl_buffer_putCharArrayLen(CFL_BUFFERP buffer, const char *value, CFL_UINT32 len);
 /** @brief Writes a null-terminated char array. */
 extern CFL_BOOL cfl_buffer_putCharArray(CFL_BUFFERP buffer, const char *value);
 
@@ -288,16 +263,13 @@ extern CFL_BOOL cfl_buffer_putDatePtr(CFL_BUFFERP buffer, CFL_DATEP value);
 /** @brief Gets raw bytes from buffer. */
 extern CFL_UINT8 *cfl_buffer_get(CFL_BUFFERP buffer, CFL_UINT32 size);
 /** @brief Copies raw bytes from buffer. */
-extern void cfl_buffer_copy(CFL_BUFFERP buffer, CFL_UINT8 *dest,
-                            CFL_UINT32 size);
+extern void cfl_buffer_copy(CFL_BUFFERP buffer, CFL_UINT8 *dest, CFL_UINT32 size);
 /** @brief Writes raw bytes to buffer. */
-extern CFL_BOOL cfl_buffer_put(CFL_BUFFERP buffer, void *value,
-                               CFL_UINT32 size);
+extern CFL_BOOL cfl_buffer_put(CFL_BUFFERP buffer, void *value, CFL_UINT32 size);
 /** @brief Appends another buffer's contents. */
 extern CFL_BOOL cfl_buffer_putBuffer(CFL_BUFFERP buffer, CFL_BUFFERP other);
 /** @brief Appends a specific size from another buffer. */
-extern CFL_BOOL cfl_buffer_putBufferSize(CFL_BUFFERP buffer, CFL_BUFFERP other,
-                                         CFL_UINT32 size);
+extern CFL_BOOL cfl_buffer_putBufferSize(CFL_BUFFERP buffer, CFL_BUFFERP other, CFL_UINT32 size);
 
 /**
  * @brief Returns remaining bytes (length - position).
@@ -312,8 +284,7 @@ extern CFL_UINT32 cfl_buffer_remaining(const CFL_BUFFERP buffer);
  * @param need Number of bytes needed.
  * @return CFL_TRUE if enough, CFL_FALSE otherwise.
  */
-extern CFL_BOOL cfl_buffer_haveEnough(const CFL_BUFFERP buffer,
-                                      CFL_UINT32 need);
+extern CFL_BOOL cfl_buffer_haveEnough(const CFL_BUFFERP buffer, CFL_UINT32 need);
 
 /**
  * @brief Writes formatted data to buffer.
@@ -321,8 +292,7 @@ extern CFL_BOOL cfl_buffer_haveEnough(const CFL_BUFFERP buffer,
  * @param format Printf-style format string.
  * @return CFL_TRUE on success, CFL_FALSE on failure.
  */
-extern CFL_BOOL cfl_buffer_putFormat(CFL_BUFFERP buffer, const char *format,
-                                     ...);
+extern CFL_BOOL cfl_buffer_putFormat(CFL_BUFFERP buffer, const char *format, ...);
 
 /**
  * @brief Moves all data from one buffer to another.
