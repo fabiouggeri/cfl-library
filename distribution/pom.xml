@@ -2,13 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
-   <parent>
-      <groupId>br.com.sicredi.maven</groupId>
-      <artifactId>sicredi-maven-super-pom</artifactId>
-      <version>1.1.4</version>
-      <relativePath></relativePath>
-   </parent>
-
    <groupId>org.cfl</groupId>
    <artifactId>cfl-release-superpom</artifactId>
    <version>1.10.0.0</version>
@@ -20,9 +13,6 @@
    <description>Super POM for install CFL library</description>
 
    <properties>
-		<artifactory.home>https://artifactory.sicredi.net/artifactory</artifactory.home>
-      <maven.repo.release.url>${artifactory.home}/libs-release-local</maven.repo.release.url>
-      <maven.repo.release.id>sicredi-release-repo</maven.repo.release.id>
       <cfl-group-id>org.cfl</cfl-group-id>
       <cfl-artifact-id>cfl-app</cfl-artifact-id>
       <builder-helper-version>2.4.0.0</builder-helper-version>
@@ -58,7 +48,7 @@
          <activation>
             <property>
                <name>cc</name>
-               <value>mingw64</value>
+               <value>mingw</value>
             </property>
          </activation>
          <properties>

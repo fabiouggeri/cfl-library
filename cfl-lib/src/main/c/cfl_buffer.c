@@ -45,8 +45,8 @@
       b->position += sizeof(t);                                                                                                    \
    } else {                                                                                                                        \
       b->position = b->length;                                                                                                     \
-   }                                                                                                                               \
-   v = d
+      v = d;                                                                                                                       \
+   }
 
 #define RETURN_BUFFER(t, b, d)                                                                                                     \
    if (b->position + sizeof(t) > b->length) {                                                                                      \

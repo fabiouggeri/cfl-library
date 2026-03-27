@@ -71,7 +71,7 @@
       <msc-link-cmd>link.exe @"${project.basedir}\target\classes\${c-classifier}\lnk_options.rsp"</msc-link-cmd>
       <msc-lib-cmd>lib.exe /SUBSYSTEM:CONSOLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'}</msc-lib-cmd>
 
-      <mingw64-id>mingw64</mingw64-id>
+      <mingw64-id>mingw</mingw64-id>
       <mingw64-version>11.0.0.2</mingw64-version>
       <mingw64-major-version>11.x</mingw64-major-version>
       <mingw64-group-id>org.mingw64</mingw64-group-id>
@@ -266,23 +266,6 @@
 
    <profiles>
       <profile>
-         <activation>
-            <os>
-               <family>windows</family>
-            </os>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>${cc-group-id}</groupId>
-               <artifactId>${cc-artifact-id}</artifactId>
-               <type>zip</type>
-               <version>${cc-version}</version>
-               <classifier>${target-platform}</classifier>
-            </dependency>
-         </dependencies>
-      </profile>
-
-      <profile>
          <id>gcc</id>
          <activation>
             <os>
@@ -368,7 +351,7 @@
          <activation>
             <property>
                <name>cc</name>
-               <value>mingw64</value>
+               <value>mingw</value>
             </property>
          </activation>
 
