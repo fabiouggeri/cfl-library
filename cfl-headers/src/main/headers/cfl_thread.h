@@ -59,29 +59,24 @@ extern "C" {
  * @brief Macro to declare getter and setter functions for thread-local
  * variables.
  */
-#define DECLARE_GET_SET(datatype, typename)                                    \
-  extern datatype cfl_thread_varGet##typename(CFL_THREAD_VARIABLEP threadVar); \
-  extern CFL_BOOL cfl_thread_varSet##                                          \
-      typename(CFL_THREAD_VARIABLEP threadVar, datatype data);
+#define DECLARE_GET_SET(datatype, typename)                                                                                        \
+   extern datatype cfl_thread_varGet##typename(CFL_THREAD_VARIABLEP threadVar);                                                    \
+   extern CFL_BOOL cfl_thread_varSet##typename(CFL_THREAD_VARIABLEP threadVar, datatype data);
 
 #if defined(CFL_OS_WINDOWS)
 /** @brief Initializes a thread-local variable with custom init/free functions
  */
-#define CFL_THREAD_VAR_INIT(datatype, varname, initFunc, freeFunc)             \
-  CFL_THREAD_VARIABLE varname = {0, TLS_OUT_OF_INDEXES, sizeof(datatype),      \
-                                 initFunc, freeFunc}
+#define CFL_THREAD_VAR_INIT(datatype, varname, initFunc, freeFunc)                                                                 \
+   CFL_THREAD_VARIABLE varname = {0, TLS_OUT_OF_INDEXES, sizeof(datatype), initFunc, freeFunc}
 /** @brief Initializes a simple thread-local variable */
-#define CFL_THREAD_VAR(datatype, varname)                                      \
-  CFL_THREAD_VARIABLE varname = {0, TLS_OUT_OF_INDEXES, sizeof(datatype),      \
-                                 NULL, NULL}
+#define CFL_THREAD_VAR(datatype, varname) CFL_THREAD_VARIABLE varname = {0, TLS_OUT_OF_INDEXES, sizeof(datatype), NULL, NULL}
 #else
 /** @brief Initializes a thread-local variable with custom init/free functions
  */
-#define CFL_THREAD_VAR_INIT(datatype, varname, initFunc, freeFunc)             \
-  CFL_THREAD_VARIABLE varname = {0, 0, sizeof(datatype), initFunc, freeFunc}
+#define CFL_THREAD_VAR_INIT(datatype, varname, initFunc, freeFunc)                                                                 \
+   CFL_THREAD_VARIABLE varname = {0, 0, sizeof(datatype), initFunc, freeFunc}
 /** @brief Initializes a simple thread-local variable */
-#define CFL_THREAD_VAR(datatype, varname)                                      \
-  CFL_THREAD_VARIABLE varname = {0, 0, sizeof(datatype), NULL, NULL}
+#define CFL_THREAD_VAR(datatype, varname) CFL_THREAD_VARIABLE varname = {0, 0, sizeof(datatype), NULL, NULL}
 #endif
 
 /** @brief Function pointer type for thread-local variable init/free callbacks
@@ -95,18 +90,18 @@ typedef void (*CFL_THREAD_FUNC)(void *param);
  * @brief Union for storing different data types in thread-local storage.
  */
 typedef union {
-  CFL_BOOL asBoolean;    /**< Boolean value */
-  CFL_INT8 asInt8;       /**< Signed 8-bit integer */
-  CFL_INT16 asInt16;     /**< Signed 16-bit integer */
-  CFL_INT32 asInt32;     /**< Signed 32-bit integer */
-  CFL_INT64 asInt64;     /**< Signed 64-bit integer */
-  CFL_UINT8 asUInt8;     /**< Unsigned 8-bit integer */
-  CFL_UINT16 asUInt16;   /**< Unsigned 16-bit integer */
-  CFL_UINT32 asUInt32;   /**< Unsigned 32-bit integer */
-  CFL_UINT64 asUInt64;   /**< Unsigned 64-bit integer */
-  CFL_FLOAT32 asFloat32; /**< 32-bit floating point */
-  CFL_FLOAT64 asFloat64; /**< 64-bit floating point */
-  void *asPointer;       /**< Generic pointer */
+      CFL_BOOL asBoolean;    /**< Boolean value */
+      CFL_INT8 asInt8;       /**< Signed 8-bit integer */
+      CFL_INT16 asInt16;     /**< Signed 16-bit integer */
+      CFL_INT32 asInt32;     /**< Signed 32-bit integer */
+      CFL_INT64 asInt64;     /**< Signed 64-bit integer */
+      CFL_UINT8 asUInt8;     /**< Unsigned 8-bit integer */
+      CFL_UINT16 asUInt16;   /**< Unsigned 16-bit integer */
+      CFL_UINT32 asUInt32;   /**< Unsigned 32-bit integer */
+      CFL_UINT64 asUInt64;   /**< Unsigned 64-bit integer */
+      CFL_FLOAT32 asFloat32; /**< 32-bit floating point */
+      CFL_FLOAT64 asFloat64; /**< 64-bit floating point */
+      void *asPointer;       /**< Generic pointer */
 } VAR_DATA;
 
 /**
@@ -114,36 +109,36 @@ typedef union {
  */
 typedef struct _CFL_THREAD_VARIABLE {
 #if defined(CFL_OS_WINDOWS)
-  volatile LONG initialized; /**< Initialization state flag */
-  DWORD storageKey;          /**< Thread-local storage key */
+      volatile LONG initialized; /**< Initialization state flag */
+      DWORD storageKey;          /**< Thread-local storage key */
 #else
-  volatile int initialized; /**< Initialization state flag */
-  pthread_key_t storageKey; /**< Thread-local storage key */
+      volatile int initialized; /**< Initialization state flag */
+      pthread_key_t storageKey; /**< Thread-local storage key */
 #endif
-  size_t dataSize;              /**< Size of the stored data */
-  CFL_THREAD_VAR_FUNC initData; /**< Optional initialization callback */
-  CFL_THREAD_VAR_FUNC freeData; /**< Optional cleanup callback */
+      size_t dataSize;              /**< Size of the stored data */
+      CFL_THREAD_VAR_FUNC initData; /**< Optional initialization callback */
+      CFL_THREAD_VAR_FUNC freeData; /**< Optional cleanup callback */
 } CFL_THREAD_VARIABLE, *CFL_THREAD_VARIABLEP;
 
 /**
  * @brief Thread-local variable data wrapper structure.
  */
 typedef struct _CFL_THREAD_VAR_DATA {
-  CFL_THREAD_VARIABLEP var; /**< Pointer to the variable descriptor */
-  CFL_UINT8 data[1];        /**< Flexible array for actual data */
+      CFL_THREAD_VARIABLEP var; /**< Pointer to the variable descriptor */
+      CFL_UINT8 data[1];        /**< Flexible array for actual data */
 } CFL_THREAD_VAR_DATA, *CFL_THREAD_VAR_DATAP;
 
 /**
  * @brief Thread structure containing thread state and metadata.
  */
 typedef struct _CFL_THREAD {
-  CFL_THREAD_FUNC func;      /**< Thread entry point function */
-  void *param;               /**< Parameter passed to thread function */
-  CFL_STR description;       /**< Optional thread description */
-  CFL_THREAD_HANDLE handle;  /**< Platform-specific thread handle */
-  CFL_BOOL manualAllocation; /**< Whether structure was manually allocated */
-  CFL_BOOL joined;           /**< Whether thread has been joined */
-  CFL_UINT8 status;          /**< Current thread status */
+      CFL_THREAD_FUNC func;      /**< Thread entry point function */
+      void *param;               /**< Parameter passed to thread function */
+      CFL_STR description;       /**< Optional thread description */
+      CFL_THREAD_HANDLE handle;  /**< Platform-specific thread handle */
+      CFL_BOOL manualAllocation; /**< Whether structure was manually allocated */
+      CFL_BOOL joined;           /**< Whether thread has been joined */
+      CFL_UINT8 status;          /**< Current thread status */
 } CFL_THREAD, *CFL_THREADP;
 
 /**
@@ -161,8 +156,7 @@ extern CFL_THREADP cfl_thread_new(CFL_THREAD_FUNC func);
  * @param description Human-readable description for the thread.
  * @return Pointer to the new thread object, or NULL if allocation fails.
  */
-extern CFL_THREADP cfl_thread_newWithDescription(CFL_THREAD_FUNC func,
-                                                 const char *description);
+extern CFL_THREADP cfl_thread_newWithDescription(CFL_THREAD_FUNC func, const char *description);
 
 /**
  * @brief Frees a thread object and its resources.
@@ -176,8 +170,14 @@ extern void cfl_thread_free(CFL_THREADP thread);
  * @param thread Pointer to the thread object.
  * @param description Human-readable description for the thread.
  */
-extern void cfl_thread_setDescription(CFL_THREADP thread,
-                                      const char *description);
+extern void cfl_thread_setDescription(CFL_THREADP thread, const char *description);
+
+/**
+ * @brief Gets the description for a thread.
+ * @param thread Pointer to the thread object.
+ * @return Pointer to the thread's description.
+ */
+extern CFL_STRP cfl_thread_getDescription(CFL_THREADP thread);
 
 /**
  * @brief Gets the current thread's ID.
@@ -281,8 +281,7 @@ extern void *cfl_thread_varGet(CFL_THREAD_VARIABLEP threadVar);
  * @param data Pointer to the data to copy into the variable.
  * @return CFL_TRUE on success, CFL_FALSE on failure.
  */
-extern CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar,
-                                  const void *data);
+extern CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar, const void *data);
 
 /* Typed getter/setter declarations for thread-local variables */
 DECLARE_GET_SET(void *, Pointer)
