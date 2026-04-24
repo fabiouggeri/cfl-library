@@ -21,16 +21,24 @@ extern "C" {
  * @brief Safely frees a string and sets pointer to NULL.
  * @param s The string pointer to free.
  */
-#define CFL_STR_FREE(s)                                                        \
-  if (s != NULL) {                                                             \
-    cfl_str_free(s);                                                           \
-    s = NULL;                                                                  \
-  }
+#define CFL_STR_FREE(s)                                                                                                            \
+   if (s != NULL) {                                                                                                                \
+      cfl_str_free(s);                                                                                                             \
+      s = NULL;                                                                                                                    \
+   }
 
 /**
  * @brief Appends a compile-time constant string.
  * @param s The destination string.
  * @param c The compile-time constant string to append.
+ */
+#define CFL_STR_APPEND_LITERAL(s, c) cfl_str_appendLen(s, c, (int)sizeof(c) - 1)
+
+/**
+ * @brief Appends a compile-time constant string.
+ * @param s The destination string.
+ * @param c The compile-time constant string to append.
+ * @deprecated Use CFL_STR_APPEND_LITERAL instead.
  */
 #define CFL_STR_APPEND_CONST(s, c) cfl_str_appendLen(s, c, (int)sizeof(c) - 1)
 
@@ -67,12 +75,12 @@ extern "C" {
  * strings.
  */
 typedef struct _CFL_STR {
-  char *data;          /**< Pointer to string data */
-  CFL_UINT32 length;   /**< Current string length (excluding null terminator) */
-  CFL_UINT32 dataSize; /**< Allocated buffer size */
-  CFL_UINT32 hashValue; /**< Cached hash value (0 if not computed) */
-  CFL_BOOL isVarData;   /**< True if data was dynamically allocated */
-  CFL_BOOL isAllocated; /**< True if structure was dynamically allocated */
+      char *data;           /**< Pointer to string data */
+      CFL_UINT32 length;    /**< Current string length (excluding null terminator) */
+      CFL_UINT32 dataSize;  /**< Allocated buffer size */
+      CFL_UINT32 hashValue; /**< Cached hash value (0 if not computed) */
+      CFL_BOOL isVarData;   /**< True if data was dynamically allocated */
+      CFL_BOOL isAllocated; /**< True if structure was dynamically allocated */
 } CFL_STR, *CFL_STRP;
 
 /**
@@ -120,8 +128,7 @@ extern void cfl_str_initCapacity(CFL_STRP str, CFL_UINT32 iniCapacity);
  * @note The buffer is used directly without copying, so it must remain valid
  *       for the lifetime of the string.
  */
-extern void cfl_str_initConstLen(CFL_STRP str, const char *buffer,
-                                 CFL_UINT32 len);
+extern void cfl_str_initConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 
 /**
  * @brief Initializes a string with a constant buffer.
@@ -338,8 +345,7 @@ extern CFL_STRP cfl_str_appendChar(CFL_STRP str, char c);
  * @return The resulting string (either new or modified), or NULL if memory
  * allocation fails.
  */
-extern CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer,
-                                  CFL_UINT32 len);
+extern CFL_STRP cfl_str_appendLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 
 /**
  * @brief Appends another string.
@@ -379,8 +385,7 @@ extern CFL_STRP cfl_str_appendStr(CFL_STRP str, CFL_STRP strAppend);
  *       performs the actual formatting. The string's hash value is reset to 0
  *       after modification.
  */
-extern CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char *format,
-                                         va_list varArgs);
+extern CFL_STRP cfl_str_appendFormatArgs(CFL_STRP str, const char *format, va_list varArgs);
 
 /**
  * @brief Appends formatted text.
@@ -522,8 +527,7 @@ extern CFL_STRP cfl_str_setValue(CFL_STRP str, const char *buffer);
  *       The function ensures the target string has enough capacity before
  * copying. After setting, the string's hash value is reset to 0.
  */
-extern CFL_STRP cfl_str_setValueLen(CFL_STRP str, const char *buffer,
-                                    CFL_UINT32 len);
+extern CFL_STRP cfl_str_setValueLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 
 /**
  * @brief Sets string to reference a constant buffer.
@@ -562,8 +566,7 @@ extern CFL_STRP cfl_str_setConst(CFL_STRP str, const char *buffer);
  * @note The buffer must remain valid for the lifetime of the string.
  * @note Any previous variable data in the string will be freed.
  */
-extern CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer,
-                                    CFL_UINT32 len);
+extern CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer, CFL_UINT32 len);
 
 /**
  * @brief Sets string content using formatted text with va_list.
@@ -585,8 +588,7 @@ extern CFL_STRP cfl_str_setConstLen(CFL_STRP str, const char *buffer,
  * allocation.
  * @note The hashValue of the string is reset to 0 after modification.
  */
-extern CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char *format,
-                                      va_list varArgs);
+extern CFL_STRP cfl_str_setFormatArgs(CFL_STRP str, const char *format, va_list varArgs);
 
 /**
  * @brief Sets string content using formatted text.
@@ -640,8 +642,7 @@ extern CFL_BOOL cfl_str_startsWith(const CFL_STRP str, const CFL_STRP strStart);
  * @return CFL_TRUE if str starts with strStart (ignoring case), CFL_FALSE
  * otherwise.
  */
-extern CFL_BOOL cfl_str_startsWithIgnoreCase(const CFL_STRP str,
-                                             const CFL_STRP strStart);
+extern CFL_BOOL cfl_str_startsWithIgnoreCase(const CFL_STRP str, const CFL_STRP strStart);
 
 /**
  * @brief Checks if string starts with a buffer.
@@ -651,8 +652,7 @@ extern CFL_BOOL cfl_str_startsWithIgnoreCase(const CFL_STRP str,
  *
  * @return CFL_TRUE if str starts with buffer, CFL_FALSE otherwise.
  */
-extern CFL_BOOL cfl_str_bufferStartsWith(const CFL_STRP str,
-                                         const char *buffer);
+extern CFL_BOOL cfl_str_bufferStartsWith(const CFL_STRP str, const char *buffer);
 
 /**
  * @brief Checks if string starts with a buffer (case-insensitive).
@@ -663,8 +663,7 @@ extern CFL_BOOL cfl_str_bufferStartsWith(const CFL_STRP str,
  * @return CFL_TRUE if str starts with buffer (ignoring case), CFL_FALSE
  * otherwise.
  */
-extern CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(const CFL_STRP str,
-                                                   const char *buffer);
+extern CFL_BOOL cfl_str_bufferStartsWithIgnoreCase(const CFL_STRP str, const char *buffer);
 
 /**
  * @brief Checks if two strings are equal.
@@ -688,8 +687,7 @@ extern CFL_BOOL cfl_str_equals(const CFL_STRP str1, const CFL_STRP str2);
  *
  * @return CFL_TRUE if strings are equal (ignoring case), CFL_FALSE otherwise.
  */
-extern CFL_BOOL cfl_str_equalsIgnoreCase(const CFL_STRP str1,
-                                         const CFL_STRP str2);
+extern CFL_BOOL cfl_str_equalsIgnoreCase(const CFL_STRP str1, const CFL_STRP str2);
 
 /**
  * @brief Compares two strings lexicographically.
@@ -707,8 +705,7 @@ extern CFL_BOOL cfl_str_equalsIgnoreCase(const CFL_STRP str1,
  * @note If str1 and str2 point to the same string or have the same data
  * pointer, they are considered equal and function returns 0 immediately.
  */
-extern CFL_INT16 cfl_str_compare(const CFL_STRP str1, const CFL_STRP str2,
-                                 CFL_BOOL bExact);
+extern CFL_INT16 cfl_str_compare(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact);
 
 /**
  * @brief Compares two strings (case-insensitive).
@@ -729,9 +726,7 @@ extern CFL_INT16 cfl_str_compare(const CFL_STRP str1, const CFL_STRP str2,
  * @note If str1 and str2 point to the same string or same data, returns 0
  * immediately.
  */
-extern CFL_INT16 cfl_str_compareIgnoreCase(const CFL_STRP str1,
-                                           const CFL_STRP str2,
-                                           CFL_BOOL bExact);
+extern CFL_INT16 cfl_str_compareIgnoreCase(const CFL_STRP str1, const CFL_STRP str2, CFL_BOOL bExact);
 
 /**
  * @brief Checks if string equals a buffer.
@@ -757,8 +752,7 @@ extern CFL_BOOL cfl_str_bufferEquals(const CFL_STRP str1, const char *str2);
  * @return CFL_TRUE if the string and buffer are equal (ignoring case),
  * CFL_FALSE otherwise.
  */
-extern CFL_BOOL cfl_str_bufferEqualsIgnoreCase(const CFL_STRP str1,
-                                               const char *str2);
+extern CFL_BOOL cfl_str_bufferEqualsIgnoreCase(const CFL_STRP str1, const char *str2);
 
 /**
  * @brief Compares string with a buffer.
@@ -775,8 +769,7 @@ extern CFL_BOOL cfl_str_bufferEqualsIgnoreCase(const CFL_STRP str1,
  * CFL_FALSE), -1 if str1 is lexicographically less than str2, 1 if str1 is
  * lexicographically greater than str2.
  */
-extern CFL_INT16 cfl_str_bufferCompare(const CFL_STRP str1, const char *str2,
-                                       CFL_BOOL bExact);
+extern CFL_INT16 cfl_str_bufferCompare(const CFL_STRP str1, const char *str2, CFL_BOOL bExact);
 
 /**
  * @brief Compares string with a buffer (case-insensitive).
@@ -794,9 +787,7 @@ extern CFL_INT16 cfl_str_bufferCompare(const CFL_STRP str1, const char *str2,
  * CFL_FALSE), -1 if str1 is lexicographically less than str2, 1 if str1 is
  * lexicographically greater than str2.
  */
-extern CFL_INT16 cfl_str_bufferCompareIgnoreCase(const CFL_STRP str1,
-                                                 const char *str2,
-                                                 CFL_BOOL bExact);
+extern CFL_INT16 cfl_str_bufferCompareIgnoreCase(const CFL_STRP str1, const char *str2, CFL_BOOL bExact);
 
 /**
  * @brief Computes and caches the hash code.
@@ -887,8 +878,7 @@ extern CFL_BOOL cfl_str_isBlank(const CFL_STRP str);
  *         beyond the string length. The returned string must be freed using
  * cfl_str_free().
  */
-extern CFL_STRP cfl_str_substr(const CFL_STRP str, CFL_UINT32 start,
-                               CFL_UINT32 end);
+extern CFL_STRP cfl_str_substr(const CFL_STRP str, CFL_UINT32 start, CFL_UINT32 end);
 
 /**
  * @brief Finds a character starting from an index.
@@ -903,8 +893,7 @@ extern CFL_STRP cfl_str_substr(const CFL_STRP str, CFL_UINT32 start,
  * @return The index of the first occurrence of the character, or -1 if not
  * found.
  */
-extern CFL_INT32 cfl_str_indexOf(const CFL_STRP str, char search,
-                                 CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOf(const CFL_STRP str, char search, CFL_UINT32 start);
 
 /**
  * @brief Finds a substring starting from an index.
@@ -919,8 +908,7 @@ extern CFL_INT32 cfl_str_indexOf(const CFL_STRP str, char search,
  * @return The index of the first occurrence of the substring, or -1 if not
  * found.
  */
-extern CFL_INT32 cfl_str_indexOfStr(const CFL_STRP str, const CFL_STRP search,
-                                    CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOfStr(const CFL_STRP str, const CFL_STRP search, CFL_UINT32 start);
 
 /**
  * @brief Finds a buffer starting from an index.
@@ -935,8 +923,7 @@ extern CFL_INT32 cfl_str_indexOfStr(const CFL_STRP str, const CFL_STRP search,
  *
  * @return The index of the first occurrence of the buffer, or -1 if not found.
  */
-extern CFL_INT32 cfl_str_indexOfBuffer(const CFL_STRP str, const char *search,
-                                       CFL_UINT32 searchLen, CFL_UINT32 start);
+extern CFL_INT32 cfl_str_indexOfBuffer(const CFL_STRP str, const char *search, CFL_UINT32 searchLen, CFL_UINT32 start);
 
 /**
  * @brief Gets character at index (from start).
@@ -997,9 +984,7 @@ extern CFL_UINT32 cfl_str_replaceChar(CFL_STRP str, char oldChar, char newChar);
  * @note If start >= sourceLen, returns an empty string.
  * @note If end < start or end > sourceLen, end is set to sourceLen.
  */
-extern CFL_STRP cfl_str_copyBufferLen(CFL_STRP dest, const char *source,
-                                      CFL_UINT32 sourceLen, CFL_UINT32 start,
-                                      CFL_UINT32 end);
+extern CFL_STRP cfl_str_copyBufferLen(CFL_STRP dest, const char *source, CFL_UINT32 sourceLen, CFL_UINT32 start, CFL_UINT32 end);
 
 /**
  * @brief Copies a buffer range to destination.
@@ -1014,8 +999,7 @@ extern CFL_STRP cfl_str_copyBufferLen(CFL_STRP dest, const char *source,
  *
  * @return The destination string containing the copied range.
  */
-extern CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source,
-                                   CFL_UINT32 start, CFL_UINT32 end);
+extern CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source, CFL_UINT32 start, CFL_UINT32 end);
 
 /**
  * @brief Copies a string range to destination.
@@ -1029,8 +1013,7 @@ extern CFL_STRP cfl_str_copyBuffer(CFL_STRP dest, const char *source,
  *
  * @return The destination string containing the copied range.
  */
-extern CFL_STRP cfl_str_copy(CFL_STRP dest, const CFL_STRP source,
-                             CFL_UINT32 start, CFL_UINT32 end);
+extern CFL_STRP cfl_str_copy(CFL_STRP dest, const CFL_STRP source, CFL_UINT32 start, CFL_UINT32 end);
 
 /**
  * @brief Moves source string to destination (transfers ownership).
