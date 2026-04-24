@@ -38,12 +38,12 @@
       <cc-target>${c-compiler}${cc-major-version}</cc-target>
       <c-classifier>${target-platform}-${cc-target}</c-classifier>
       <debug-lib></debug-lib>
-      <extractDir>${user.home}\sic-build</extractDir>
+      <extractDir>${user.home}\mvn-build</extractDir>
       <tools-path>${extractDir}</tools-path>
       <cc-path>${tools-path}\${cc-group-id}\${cc-artifact-id}\${cc-version}\${target-platform}</cc-path>
-      <lpref></lpref>
-      <lext>lib</lext>
-      <oext>obj</oext>
+      <lpref>lib</lpref>
+      <lext>a</lext>
+      <oext>o</oext>
 
       <bcc-id>bcc</bcc-id>
       <bcc-version>5.6.0.1</bcc-version>
@@ -72,7 +72,7 @@
       <msc-lib-cmd>lib.exe /SUBSYSTEM:CONSOLE /OUT:"#{outputFile}" #{inputFiles, '"', '" "', '"'}</msc-lib-cmd>
 
       <mingw64-id>mingw</mingw64-id>
-      <mingw64-version>11.0.0.2</mingw64-version>
+      <mingw64-version>11.0.0.0</mingw64-version>
       <mingw64-major-version>11.x</mingw64-major-version>
       <mingw64-group-id>org.mingw64</mingw64-group-id>
       <mingw64-artifact-id>mingw64-app</mingw64-artifact-id>
@@ -110,18 +110,18 @@
       <gcc-link-cmd>gcc #{inputFiles, ' ', ' ', ' '} #{?debug='true', '-g -lSegFault'} #{!debug, '-Ofast -Wl,-s -Wl,-S'} -Wdiscarded-qualifiers -Wl,--error-unresolved-symbols -Wl,--start-group #{inputLibraries, '-l$(name,"lib")', ' -l$(name,"lib")'} -Wl,--end-group -o#{outputFile} #{librariesPaths, '-L', ' -L'}</gcc-link-cmd>
       <gcc-lib-cmd>ar rcs #{outputFile} #{inputFiles, ' ', ' ', ' '}</gcc-lib-cmd>
 
-      <c-compiler>${msc-id}</c-compiler>
-      <cc-version>${msc-version}</cc-version>
-      <cc-major-version>${msc-major-version}</cc-major-version>
-      <cc-group-id>${msc-group-id}</cc-group-id>
-      <cc-artifact-id>${msc-artifact-id}</cc-artifact-id>
-      <cc-includes-path>${msc-includes-path}</cc-includes-path>
-      <cc-libs-path>${msc-libs-path}</cc-libs-path>
-      <cc-libs>${msc-libs}</cc-libs>
-      <cc-cmd>${msc-cmd}</cc-cmd>
-      <link-options>${msc-link-options}</link-options>
-      <link-cmd>${msc-link-cmd}</link-cmd>
-      <lib-cmd>${msc-lib-cmd}</lib-cmd>
+      <c-compiler>${mingw64-id}</c-compiler>
+      <cc-version>${mingw64-version}</cc-version>
+      <cc-major-version>${mingw64-major-version}</cc-major-version>
+      <cc-group-id>${mingw64-group-id}</cc-group-id>
+      <cc-artifact-id>${mingw64-artifact-id}</cc-artifact-id>
+      <cc-includes-path>${mingw64-includes-path}</cc-includes-path>
+      <cc-libs-path>${mingw64-libs-path}</cc-libs-path>
+      <cc-libs>${mingw64-libs}</cc-libs>
+      <cc-cmd>${mingw64-cmd}</cc-cmd>
+      <link-options>${mingw64-link-options}</link-options>
+      <link-cmd>${mingw64-link-cmd}</link-cmd>
+      <lib-cmd>${mingw64-lib-cmd}</lib-cmd>
    </properties>
 
    <build>
@@ -404,6 +404,20 @@
             <oext>o</oext>
          </properties>
       </profile>
+      
+      <profile>
+         <id>cfl_release</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <property>
+               <name>release</name>
+            </property>
+         </activation>
+         <properties>
+            <def.CFL_RELEASE_BUILD/>
+         </properties>
+      </profile>
+      
    </profiles>
 
 </project>

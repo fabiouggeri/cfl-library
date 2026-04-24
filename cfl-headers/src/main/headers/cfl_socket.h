@@ -34,8 +34,7 @@ typedef CFL_UINT64 CFL_SOCKET;
  * @param backlog Maximum length of the queue of pending connections.
  * @return The listening socket handle, or CFL_INVALID_SOCKET on error.
  */
-extern CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port,
-                                    CFL_INT32 backlog);
+extern CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port, CFL_INT32 backlog);
 
 /**
  * @brief Accepts a new incoming connection.
@@ -44,8 +43,7 @@ extern CFL_SOCKET cfl_socket_listen(const char *address, CFL_UINT16 port,
  * @param port Output pointer to store client port.
  * @return The new client socket handle, or CFL_INVALID_SOCKET on error.
  */
-extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket,
-                                    CFL_STRP clientAddr, CFL_UINT16 *port);
+extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket, CFL_STRP clientAddr, CFL_UINT16 *port);
 
 /**
  * @brief Accepts a connection with a timeout.
@@ -56,10 +54,8 @@ extern CFL_SOCKET cfl_socket_accept(CFL_SOCKET listenSocket,
  * @param timesUp Output pointer set to CFL_TRUE if timeout occurred.
  * @return The new client socket handle, or CFL_INVALID_SOCKET on error/timeout.
  */
-extern CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket,
-                                           CFL_UINT32 timeoutMillis,
-                                           CFL_STRP clientAddr,
-                                           CFL_UINT16 *port, CFL_BOOL *timesUp);
+extern CFL_SOCKET cfl_socket_acceptTimeout(CFL_SOCKET listenSocket, CFL_UINT32 timeoutMillis, CFL_STRP clientAddr, CFL_UINT16 *port,
+                                           CFL_BOOL *timesUp);
 
 /**
  * @brief Opens a connection to a remote server (client).
@@ -91,8 +87,7 @@ extern CFL_INT32 cfl_socket_sendBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer);
  * @param len Length of data to send.
  * @return Number of bytes sent, or CFL_SOCKET_ERROR on failure.
  */
-extern CFL_INT32 cfl_socket_send(CFL_SOCKET socket, const char *buffer,
-                                 CFL_INT32 len);
+extern CFL_INT32 cfl_socket_send(CFL_SOCKET socket, const char *buffer, CFL_INT32 len);
 
 /**
  * @brief Helper to send all data in a buffer (looping if necessary).
@@ -109,8 +104,7 @@ extern CFL_BOOL cfl_socket_sendAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer);
  * @param len Total length to send.
  * @return CFL_TRUE if all data sent, CFL_FALSE on error.
  */
-extern CFL_BOOL cfl_socket_sendAll(CFL_SOCKET socket, const char *buffer,
-                                   CFL_UINT32 len);
+extern CFL_BOOL cfl_socket_sendAll(CFL_SOCKET socket, const char *buffer, CFL_UINT32 len);
 
 /**
  * @brief Receives data into a raw buffer.
@@ -119,8 +113,7 @@ extern CFL_BOOL cfl_socket_sendAll(CFL_SOCKET socket, const char *buffer,
  * @param len Maximum number of bytes to receive.
  * @return Number of bytes received, 0 on disconnect, or CFL_SOCKET_ERROR.
  */
-extern CFL_INT32 cfl_socket_receive(CFL_SOCKET socket, const char *buffer,
-                                    int len);
+extern CFL_INT32 cfl_socket_receive(CFL_SOCKET socket, const char *buffer, int len);
 
 /**
  * @brief Receives exactly 'len' bytes (looping if necessary).
@@ -129,22 +122,17 @@ extern CFL_INT32 cfl_socket_receive(CFL_SOCKET socket, const char *buffer,
  * @param len Exact number of bytes to receive.
  * @return Number of bytes received (should match len), or error/disconnect.
  */
-extern CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer,
-                                       int len);
+extern CFL_INT32 cfl_socket_receiveAll(CFL_SOCKET socket, const char *buffer, int len);
 
 /**
  * @brief Receives exact amount of data into a CFL buffer with timeout.
  * @param socket The connected socket.
  * @param buffer CFL buffer to append received data to.
- * @param packetLen Number of bytes to receive.
  * @param timeoutMillis Timeout for operation in milliseconds.
  * @return CFL_TRUE if successfully received packetLen bytes, CFL_FALSE on
  * error/timeout.
  */
-extern CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket,
-                                            CFL_BUFFERP buffer,
-                                            CFL_UINT32 packetLen,
-                                            CFL_UINT32 timeoutMillis);
+extern CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket, CFL_BUFFERP buffer, CFL_UINT32 timeoutMillis);
 
 /**
  * @brief Waits until socket is readable.
@@ -152,8 +140,7 @@ extern CFL_BOOL cfl_socket_receiveAllBuffer(CFL_SOCKET socket,
  * @param timeoutMillis Timeout in milliseconds.
  * @return 1 if readable, 0 on timeout, -1 on error.
  */
-extern CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket,
-                                       CFL_UINT32 timeoutMillis);
+extern CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
 
 /**
  * @brief Waits until socket is writable.
@@ -161,8 +148,7 @@ extern CFL_INT32 cfl_socket_selectRead(CFL_SOCKET socket,
  * @param timeoutMillis Timeout in milliseconds.
  * @return 1 if writable, 0 on timeout, -1 on error.
  */
-extern CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket,
-                                        CFL_UINT32 timeoutMillis);
+extern CFL_INT32 cfl_socket_selectWrite(CFL_SOCKET socket, CFL_UINT32 timeoutMillis);
 
 /**
  * @brief Waits for socket activity (read or write).
@@ -226,8 +212,7 @@ extern CFL_BOOL cfl_socket_setSendBufferSize(CFL_SOCKET socket, int size);
  * @param interval Keep-alive interval.
  * @return CFL_TRUE on success.
  */
-extern CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active,
-                                        CFL_UINT32 time, CFL_UINT32 interval);
+extern CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT32 time, CFL_UINT32 interval);
 
 /**
  * @brief Configures SO_LINGER option.
@@ -236,8 +221,7 @@ extern CFL_BOOL cfl_socket_setKeepAlive(CFL_SOCKET socket, CFL_BOOL active,
  * @param lingerSeconds Linger time in seconds.
  * @return CFL_TRUE on success.
  */
-extern CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active,
-                                     CFL_UINT16 lingerSeconds);
+extern CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active, CFL_UINT16 lingerSeconds);
 
 /**
  * @brief Shuts down part of or the full connection.
@@ -246,8 +230,7 @@ extern CFL_BOOL cfl_socket_setLinger(CFL_SOCKET socket, CFL_BOOL active,
  * @param write Shutdown writing.
  * @return CFL_TRUE on success.
  */
-extern CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read,
-                                    CFL_BOOL write);
+extern CFL_BOOL cfl_socket_shutdown(CFL_SOCKET socket, CFL_BOOL read, CFL_BOOL write);
 
 /**
  * @brief Gets the local hostname.
@@ -263,8 +246,7 @@ extern char *cfl_socket_hostname(char *hostname, CFL_UINT32 hostnameLen);
  * @param hostAddressLen Size of buffer.
  * @return Pointer to hostAddress buffer.
  */
-extern char *cfl_socket_hostAddress(char *hostAddress,
-                                    CFL_UINT32 hostAddressLen);
+extern char *cfl_socket_hostAddress(char *hostAddress, CFL_UINT32 hostAddressLen);
 
 #ifdef __cplusplus
 }

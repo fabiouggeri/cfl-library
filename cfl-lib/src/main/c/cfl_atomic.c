@@ -20,150 +20,191 @@
 #include "cfl_atomic.h"
 
 #if defined(__BORLANDC__)
-   #define DEFINE_OPERATIONS_SET(datatype, typename) \
-      datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         datatype previousValue = *var;\
-         *var = value;\
-         return previousValue;\
-      }\
-      datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype *var, datatype oldValue, datatype newValue) {\
-         datatype previousValue = *var;\
-         if (previousValue == oldValue) {\
-            *var = newValue;\
-         }\
-         return previousValue;\
-      }
+#define DEFINE_OPERATIONS_GET(datatype, typename)                                                                                  \
+   datatype cfl_atomic_get##typename(VOLATILE_PARAM datatype *var) {                                                               \
+      return *var;                                                                                                                 \
+   }
 
-   #define DEFINE_OPERATIONS_OP(datatype, typename) \
-      datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         datatype previousValue = *var;\
-         *var = *var + value;\
-         return previousValue;\
-      }\
-      datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         datatype previousValue = *var;\
-         *var = *var - value;\
-         return previousValue;\
-      }\
-      datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         datatype previousValue = *var;\
-         *var = *var & value;\
-         return previousValue;\
-      }\
-      datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         datatype previousValue = *var;\
-         *var = *var | value;\
-         return previousValue;\
-      }\
-      datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         datatype previousValue = *var;\
-         *var = *var ^ value;\
-         return previousValue;\
-      }
+#define DEFINE_OPERATIONS_SET(datatype, typename)                                                                                  \
+   datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      datatype previousValue = *var;                                                                                               \
+      *var = value;                                                                                                                \
+      return previousValue;                                                                                                        \
+   }                                                                                                                               \
+   datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype *var, datatype oldValue, datatype newValue) {               \
+      datatype previousValue = *var;                                                                                               \
+      if (previousValue == oldValue) {                                                                                             \
+         *var = newValue;                                                                                                          \
+      }                                                                                                                            \
+      return previousValue;                                                                                                        \
+   }
 
-      DEFINE_OPERATIONS_SET(CFL_BOOL , Boolean)
+#define DEFINE_OPERATIONS_OP(datatype, typename)                                                                                   \
+   datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      datatype previousValue = *var;                                                                                               \
+      *var = *var + value;                                                                                                         \
+      return previousValue;                                                                                                        \
+   }                                                                                                                               \
+   datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      datatype previousValue = *var;                                                                                               \
+      *var = *var - value;                                                                                                         \
+      return previousValue;                                                                                                        \
+   }                                                                                                                               \
+   datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      datatype previousValue = *var;                                                                                               \
+      *var = *var & value;                                                                                                         \
+      return previousValue;                                                                                                        \
+   }                                                                                                                               \
+   datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype *var, datatype value) {                                                \
+      datatype previousValue = *var;                                                                                               \
+      *var = *var | value;                                                                                                         \
+      return previousValue;                                                                                                        \
+   }                                                                                                                               \
+   datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      datatype previousValue = *var;                                                                                               \
+      *var = *var ^ value;                                                                                                         \
+      return previousValue;                                                                                                        \
+   }
 
-      DEFINE_OPERATIONS_SET(CFL_INT8 , Int8   )
-      DEFINE_OPERATIONS_OP(CFL_INT8 , Int8   )
+DEFINE_OPERATIONS_GET(CFL_BOOL, Boolean)
+DEFINE_OPERATIONS_SET(CFL_BOOL, Boolean)
 
-      DEFINE_OPERATIONS_SET(CFL_INT16, Int16  )
-      DEFINE_OPERATIONS_OP(CFL_INT16, Int16  )
+DEFINE_OPERATIONS_GET(CFL_INT8, Int8)
+DEFINE_OPERATIONS_SET(CFL_INT8, Int8)
+DEFINE_OPERATIONS_OP(CFL_INT8, Int8)
 
-      DEFINE_OPERATIONS_SET(CFL_INT32, Int32  )
-      DEFINE_OPERATIONS_OP(CFL_INT32, Int32  )
+DEFINE_OPERATIONS_GET(CFL_INT16, Int16)
+DEFINE_OPERATIONS_SET(CFL_INT16, Int16)
+DEFINE_OPERATIONS_OP(CFL_INT16, Int16)
 
-      DEFINE_OPERATIONS_SET(CFL_INT64, Int64  )
-      DEFINE_OPERATIONS_OP(CFL_INT64, Int64  )
+DEFINE_OPERATIONS_GET(CFL_INT32, Int32)
+DEFINE_OPERATIONS_SET(CFL_INT32, Int32)
+DEFINE_OPERATIONS_OP(CFL_INT32, Int32)
 
-      DEFINE_OPERATIONS_SET(void *   , Pointer)
+DEFINE_OPERATIONS_GET(CFL_INT64, Int64)
+DEFINE_OPERATIONS_SET(CFL_INT64, Int64)
+DEFINE_OPERATIONS_OP(CFL_INT64, Int64)
+DEFINE_OPERATIONS_GET(void *, Pointer)
+DEFINE_OPERATIONS_SET(void *, Pointer)
 
-#elif defined(CFL_OS_WINDOWS) && ! defined(__GNUC__)
-   #include <intrin.h>
+#elif defined(CFL_OS_WINDOWS) && !defined(__GNUC__)
+#include <intrin.h>
 
-   #define DEFINE_OPERATIONS_SET(datatype, typename, nativetype, datasize) \
-      datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return _InterlockedExchange##datasize((nativetype *)var, (nativetype) value);\
-      }\
-      datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype *var, datatype oldValue, datatype newValue) {\
-         return _InterlockedCompareExchange##datasize((nativetype *)var, (nativetype) newValue, (nativetype) oldValue);\
-      }
+#define DEFINE_OPERATIONS_GET(datatype, typename, nativetype, datasize)                                                            \
+   datatype cfl_atomic_get##typename(VOLATILE_PARAM datatype *var) {                                                               \
+      return _InterlockedOr##datasize((nativetype *)var, (nativetype)0);                                                           \
+   }
 
-   #define DEFINE_OPERATIONS_OP(datatype, typename, nativetype, datasize) \
-      datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return _InterlockedExchangeAdd##datasize((nativetype *)var, (nativetype) value);\
-      }\
-      datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return _InterlockedExchangeAdd##datasize((nativetype *)var, (nativetype) (-1 * value));\
-      }\
-      datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return _InterlockedAnd##datasize((nativetype *)var, (nativetype) value);\
-      }\
-      datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return _InterlockedOr##datasize((nativetype *)var, (nativetype) value);\
-      }\
-      datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return _InterlockedXor##datasize((nativetype *)var, (nativetype) value);\
-      }
+#define DEFINE_OPERATIONS_GET_PTR(datatype, typename, nativetype)                                                                  \
+   datatype cfl_atomic_get##typename(VOLATILE_PARAM datatype *var) {                                                               \
+      return _InterlockedCompareExchangePointer((nativetype *)var, (nativetype)0, (nativetype)0);                                  \
+   }
 
-   DEFINE_OPERATIONS_SET(CFL_BOOL , Boolean, char  , 8 )
+#define DEFINE_OPERATIONS_SET(datatype, typename, nativetype, datasize)                                                            \
+   datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return _InterlockedExchange##datasize((nativetype *)var, (nativetype)value);                                                 \
+   }                                                                                                                               \
+   datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype *var, datatype oldValue, datatype newValue) {               \
+      return _InterlockedCompareExchange##datasize((nativetype *)var, (nativetype)newValue, (nativetype)oldValue);                 \
+   }
 
-   DEFINE_OPERATIONS_SET(CFL_INT8 , Int8   , char  , 8 )
-   DEFINE_OPERATIONS_OP(CFL_INT8 , Int8   , char  , 8 )
+#define DEFINE_OPERATIONS_OP(datatype, typename, nativetype, datasize)                                                             \
+   datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return _InterlockedExchangeAdd##datasize((nativetype *)var, (nativetype)value);                                              \
+   }                                                                                                                               \
+   datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return _InterlockedExchangeAdd##datasize((nativetype *)var, (nativetype)(-1 * value));                                       \
+   }                                                                                                                               \
+   datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return _InterlockedAnd##datasize((nativetype *)var, (nativetype)value);                                                      \
+   }                                                                                                                               \
+   datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype *var, datatype value) {                                                \
+      return _InterlockedOr##datasize((nativetype *)var, (nativetype)value);                                                       \
+   }                                                                                                                               \
+   datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return _InterlockedXor##datasize((nativetype *)var, (nativetype)value);                                                      \
+   }
 
-   DEFINE_OPERATIONS_SET(CFL_INT16, Int16  , short , 16)
-   DEFINE_OPERATIONS_OP(CFL_INT16, Int16  , short , 16)
+DEFINE_OPERATIONS_GET(CFL_BOOL, Boolean, char, 8)
+DEFINE_OPERATIONS_SET(CFL_BOOL, Boolean, char, 8)
 
-   DEFINE_OPERATIONS_SET(CFL_INT32, Int32  , long  ,   )
-   DEFINE_OPERATIONS_OP(CFL_INT32, Int32  , long  ,   )
+DEFINE_OPERATIONS_GET(CFL_INT8, Int8, char, 8)
+DEFINE_OPERATIONS_SET(CFL_INT8, Int8, char, 8)
+DEFINE_OPERATIONS_OP(CFL_INT8, Int8, char, 8)
+
+DEFINE_OPERATIONS_GET(CFL_INT16, Int16, short, 16)
+DEFINE_OPERATIONS_SET(CFL_INT16, Int16, short, 16)
+DEFINE_OPERATIONS_OP(CFL_INT16, Int16, short, 16)
+
+DEFINE_OPERATIONS_GET(CFL_INT32, Int32, long, )
+DEFINE_OPERATIONS_SET(CFL_INT32, Int32, long, )
+DEFINE_OPERATIONS_OP(CFL_INT32, Int32, long, )
 
 #if defined(CFL_ARCH_64)
-   DEFINE_OPERATIONS_SET(void *   , Pointer, void *, Pointer )
-   DEFINE_OPERATIONS_SET(CFL_INT64, Int64  , __int64, 64)
-   DEFINE_OPERATIONS_OP(CFL_INT64, Int64  , __int64, 64)
+DEFINE_OPERATIONS_GET(CFL_INT64, Int64, __int64, 64)
+DEFINE_OPERATIONS_SET(CFL_INT64, Int64, __int64, 64)
+DEFINE_OPERATIONS_OP(CFL_INT64, Int64, __int64, 64)
 #endif
+
+DEFINE_OPERATIONS_GET_PTR(void *, Pointer, void * volatile)
+DEFINE_OPERATIONS_SET(void *, Pointer, void *, Pointer)
 
 #else
 
-   #define DEFINE_OPERATIONS_SET(datatype, typename) \
-      datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return __sync_lock_test_and_set(var, value);\
-      }\
-      datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype *var, datatype oldValue, datatype newValue) {\
-         return __sync_val_compare_and_swap(var, oldValue, newValue);\
-      }
+#define DEFINE_OPERATIONS_GET(datatype, typename)                                                                                  \
+   datatype cfl_atomic_get##typename(VOLATILE_PARAM datatype *var) {                                                               \
+      return __sync_fetch_and_add(var, (datatype)0);                                                                               \
+   }
 
-   #define DEFINE_OPERATIONS_OP(datatype, typename) \
-      datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return __sync_fetch_and_add(var, value);\
-      }\
-      datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return __sync_fetch_and_sub(var, value);\
-      }\
-      datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return __sync_fetch_and_and(var, value);\
-      }\
-      datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return __sync_fetch_and_or(var, value);\
-      }\
-      datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype *var, datatype value) {\
-         return __sync_fetch_and_xor(var, value);\
-      }
+#define DEFINE_OPERATIONS_GET_PTR(datatype, typename)                                                                              \
+   datatype cfl_atomic_get##typename(VOLATILE_PARAM datatype *var) {                                                               \
+      return __sync_val_compare_and_swap(var, (datatype)0, (datatype)0);                                                           \
+   }
 
-   DEFINE_OPERATIONS_SET(CFL_BOOL , Boolean)
+#define DEFINE_OPERATIONS_SET(datatype, typename)                                                                                  \
+   datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return __sync_val_compare_and_swap(var, (datatype)(*var), (datatype)value);                                                  \
+   }                                                                                                                               \
+   datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype *var, datatype oldValue, datatype newValue) {               \
+      return __sync_val_compare_and_swap(var, oldValue, newValue);                                                                 \
+   }
 
-   DEFINE_OPERATIONS_SET(CFL_INT8 , Int8   )
-   DEFINE_OPERATIONS_OP(CFL_INT8 , Int8   )
+#define DEFINE_OPERATIONS_OP(datatype, typename)                                                                                   \
+   datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return __sync_fetch_and_add(var, value);                                                                                     \
+   }                                                                                                                               \
+   datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return __sync_fetch_and_sub(var, value);                                                                                     \
+   }                                                                                                                               \
+   datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return __sync_fetch_and_and(var, value);                                                                                     \
+   }                                                                                                                               \
+   datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype *var, datatype value) {                                                \
+      return __sync_fetch_and_or(var, value);                                                                                      \
+   }                                                                                                                               \
+   datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype *var, datatype value) {                                               \
+      return __sync_fetch_and_xor(var, value);                                                                                     \
+   }
 
-   DEFINE_OPERATIONS_SET(CFL_INT16, Int16  )
-   DEFINE_OPERATIONS_OP(CFL_INT16, Int16  )
+DEFINE_OPERATIONS_GET(CFL_BOOL, Boolean)
+DEFINE_OPERATIONS_SET(CFL_BOOL, Boolean)
 
-   DEFINE_OPERATIONS_SET(CFL_INT32, Int32  )
-   DEFINE_OPERATIONS_OP(CFL_INT32, Int32  )
+DEFINE_OPERATIONS_GET(CFL_INT8, Int8)
+DEFINE_OPERATIONS_SET(CFL_INT8, Int8)
+DEFINE_OPERATIONS_OP(CFL_INT8, Int8)
 
-   DEFINE_OPERATIONS_SET(CFL_INT64, Int64  )
-   DEFINE_OPERATIONS_OP(CFL_INT64, Int64  )
+DEFINE_OPERATIONS_GET(CFL_INT16, Int16)
+DEFINE_OPERATIONS_SET(CFL_INT16, Int16)
+DEFINE_OPERATIONS_OP(CFL_INT16, Int16)
 
-   DEFINE_OPERATIONS_SET(void *   , Pointer)
+DEFINE_OPERATIONS_GET(CFL_INT32, Int32)
+DEFINE_OPERATIONS_SET(CFL_INT32, Int32)
+DEFINE_OPERATIONS_OP(CFL_INT32, Int32)
+
+DEFINE_OPERATIONS_GET(CFL_INT64, Int64)
+DEFINE_OPERATIONS_SET(CFL_INT64, Int64)
+DEFINE_OPERATIONS_OP(CFL_INT64, Int64)
+DEFINE_OPERATIONS_GET_PTR(void *, Pointer)
+DEFINE_OPERATIONS_SET(void *, Pointer)
 
 #endif
-

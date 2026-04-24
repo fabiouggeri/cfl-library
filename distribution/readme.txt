@@ -1,1 +1,1 @@
-Directory to copy distribution files
+Directory for packaging and distribution via Maven.

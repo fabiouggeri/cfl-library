@@ -18,10 +18,10 @@
       <builder-helper-version>2.4.0.0</builder-helper-version>
       <os-target>${os}${arch}</os-target>
 
-      <cc>msc</cc>
-      <cc-major-version>16.x</cc-major-version>
-      <cc-version>16.0.0.2</cc-version>
-      <cc-target>${cc}${cc-major-version}</cc-target>
+      <cc>mingw</cc>
+      <cc-major-version>11.x</cc-major-version>
+      <cc-version>11.0.0.0</cc-version>
+      <cc-target>gcc</cc-target>
       <os>win</os>
       <arch>64</arch>
    </properties>
@@ -53,7 +53,7 @@
          </activation>
          <properties>
             <cc>mingw64</cc>
-            <cc-version>11.0.0.2</cc-version>
+            <cc-version>11.0.0.0</cc-version>
             <cc-major-version>11.x</cc-major-version>
             <cc-target>gcc</cc-target>
             <os>win</os>

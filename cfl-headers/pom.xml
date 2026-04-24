@@ -16,10 +16,10 @@
 
    <profiles>
       <profile>
-         <id>release</id>
+         <id>distribution</id>
          <activation>
             <property>
-               <name>release</name>
+               <name>distribution</name>
             </property>
          </activation>
          <build>

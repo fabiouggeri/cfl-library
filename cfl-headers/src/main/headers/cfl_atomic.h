@@ -33,11 +33,19 @@ extern "C" {
  * - cfl_atomic_compareAndSet##typename: Atomically sets a value if it matches
  * the expected old value.
  */
-#define DECLARE_OPERATIONS_SET(datatype, typename)                             \
-  extern datatype cfl_atomic_set##                                             \
-      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
-  extern datatype cfl_atomic_compareAndSet##typename(                          \
-      VOLATILE_PARAM datatype * var, datatype oldValue, datatype newValue);
+#define DECLARE_OPERATIONS_SET(datatype, typename)                                                                                 \
+   extern datatype cfl_atomic_set##typename(VOLATILE_PARAM datatype * var, datatype value);                                        \
+   extern datatype cfl_atomic_compareAndSet##typename(VOLATILE_PARAM datatype * var, datatype oldValue, datatype newValue);
+
+/**
+ * @brief Declares atomic get function for a data type.
+ * @param datatype The C data type.
+ * @param typename The type name suffix for function names.
+ *
+ * Generated functions:
+ * - cfl_atomic_get##typename: Atomically gets a variable.
+ */
+#define DECLARE_OPERATIONS_GET(datatype, typename) extern datatype cfl_atomic_get##typename(VOLATILE_PARAM datatype * var);
 
 /**
  * @brief Declares atomic arithmetic and bitwise operation functions for a data
@@ -57,45 +65,47 @@ extern "C" {
  * - cfl_atomic_xor##typename: Atomically performs bitwise XOR and returns the
  * previous value.
  */
-#define DECLARE_OPERATIONS_OP(datatype, typename)                              \
-  extern datatype cfl_atomic_add##                                             \
-      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
-  extern datatype cfl_atomic_sub##                                             \
-      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
-  extern datatype cfl_atomic_and##                                             \
-      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
-  extern datatype cfl_atomic_or##                                              \
-      typename(VOLATILE_PARAM datatype * var, datatype value);                 \
-  extern datatype cfl_atomic_xor##                                             \
-      typename(VOLATILE_PARAM datatype * var, datatype value)
+#define DECLARE_OPERATIONS_OP(datatype, typename)                                                                                  \
+   extern datatype cfl_atomic_add##typename(VOLATILE_PARAM datatype * var, datatype value);                                        \
+   extern datatype cfl_atomic_sub##typename(VOLATILE_PARAM datatype * var, datatype value);                                        \
+   extern datatype cfl_atomic_and##typename(VOLATILE_PARAM datatype * var, datatype value);                                        \
+   extern datatype cfl_atomic_or##typename(VOLATILE_PARAM datatype * var, datatype value);                                         \
+   extern datatype cfl_atomic_xor##typename(VOLATILE_PARAM datatype * var, datatype value);
 
 /* Boolean atomic operations (set and compare-and-swap only) */
+DECLARE_OPERATIONS_GET(CFL_BOOL, Boolean);
 DECLARE_OPERATIONS_SET(CFL_BOOL, Boolean);
 
 /* 8-bit integer atomic operations */
+DECLARE_OPERATIONS_GET(CFL_INT8, Int8);
 DECLARE_OPERATIONS_SET(CFL_INT8, Int8);
 DECLARE_OPERATIONS_OP(CFL_INT8, Int8);
 
 /* 16-bit integer atomic operations */
+DECLARE_OPERATIONS_GET(CFL_INT16, Int16);
 DECLARE_OPERATIONS_SET(CFL_INT16, Int16);
 DECLARE_OPERATIONS_OP(CFL_INT16, Int16);
 
 /* 32-bit integer atomic operations */
+DECLARE_OPERATIONS_GET(CFL_INT32, Int32);
 DECLARE_OPERATIONS_SET(CFL_INT32, Int32);
 DECLARE_OPERATIONS_OP(CFL_INT32, Int32);
 
 /* 64-bit integer atomic operations (platform-dependent availability) */
 #if defined(CFL_OS_WINDOWS)
 #if defined(CFL_ARCH_64)
+DECLARE_OPERATIONS_GET(CFL_INT64, Int64);
 DECLARE_OPERATIONS_SET(CFL_INT64, Int64);
 DECLARE_OPERATIONS_OP(CFL_INT64, Int64);
 #endif
 #else
+DECLARE_OPERATIONS_GET(CFL_INT64, Int64);
 DECLARE_OPERATIONS_SET(CFL_INT64, Int64);
 DECLARE_OPERATIONS_OP(CFL_INT64, Int64);
 #endif
 
 /* Pointer atomic operations (set and compare-and-swap only) */
+DECLARE_OPERATIONS_GET(void *, Pointer);
 DECLARE_OPERATIONS_SET(void *, Pointer);
 
 #ifdef __cplusplus
