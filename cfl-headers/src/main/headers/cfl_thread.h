@@ -67,9 +67,9 @@ extern "C" {
 /** @brief Initializes a thread-local variable with custom init/free functions
  */
 #define CFL_THREAD_VAR_INIT(datatype, varname, initFunc, freeFunc)                                                                 \
-   CFL_THREAD_VARIABLE varname = {0, TLS_OUT_OF_INDEXES, sizeof(datatype), initFunc, freeFunc}
+   CFL_THREAD_VARIABLE varname = {0, FLS_OUT_OF_INDEXES, sizeof(datatype), initFunc, freeFunc}
 /** @brief Initializes a simple thread-local variable */
-#define CFL_THREAD_VAR(datatype, varname) CFL_THREAD_VARIABLE varname = {0, TLS_OUT_OF_INDEXES, sizeof(datatype), NULL, NULL}
+#define CFL_THREAD_VAR(datatype, varname) CFL_THREAD_VARIABLE varname = {0, FLS_OUT_OF_INDEXES, sizeof(datatype), NULL, NULL}
 #else
 /** @brief Initializes a thread-local variable with custom init/free functions
  */
@@ -282,6 +282,15 @@ extern void *cfl_thread_varGet(CFL_THREAD_VARIABLEP threadVar);
  * @return CFL_TRUE on success, CFL_FALSE on failure.
  */
 extern CFL_BOOL cfl_thread_varSet(CFL_THREAD_VARIABLEP threadVar, const void *data);
+
+/**
+ * @brief Frees a thread-local variable and releases its storage key.
+ * @param threadVar Pointer to the thread-local variable descriptor to free.
+ * @note After calling this function, the variable must be re-initialized before use.
+ *       Any per-thread data associated with this variable is NOT freed by this call;
+ *       it must have been freed or the threads must have exited before calling this.
+ */
+extern void cfl_thread_varFree(CFL_THREAD_VARIABLEP threadVar);
 
 /* Typed getter/setter declarations for thread-local variables */
 DECLARE_GET_SET(void *, Pointer)
